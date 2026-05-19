@@ -71,6 +71,12 @@ None yet.
 
 None yet.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260519-rat | use Mag cover.png from assets folder on magazine cover | 2026-05-19 | f54c505 | [260519-rat-use-mag-cover-png-from-assets-folder-on-](.planning/quick/260519-rat-use-mag-cover-png-from-assets-folder-on-/) |
+
 ## Session Continuity
 
 Last session: 2026-05-19T10:33:57Z
