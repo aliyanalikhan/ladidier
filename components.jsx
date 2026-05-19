@@ -7,7 +7,7 @@ const { useState, useEffect, useRef, useMemo } = React;
 const U = "https://images.unsplash.com/";
 const IMG = {
   // Magazine
-  cover:        "assets/eclat-cover.png",
+  cover:        "assets/Mag cover.png",
   articleHero:  U + "photo-1469334031218-e382a71b716b?w=1800&q=85&auto=format",
   // Stories
   letter:       U + "photo-1559563458-527698bf5295?w=900&q=85&auto=format",
@@ -390,25 +390,10 @@ function Reveal({ children, delay = 0 }) {
 /* ── Magazine cover (composite placeholder) ───────────────── */
 function MagazineCover({ tint = "blush", vol = "I", no = "03", season = "S/S 2026", title = "On Luxe & Larger Living", coverline = "The Quiet Audacity Issue", tilt = false, img = null }) {
   const photo = img || ISSUE.img;
-  const isCustomCover = photo && (photo.includes("eclat-cover") || photo.includes("cover.png") || photo.includes("uploads/"));
-
-  if (isCustomCover) {
-    return (
-      <div className={`cover framed ${tilt ? "tilt" : ""}`}
-           style={{
-             backgroundImage: `url(${photo})`,
-             backgroundPosition: "center",
-             backgroundSize: "cover",
-             backgroundRepeat: "no-repeat"
-           }}>
-      </div>
-    );
-  }
-
   return (
     <div className={`cover ph photo framed ${tilt ? "tilt" : ""}`}
          data-tag={`Vol. ${vol}  ·  N°${no}`} data-label="COVER · PHOTOGRAPHY"
-         style={{ "--bg-image": `url(${photo})`, color: "#fff" }}>
+         style={{ "--bg-image": `url("${photo}")`, color: "#fff" }}>
       <span className="cover-corner tl"><DecoCorner size={42} /></span>
       <span className="cover-corner tr"><DecoCorner size={42} /></span>
       <span className="cover-corner bl"><DecoCorner size={42} /></span>
