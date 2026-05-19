@@ -6,7 +6,7 @@ Three phases deliver the full v1.0 milestone. Phase 1 adds the mobile navigation
 
 ## Phases
 
-- [ ] **Phase 1: Mobile Navigation** - Hamburger button + full-screen overlay nav with close behavior and active-route highlight
+- [x] **Phase 1: Mobile Navigation** - Hamburger button + full-screen overlay nav with close behavior and active-route highlight
 - [ ] **Phase 2: Responsive Layouts** - Full mobile CSS pass covering footer, heroes, store rows, plan cards, article/magazine pages, tweaks panel, and tap targets
 - [ ] **Phase 3: Vercel Deploy** - Commit all changes, push to repository, confirm live Vercel URL renders correctly on mobile and desktop
 
@@ -24,7 +24,7 @@ Three phases deliver the full v1.0 milestone. Phase 1 adds the mobile navigation
 **Plans**: 2 plans
 Plans:
 - [x] 01-01-PLAN.md — Mobile nav CSS: hamburger, overlay, link states, animations, media query
-- [ ] 01-02-PLAN.md — React components: MobileNav overlay component + hamburger wiring in Nav
+- [x] 01-02-PLAN.md — React components: MobileNav overlay component + hamburger wiring in Nav
 **UI hint**: yes
 
 ### Phase 2: Responsive Layouts
@@ -54,7 +54,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Mobile Navigation | 1/2 | In progress | - |
+| 1. Mobile Navigation | 2/2 | Complete | 2026-05-19 |
 | 2. Responsive Layouts | 0/TBD | Not started | - |
 | 3. Vercel Deploy | 0/TBD | Not started | - |
 

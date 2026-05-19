@@ -7,10 +7,10 @@
 
 ### Mobile Navigation
 
-- [ ] **MOB-01**: User sees a hamburger menu button in the nav on screens ≤768px (desktop nav links hidden)
-- [ ] **MOB-02**: Tapping the hamburger opens a full-screen overlay with all navigation links
-- [ ] **MOB-03**: User can close the mobile nav by tapping the close (×) button or pressing Escape
-- [ ] **MOB-04**: Active route is visually highlighted in the mobile nav overlay
+- [x] **MOB-01**: User sees a hamburger menu button in the nav on screens ≤768px (desktop nav links hidden)
+- [x] **MOB-02**: Tapping the hamburger opens a full-screen overlay with all navigation links
+- [x] **MOB-03**: User can close the mobile nav by tapping the close (×) button or pressing Escape
+- [x] **MOB-04**: Active route is visually highlighted in the mobile nav overlay
 
 ### Responsive Layouts
 
@@ -56,10 +56,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MOB-01 | Phase 1 | CSS complete (Plan 01-01); React wiring in Plan 01-02 |
-| MOB-02 | Phase 1 | CSS complete (Plan 01-01); React wiring in Plan 01-02 |
-| MOB-03 | Phase 1 | CSS complete (Plan 01-01); React wiring in Plan 01-02 |
-| MOB-04 | Phase 1 | CSS complete (Plan 01-01); React wiring in Plan 01-02 |
+| MOB-01 | Phase 1 | Complete — CSS (Plan 01-01) + React hamburger button (Plan 01-02) |
+| MOB-02 | Phase 1 | Complete — CSS (Plan 01-01) + MobileNav component (Plan 01-02) |
+| MOB-03 | Phase 1 | Complete — CSS (Plan 01-01) + × button and Escape handler (Plan 01-02) |
+| MOB-04 | Phase 1 | Complete — CSS (Plan 01-01) + active class + aria-current (Plan 01-02) |
 | RESP-01 | Phase 2 | Pending |
 | RESP-02 | Phase 2 | Pending |
 | RESP-03 | Phase 2 | Pending |
