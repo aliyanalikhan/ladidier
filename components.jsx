@@ -7,7 +7,7 @@ const { useState, useEffect, useRef, useMemo } = React;
 const U = "https://images.unsplash.com/";
 const IMG = {
   // Magazine
-  cover:        U + "photo-1488426862026-3ee34a7d66df?w=1400&q=85&auto=format",
+  cover:        "assets/eclat-cover.png",
   articleHero:  U + "photo-1469334031218-e382a71b716b?w=1800&q=85&auto=format",
   // Stories
   letter:       U + "photo-1559563458-527698bf5295?w=900&q=85&auto=format",
@@ -30,20 +30,22 @@ const IMG = {
   s_travel:     U + "photo-1488646953014-85cb44e25828?w=900&q=85&auto=format",
   s_skincare:   U + "photo-1556228578-0a85b3bc8b62?w=900&q=85&auto=format",
   s_wigs:       U + "photo-1605497788044-5a32c7078486?w=900&q=85&auto=format",
+  s_transport:  U + "photo-1549399542-7e3f8b79c341?w=900&q=85&auto=format",
 };
 
 const STORES = [
-  { id: "01", name: "Ladidiér Jewelry",           cat: "Jewelry",          tint: "blush", est: "MMXXI",   tagline: "Heirlooms in waiting.",                         img: IMG.s_jewelry },
-  { id: "02", name: "Ladidiér Cosmetics",         cat: "Cosmetics",        tint: "lilac", est: "MMXXII",  tagline: "Pigment, ceremony, restraint.",                 img: IMG.s_cosmetics },
-  { id: "03", name: "The Scnt Shop",              cat: "Perfumery",        tint: "cream", est: "MMXXII",  tagline: "Olfactive cabinet, hand-poured.",               img: IMG.s_scent },
-  { id: "04", name: "Adeva Store",                cat: "Womenswear",       tint: "sky",   est: "MMXXII",  tagline: "A wardrobe authored slowly.",                   img: IMG.s_adeva },
-  { id: "05", name: "Ladidiér Homme",             cat: "Menswear",         tint: "sage",  est: "MMXXIII", tagline: "Tailoring for the modern flâneur.",             img: IMG.s_homme },
-  { id: "06", name: "Piata Noir Roast",           cat: "Coffee",           tint: "noir",  est: "MMXXIII", tagline: "Single-origin daily ritual.",                   img: IMG.s_coffee },
-  { id: "07", name: "Posh Paw Pet Supplies",      cat: "Pets",             tint: "blush", est: "MMXXIII", tagline: "Couture for the four-legged.",                  img: IMG.s_pets },
-  { id: "08", name: "Ladidiér Maison",            cat: "Home & Garden",    tint: "sage",  est: "MMXXIV",  tagline: "Objects to live with, not around.",             img: IMG.s_maison },
-  { id: "09", name: "Just Rippin",                cat: "Travel",           tint: "sky",   est: "MMXXIV",  tagline: "Routes for the restless.",                      img: IMG.s_travel },
-  { id: "10", name: "Ladidiér Beauté Essence",    cat: "Skincare",         tint: "lilac", est: "MMXXIV",  tagline: "Quiet science, soft results.",                  img: IMG.s_skincare },
-  { id: "11", name: "Merry Wigs",                 cat: "Hair Couture",     tint: "cream", est: "MMXXV",   tagline: "Crowns, on command.",                            img: IMG.s_wigs },
+  { id: "01", name: "Ladidiér Jewelry",           cat: "Jewelry",          tint: "blush", est: "MMXXI",   tagline: "Heirlooms in waiting.",                         img: IMG.s_jewelry,   url: "https://www.ladidierjewelry.com/" },
+  { id: "02", name: "Ladidiér Cosmetics",         cat: "Cosmetics",        tint: "lilac", est: "MMXXII",  tagline: "Pigment, ceremony, restraint.",                 img: IMG.s_cosmetics, url: "https://ladidiercosmetics.com/" },
+  { id: "03", name: "The Scnt Shop",              cat: "Perfumery",        tint: "cream", est: "MMXXII",  tagline: "Olfactive cabinet, hand-poured.",               img: IMG.s_scent,     url: "https://thescntshop.com/" },
+  { id: "04", name: "Adeva Store",                cat: "Womenswear",       tint: "sky",   est: "MMXXII",  tagline: "A wardrobe authored slowly.",                   img: IMG.s_adeva,     url: "https://adevastore.com/" },
+  { id: "05", name: "Ladidiér Homme",             cat: "Menswear",         tint: "sage",  est: "MMXXIII", tagline: "Tailoring for the modern flâneur.",             img: IMG.s_homme,     url: "https://ladidierhomme.com/" },
+  { id: "06", name: "Piata Noir Roast",           cat: "Coffee",           tint: "noir",  est: "MMXXIII", tagline: "Single-origin daily ritual.",                   img: IMG.s_coffee,    url: "https://piatanoirroast.com/" },
+  { id: "07", name: "Posh Paw Pet Supplies",      cat: "Pets",             tint: "blush", est: "MMXXIII", tagline: "Couture for the four-legged.",                  img: IMG.s_pets,      url: "https://poshpawpetsupplies.com/" },
+  { id: "08", name: "Ladidiér Maison",            cat: "Home & Garden",    tint: "sage",  est: "MMXXIV",  tagline: "Objects to live with, not around.",             img: IMG.s_maison,    url: "https://ladidiermaison.com/" },
+  { id: "09", name: "Justrippin",                 cat: "Travel",           tint: "sky",   est: "MMXXIV",  tagline: "Routes for the restless.",                      img: IMG.s_travel,    url: "https://justrippin.net" },
+  { id: "10", name: "Ladidiér Beauté Essence",    cat: "Skincare",         tint: "lilac", est: "MMXXIV",  tagline: "Quiet science, soft results.",                  img: IMG.s_skincare,  url: "https://ladidierbeautyessence.store/" },
+  { id: "11", name: "Merry Wigs",                 cat: "Hair Couture",     tint: "cream", est: "MMXXV",   tagline: "Crowns, on command.",                            img: IMG.s_wigs,      url: "https://www.merrywigs.com/" },
+  { id: "12", name: "Swift Care NEMT",            cat: "Luxury Transit",   tint: "noir",  est: "MMXXVI",  tagline: "Luxury medical & private transportation.",      img: IMG.s_transport, url: "http://www.swiftcarenemt.com" },
 ];
 
 const ISSUE = {
@@ -60,7 +62,7 @@ const STORIES = [
   { id: 2, kicker: "Atelier",           title: "Inside the Petit Atelier Where Each Vial Is Numbered",  author: "Jules Mercier",   read: "9 min", tint: "lilac", img: IMG.atelier },
   { id: 3, kicker: "Object Study",      title: "The Signet Ring: A Brief History of Marking One's Hand", author: "S. Okafor",       read: "5 min", tint: "cream", img: IMG.signet },
   { id: 4, kicker: "House Guest",       title: "Tea, Three Ways, with the Maison Editor at Home",        author: "Lina Park",       read: "7 min", tint: "sage",  img: IMG.tea },
-  { id: 5, kicker: "Travel Diary",      title: "Forty-Eight Hours in a City That Refuses to Hurry",      author: "Just Rippin",     read: "8 min", tint: "sky",   img: IMG.travel },
+  { id: 5, kicker: "Travel Diary",      title: "Forty-Eight Hours in a City That Refuses to Hurry",      author: "Justrippin",     read: "8 min", tint: "sky",   img: IMG.travel },
   { id: 6, kicker: "Beauty",            title: "The Slow Skincare Manifesto: Less, but Better",          author: "Dr. M. Lévy",     read: "4 min", tint: "blush", img: IMG.skin },
   { id: 7, kicker: "Menswear",          title: "Why the Soft Suit Won and Refuses to Leave",             author: "K. Adebayo",      read: "6 min", tint: "sage",  img: IMG.suit },
   { id: 8, kicker: "Coffee",            title: "From Cherry to Cup: A Single Origin's Slow Year",        author: "Piata Noir",      read: "10 min", tint: "noir", img: IMG.coffee },
@@ -303,7 +305,7 @@ function Footer({ setRoute }) {
           <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>LaDidiér</div>
         </div>
         <p className="muted" style={{ maxWidth: 36, fontSize: 13, lineHeight: 1.55, maxInlineSize: "32ch", margin: 0 }}>
-          A house of houses. Eleven stores, one magazine, and a quiet promise: live a little larger.
+          A house of houses. Twelve stores, one magazine, and a quiet promise: live a little larger.
         </p>
         <div className="subs-inline" style={{ marginTop: 28 }}>
           <input placeholder="Your e-mail address" />
@@ -388,6 +390,21 @@ function Reveal({ children, delay = 0 }) {
 /* ── Magazine cover (composite placeholder) ───────────────── */
 function MagazineCover({ tint = "blush", vol = "I", no = "03", season = "S/S 2026", title = "On Luxe & Larger Living", coverline = "The Quiet Audacity Issue", tilt = false, img = null }) {
   const photo = img || ISSUE.img;
+  const isCustomCover = photo && (photo.includes("eclat-cover") || photo.includes("cover.png") || photo.includes("uploads/"));
+
+  if (isCustomCover) {
+    return (
+      <div className={`cover framed ${tilt ? "tilt" : ""}`}
+           style={{
+             backgroundImage: `url(${photo})`,
+             backgroundPosition: "center",
+             backgroundSize: "cover",
+             backgroundRepeat: "no-repeat"
+           }}>
+      </div>
+    );
+  }
+
   return (
     <div className={`cover ph photo framed ${tilt ? "tilt" : ""}`}
          data-tag={`Vol. ${vol}  ·  N°${no}`} data-label="COVER · PHOTOGRAPHY"
