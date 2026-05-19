@@ -21,7 +21,10 @@ Three phases deliver the full v1.0 milestone. Phase 1 adds the mobile navigation
   2. Tapping the hamburger opens a full-screen overlay displaying all navigation links
   3. The overlay closes when the user taps the × button or presses Escape
   4. The currently active route is visually distinct from other links in the overlay
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Mobile nav CSS: hamburger, overlay, link states, animations, media query
+- [ ] 01-02-PLAN.md — React components: MobileNav overlay component + hamburger wiring in Nav
 **UI hint**: yes
 
 ### Phase 2: Responsive Layouts
@@ -51,9 +54,10 @@ Three phases deliver the full v1.0 milestone. Phase 1 adds the mobile navigation
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Mobile Navigation | 0/TBD | Not started | - |
+| 1. Mobile Navigation | 0/2 | Not started | - |
 | 2. Responsive Layouts | 0/TBD | Not started | - |
 | 3. Vercel Deploy | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-05-19 — v1.0 Mobile Responsiveness & Vercel Deploy*
+*Phase 1 planned: 2026-05-19 — 2 plans, 2 waves*
