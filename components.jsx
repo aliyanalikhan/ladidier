@@ -99,22 +99,60 @@ function Nav({ route, setRoute }) {
       {label}
     </a>
   );
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const hamburgerRef = useRef(null);
+
+  const openMenu = () => { setMenuOpen(true); setIsClosing(false); };
+  const closeMenu = () => {
+    setIsClosing(true);
+    setTimeout(() => { setMenuOpen(false); setIsClosing(false); }, 300);
+  };
+
+  useEffect(() => { if (menuOpen) closeMenu(); }, [route]);
+
   return (
-    <nav className="nav">
-      <div className="nav-left">
-        {item("magazine", "Magazine")}
-        {item("stores", "Stores")}
-        {item("about", "Universe")}
-      </div>
-      <div className="nav-center" onClick={() => setRoute("home")} style={{ cursor: "pointer" }}>
-        <Logo height={34} />
-      </div>
-      <div className="nav-right">
-        <a href="#search" onClick={(e) => e.preventDefault()}>Search</a>
-        {item("subscribe", "Subscribe")}
-        <a href="#account" onClick={(e) => e.preventDefault()} className="mono" style={{ fontSize: 11, letterSpacing: ".1em" }}>EN · USD</a>
-      </div>
-    </nav>
+    <>
+      <nav className="nav">
+        <div className="nav-left">
+          {item("magazine", "Magazine")}
+          {item("stores", "Stores")}
+          {item("about", "Universe")}
+        </div>
+        <div className="nav-center" onClick={() => setRoute("home")} style={{ cursor: "pointer" }}>
+          <Logo height={34} />
+        </div>
+        <div className="nav-right">
+          <a href="#search" onClick={(e) => e.preventDefault()}>Search</a>
+          {item("subscribe", "Subscribe")}
+          <a href="#account" onClick={(e) => e.preventDefault()} className="mono" style={{ fontSize: 11, letterSpacing: ".1em" }}>EN · USD</a>
+          <button
+            className="nav-hamburger"
+            ref={hamburgerRef}
+            aria-label="Open navigation"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav-overlay"
+            onClick={openMenu}
+          >
+            <svg viewBox="0 0 20 14" width={20} height={14} fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect y="0" width="20" height="2" rx="1" fill="currentColor" />
+              <rect y="6" width="20" height="2" rx="1" fill="currentColor" />
+              <rect y="12" width="20" height="2" rx="1" fill="currentColor" />
+            </svg>
+          </button>
+        </div>
+      </nav>
+      {menuOpen && (
+        <MobileNav
+          route={route}
+          setRoute={setRoute}
+          onClose={closeMenu}
+          isClosing={isClosing}
+          hamburgerRef={hamburgerRef}
+        />
+      )}
+    </>
   );
 }
 
@@ -376,4 +414,4 @@ function MagazineCover({ tint = "blush", vol = "I", no = "03", season = "S/S 202
   );
 }
 
-Object.assign(window, { STORES, ISSUE, STORIES, IMG, Photo, Crest, Logo, Nav, Footer, StoreMarquee, Reveal, MagazineCover });
+Object.assign(window, { STORES, ISSUE, STORIES, IMG, Photo, Crest, Logo, Nav, MobileNav, Footer, StoreMarquee, Reveal, MagazineCover });
