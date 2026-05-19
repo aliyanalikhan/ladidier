@@ -56,10 +56,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MOB-01 | Phase 1 | Pending |
-| MOB-02 | Phase 1 | Pending |
-| MOB-03 | Phase 1 | Pending |
-| MOB-04 | Phase 1 | Pending |
+| MOB-01 | Phase 1 | CSS complete (Plan 01-01); React wiring in Plan 01-02 |
+| MOB-02 | Phase 1 | CSS complete (Plan 01-01); React wiring in Plan 01-02 |
+| MOB-03 | Phase 1 | CSS complete (Plan 01-01); React wiring in Plan 01-02 |
+| MOB-04 | Phase 1 | CSS complete (Plan 01-01); React wiring in Plan 01-02 |
 | RESP-01 | Phase 2 | Pending |
 | RESP-02 | Phase 2 | Pending |
 | RESP-03 | Phase 2 | Pending |

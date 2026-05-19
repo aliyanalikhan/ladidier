@@ -23,7 +23,7 @@ Three phases deliver the full v1.0 milestone. Phase 1 adds the mobile navigation
   4. The currently active route is visually distinct from other links in the overlay
 **Plans**: 2 plans
 Plans:
-- [ ] 01-01-PLAN.md — Mobile nav CSS: hamburger, overlay, link states, animations, media query
+- [x] 01-01-PLAN.md — Mobile nav CSS: hamburger, overlay, link states, animations, media query
 - [ ] 01-02-PLAN.md — React components: MobileNav overlay component + hamburger wiring in Nav
 **UI hint**: yes
 
@@ -54,7 +54,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Mobile Navigation | 0/2 | Not started | - |
+| 1. Mobile Navigation | 1/2 | In progress | - |
 | 2. Responsive Layouts | 0/TBD | Not started | - |
 | 3. Vercel Deploy | 0/TBD | Not started | - |
 

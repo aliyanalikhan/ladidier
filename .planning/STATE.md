@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Mobile Responsiveness & Vercel Deploy
 status: executing
-stopped_at: Phase 1 UI-SPEC approved
-last_updated: "2026-05-19T10:24:43.806Z"
-last_activity: 2026-05-19 -- Phase 01 planning complete
+stopped_at: Phase 01 Plan 01 complete
+last_updated: "2026-05-19T00:00:00.000Z"
+last_activity: 2026-05-19 -- Phase 01, Plan 01 complete (mobile nav CSS)
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 2
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-19)
 
 **Core value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
-**Current focus:** Phase 1 — Mobile Navigation
+**Current focus:** Phase 01 — Mobile Navigation
 
 ## Current Position
 
-Phase: 1 of 3 (Mobile Navigation)
-Plan: — (not yet planned)
-Status: Ready to execute
-Last activity: 2026-05-19 -- Phase 01 planning complete
+Phase: 01 (Mobile Navigation) — EXECUTING
+Plan: 2 of 2
+Status: Plan 01-01 complete, Plan 01-02 pending
+Last activity: 2026-05-19 -- Plan 01-01 complete (mobile nav CSS)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50% (Phase 01)
 
 ## Performance Metrics
 
@@ -44,7 +44,7 @@ Progress: [░░░░░░░░░░] 0%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-mobile-navigation | 1 | ~15min | ~15min |
 
 *Updated after each plan completion*
 
@@ -54,6 +54,10 @@ Progress: [░░░░░░░░░░] 0%
 
 - v1.0 init: Full-screen overlay nav chosen (matches luxury editorial brand feel)
 - v1.0 init: No mobile build pipeline — site is zero-build (React CDN + Babel standalone)
+- 01-01: Standalone @media (max-width: 768px) block added (not merged into 920px block) — keeps breakpoints cleanly separated
+- 01-01: Overlay uses opacity:0/pointer-events:none as hidden state (not display:none) — enables CSS animation without JS timing tricks
+- 01-01: Reused existing stgIn keyframe for link stagger — maintains animation vocabulary consistency
+- 01-01: border-left: 3px solid transparent reserved at rest on .mobile-overlay-link — prevents layout shift on .active
 
 ### Pending Todos
 
@@ -65,6 +69,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-19T09:09:36.991Z
-Stopped at: Phase 1 UI-SPEC approved
-Resume file: .planning/phases/01-mobile-navigation/01-UI-SPEC.md
+Last session: 2026-05-19T00:00:00.000Z
+Stopped at: Phase 01 Plan 01 complete
+Resume file: .planning/phases/01-mobile-navigation/01-02-PLAN.md
