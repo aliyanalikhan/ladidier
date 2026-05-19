@@ -490,6 +490,152 @@ hr.rule-strong {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   MOBILE OVERLAY — full-screen nav overlay and all child states
+   ───────────────────────────────────────────────────────────── */
+
+/* Overlay keyframes */
+@keyframes mobileOverlayIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes mobileOverlayOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+/* Overlay container (hidden state; JS adds .open to show) */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  padding: 64px 24px 48px;
+  opacity: 0;
+  pointer-events: none;
+  animation: none;
+}
+
+/* Open state — fades in and translates up */
+.mobile-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+  animation: mobileOverlayIn 400ms cubic-bezier(.2,.7,.2,1) both;
+}
+
+/* Closing state — reverse animation before unmount */
+.mobile-overlay.closing {
+  animation: mobileOverlayOut 300ms cubic-bezier(.2,.7,.2,1) both;
+  pointer-events: none;
+}
+
+/* Overlay header — logo + close button */
+.mobile-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+/* Close (×) button — 44×44px tap target */
+.mobile-overlay-close {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+  color: var(--fg);
+  opacity: .82;
+  transition: opacity .2s ease, color .2s ease;
+}
+.mobile-overlay-close:hover { opacity: 1; color: var(--gold); }
+.mobile-overlay-close:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Overlay nav list */
+.mobile-overlay-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Section kicker label (e.g. "Navigate", "Discover") */
+.mobile-overlay-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 12px;
+  margin-top: 24px;
+}
+.mobile-overlay-label:first-child { margin-top: 0; }
+
+/* Overlay link */
+.mobile-overlay-link {
+  display: block;
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--fg);
+  opacity: .82;
+  padding: 16px 0;
+  border-left: 3px solid transparent;
+  padding-left: 16px;
+  transition: opacity .3s ease, border-color .3s ease, color .3s ease;
+}
+.mobile-overlay-link:hover { opacity: 1; }
+
+/* Active route — gold left border */
+.mobile-overlay-link.active {
+  border-left-color: var(--gold);
+  opacity: 1;
+  color: var(--fg);
+}
+
+/* Divider line between link groups */
+.mobile-overlay-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 8px 0;
+}
+
+/* Footer locale string */
+.mobile-overlay-footer {
+  margin-top: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* Link stagger — animate in after overlay finishes entering */
+.mobile-overlay.open .mobile-overlay-link {
+  animation: stgIn .9s cubic-bezier(.2,.7,.2,1) both;
+  opacity: 0;
+}
+.mobile-overlay.open .mobile-overlay-link:nth-child(1) { animation-delay: 200ms; }
+.mobile-overlay.open .mobile-overlay-link:nth-child(2) { animation-delay: 260ms; }
+.mobile-overlay.open .mobile-overlay-link:nth-child(3) { animation-delay: 320ms; }
+.mobile-overlay.open .mobile-overlay-link:nth-child(4) { animation-delay: 380ms; }
+.mobile-overlay.open .mobile-overlay-link:nth-child(5) { animation-delay: 440ms; }
+
+/* ─────────────────────────────────────────────────────────────
    ORNAMENT + MOTION LAYER
    ───────────────────────────────────────────────────────────── */
 
@@ -708,6 +854,11 @@ body::before {
   .float, .float-slow, .watermark, .vmarquee ul { animation: none !important; }
   .stg-i { transform: none; opacity: 1; }
   .lr-draw path { stroke-dashoffset: 0; }
+
+  /* Mobile overlay — silence all animations */
+  .mobile-overlay, .mobile-overlay.open { animation: none !important; opacity: 1 !important; }
+  .mobile-overlay.closing { animation: none !important; }
+  .mobile-overlay-link { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 
 /* Custom Magazine Paywall Gate & Immersive Frame */
