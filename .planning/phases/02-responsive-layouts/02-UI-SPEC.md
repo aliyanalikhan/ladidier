@@ -40,7 +40,7 @@ Phone-viewport spacing values used in the 480px pass. All multiples of 4.
 |-------|-------|---------------------|
 | xs | 4px | Minimum gap (foot-base column gap at phone) |
 | sm | 8px | foot-base gap: 8px (D-09, source: CONTEXT.md) |
-| md | 16px | Horizontal padding override for article body and container (D-07); store-row grid gap (D-05) |
+| md | 16px | Horizontal padding override for article body and container (D-07); store-row grid gap (D-05); store-row vertical padding |
 | lg | 24px | hero-manifest vertical padding bottom at phone |
 | xl | 32px | tweaks panel left/right margin (calc(100vw - 32px) = 16px each side) (D-10) |
 | 2xl | 48px | hero-manifest vertical padding top at phone |
@@ -73,11 +73,13 @@ Existing breakpoints — do NOT modify:
 Phone-viewport overrides. All `clamp()` expressions from the base stylesheet are replaced
 with explicit `px` values at 480px — no new clamp expressions.
 
+Declared phone sizes: **16px** (body + lede), **22px** (H3 + store-row name), **30px** (H2), **40px** (H1) — exactly 4 distinct sizes.
+
 | Role | Desktop (clamp base) | Phone override | Weight | Line height |
 |------|----------------------|----------------|--------|-------------|
 | Body / article prose | 18px (inline style) | 16px | 400 | 1.65 (override from 1.7) |
 | Body / general | var(--sans) default | no change | 400 | var(--line-h) 1.45 |
-| Lede / intro | clamp(18px, 1.5vw, 22px) | 17px | 400 | 1.5 |
+| Lede / intro | clamp(18px, 1.5vw, 22px) | 16px | 400 | 1.5 |
 | H1 display | clamp(48px, 9vw, 140px) | 40px | 300 | 0.92 |
 | H2 display | clamp(36px, 6vw, 92px) | 30px | 300 | 0.95 |
 | H3 display | clamp(24px, 3.2vw, 44px) | 22px | 300 | 1.1 |
@@ -158,7 +160,7 @@ Grid already collapses to 1 column at 920px; no grid override needed at 480px.
 .store-row {
   grid-template-columns: 32px 1fr auto;   /* D-05 */
   gap: 16px;                              /* D-05 */
-  padding: 20px 0;
+  padding: 16px 0;
 }
 ```
 
