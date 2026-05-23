@@ -485,7 +485,9 @@ hr.rule-strong {
 /* 768px breakpoint — hide desktop nav, show hamburger */
 @media (max-width: 768px) {
   .nav { grid-template-columns: auto 1fr auto; }
-  .nav-left, .nav-right { display: none; }
+  .nav-left { display: none; }
+  .nav-right > a { display: none; }
+  .nav-right { display: flex; align-items: center; justify-content: flex-end; }
   .nav-hamburger { display: flex; }
 }
 
@@ -983,4 +985,28 @@ body::before {
 }
 .magazine-frame:hover {
   transform: scale(1.005);
+}
+
+/* Magazine Responsive Rules */
+@media (max-width: 480px) {
+  .fp-iframe {
+    height: 300px !important;
+  }
+  .paywall-gate {
+    padding: 24px 16px !important;
+  }
+  .paywall-input-container {
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-top: 24px !important;
+  }
+  .preview-indicator {
+    padding: 6px 14px !important;
+    gap: 8px !important;
+    bottom: 12px !important;
+  }
+  .preview-indicator span, .preview-indicator button {
+    font-size: 10px !important;
+    letter-spacing: .02em !important;
+  }
 }

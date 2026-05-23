@@ -500,7 +500,7 @@ function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
 
             {/* Permanent preview indicator for non-subscribed users */}
             {!isSubscribed && !showPaywall && (
-              <div style={{
+              <div className="preview-indicator" style={{
                 position: "absolute",
                 bottom: "20px",
                 left: "50%",
@@ -514,7 +514,9 @@ function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
                 gap: "16px",
                 boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
                 zIndex: 5,
-                animation: "floaty 4s ease-in-out infinite alternate"
+                animation: "floaty 4s ease-in-out infinite alternate",
+                maxWidth: "calc(100% - 32px)",
+                boxSizing: "border-box"
               }}>
                 <span className="mono" style={{ fontSize: 11, color: "var(--noir)", fontWeight: 500, letterSpacing: ".04em" }}>
                   ✦ READING PREVIEW
