@@ -182,7 +182,7 @@ function FeaturedStories({ setRoute }) {
         <button className="btn ghost" onClick={() => setRoute("magazine")}>All stories →</button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 40 }}>
+      <div className="magazine-featured-grid" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 40 }}>
         {/* Lead story */}
         <Reveal>
           <article className="art-card lift" onClick={() => setRoute("article")} style={{ cursor: "pointer" }}>
@@ -271,7 +271,7 @@ function Manifesto() {
         <Flourish width={240} color="var(--gold)" opacity={.7} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 80, alignItems: "start" }}>
+      <div className="manifesto-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 80, alignItems: "start" }}>
         <div className="col gap-24">
           <div className="eyebrow">House Note · I</div>
           <Crest size={64} color="var(--gold)" />
@@ -308,7 +308,7 @@ function Manifesto() {
 
       {/* Editorial montage strip */}
       <Reveal>
-        <div style={{ marginTop: 56, display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 1.2fr", gap: 18 }}>
+        <div className="montage-grid" style={{ marginTop: 56, display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 1.2fr", gap: 18 }}>
           <div className="ph photo float-slow" style={{ aspectRatio: "3/4", "--bg-image": `url(${IMG.atelier})` }} data-tag="Atelier" data-label="THE PERFUMER'S HAND"></div>
           <div className="ph photo float" style={{ aspectRatio: "4/5", marginTop: 40, "--bg-image": `url(${IMG.signet})` }} data-tag="Object" data-label="THE SIGNET RING"></div>
           <div className="ph photo float-slow" style={{ aspectRatio: "4/5", marginTop: 12, "--bg-image": `url(${IMG.tea})` }} data-tag="Maison" data-label="HOUSE GUEST"></div>
@@ -342,7 +342,7 @@ function SubscribeBanner({ setRoute }) {
       <div className="ornament-divider" style={{ paddingTop: 0, marginBottom: 28 }}>
         <Flourish width={280} color="var(--gold)" opacity={.7} />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+      <div className="subscribe-banner-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
         <div>
           <div className="eyebrow">Reading is free. Belonging is optional.</div>
           <h2 className="display h2" style={{ margin: "20px 0 0", maxWidth: "16ch" }}>
@@ -544,7 +544,7 @@ function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
       </section>
 
       {/* Issue feature panel */}
-      <section className="section container" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 64, alignItems: "center", position: "relative" }}>
+      <section className="section container magazine-cover-split" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 64, alignItems: "center", position: "relative" }}>
         <div className="float-slow">
           <MagazineCover tint={ISSUE.cover} vol={ISSUE.vol} no={ISSUE.no} season={ISSUE.season} title={ISSUE.title} tilt />
         </div>
@@ -854,7 +854,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
         {/* FAQ */}
         <div style={{ marginTop: 120 }}>
           <div className="eyebrow" style={{ marginBottom: 32 }}>The Fine Print, in Plain Words</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
+          <div className="faq-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
             {[
               ["When does the paywall arrive?", "Eventually, but never for the Editor's Letter or the cover story. The rest will move to members-only over the coming year. We will tell you, twice, before it happens."],
               ["Will I still receive the stores' product news?", "Yes. The store mailing lists are separate; you control each one from your account."],
@@ -895,7 +895,7 @@ function AboutPage({ setRoute }) {
       </header>
 
       <section className="section container">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 80, alignItems: "start" }}>
+        <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 80, alignItems: "start" }}>
           <div className="col gap-32" style={{ position: "sticky", top: 120 }}>
             <Crest size={72} color="var(--gold)" />
             <div>
@@ -918,7 +918,7 @@ function AboutPage({ setRoute }) {
               Five years later we have fourteen storefronts and a magazine that asks the question for us, every season.
             </p>
 
-            <div style={{ marginTop: 48, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+            <div className="history-images-1" style={{ marginTop: 48, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
               <div className="ph photo" style={{ aspectRatio: "4/5", "--bg-image": `url(${IMG.atelier})` }} data-tag="The Petit Atelier" data-label="PARIS · IX"></div>
               <div className="ph photo float-slow" style={{ aspectRatio: "9/16", marginTop: 48, "--bg-image": `url(${IMG.s_maison})` }} data-tag="Maison" data-label="BROOKLYN · NY"></div>
             </div>
@@ -933,7 +933,7 @@ function AboutPage({ setRoute }) {
               you can begin reading at any door.
             </p>
 
-            <div style={{ marginTop: 48, display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 18 }}>
+            <div className="history-images-2" style={{ marginTop: 48, display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 18 }}>
               <div className="ph photo" style={{ aspectRatio: "5/4", "--bg-image": `url(${IMG.travel})` }} data-tag="Editorial" data-label="THE TRAVEL DIARY"></div>
               <div className="ph photo float" style={{ aspectRatio: "5/4", "--bg-image": `url(${IMG.coffee})` }} data-tag="Piata Noir" data-label="ROAST · OAXACA"></div>
             </div>

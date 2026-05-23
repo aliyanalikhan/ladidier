@@ -532,6 +532,17 @@ hr.rule-strong {
   /* RESP-01: footer — D-08, D-09 */
   .foot { grid-template-columns: 1fr; gap: 32px; }
   .foot-base { flex-direction: column; gap: 8px; align-items: center; text-align: center; }
+
+  /* Collapse page grid components on phone scales */
+  .magazine-featured-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .manifesto-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+  .montage-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+  .subscribe-banner-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .magazine-cover-split { grid-template-columns: 1fr !important; gap: 40px !important; }
+  .faq-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .about-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+  .history-images-1 { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .history-images-2 { grid-template-columns: 1fr !important; gap: 16px !important; }
 }
 
 /* Tap targets — RESP-10, D-11 */
