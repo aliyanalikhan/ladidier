@@ -19,18 +19,20 @@ const IMG = {
   suit:         U + "photo-1507003211169-0a1dd7228f2d?w=900&q=85&auto=format",
   coffee:       U + "photo-1495474472287-4d71bcdd2085?w=900&q=85&auto=format",
   // Stores
-  s_jewelry:    U + "photo-1605100804763-247f67b3557e?w=900&q=85&auto=format",
-  s_cosmetics:  U + "photo-1596462502278-27bfdc403348?w=900&q=85&auto=format",
-  s_scent:      U + "photo-1541643600914-78b084683601?w=900&q=85&auto=format",
-  s_adeva:      U + "photo-1490481651871-ab68de25d43d?w=900&q=85&auto=format",
-  s_homme:      U + "photo-1507003211169-0a1dd7228f2d?w=900&q=85&auto=format",
-  s_coffee:     U + "photo-1495474472287-4d71bcdd2085?w=900&q=85&auto=format",
-  s_pets:       U + "photo-1583337130417-3346a1be7dee?w=900&q=85&auto=format",
-  s_maison:     U + "photo-1556228720-195a672e8a03?w=900&q=85&auto=format",
-  s_travel:     U + "photo-1488646953014-85cb44e25828?w=900&q=85&auto=format",
-  s_skincare:   U + "photo-1556228578-0a85b3bc8b62?w=900&q=85&auto=format",
-  s_wigs:       U + "photo-1605497788044-5a32c7078486?w=900&q=85&auto=format",
-  s_transport:  U + "photo-1549399542-7e3f8b79c341?w=900&q=85&auto=format",
+  s_jewelry:    "assets/ladidier-jewelry.jpeg",
+  s_cosmetics:  "assets/ladidier-cosmetics.jpeg",
+  s_scent:      "assets/the-scnt-shop.jpeg",
+  s_adeva:      "assets/adeva-store.jpeg",
+  s_homme:      "assets/ladidier-homme.jpeg",
+  s_coffee:     "assets/piata-noir-roast.jpeg",
+  s_pets:       "assets/posh-paw-pet-supplies.jpeg",
+  s_maison:     "assets/ladidier-maison.jpeg",
+  s_travel:     "assets/justrippin.jpeg",
+  s_skincare:   "assets/ladidier-beauty-essence.jpeg",
+  s_wigs:       "assets/merry-wigs.jpeg",
+  s_transport:  "assets/luxury-transportation-plus.jpeg",
+  s_puriena:    "assets/puriena.jpeg",
+  s_elixoria:   "assets/elixoria.png",
 };
 
 const STORES = [
@@ -45,7 +47,9 @@ const STORES = [
   { id: "09", name: "Justrippin",                 cat: "Travel",           tint: "sky",   est: "MMXXIV",  tagline: "Routes for the restless.",                      img: IMG.s_travel,    url: "https://justrippin.net" },
   { id: "10", name: "Ladidiér Beauté Essence",    cat: "Skincare",         tint: "lilac", est: "MMXXIV",  tagline: "Quiet science, soft results.",                  img: IMG.s_skincare,  url: "https://ladidierbeautyessence.store/" },
   { id: "11", name: "Merry Wigs",                 cat: "Hair Couture",     tint: "cream", est: "MMXXV",   tagline: "Crowns, on command.",                            img: IMG.s_wigs,      url: "https://www.merrywigs.com/" },
-  { id: "12", name: "Swift Care NEMT",            cat: "Luxury Transit",   tint: "noir",  est: "MMXXVI",  tagline: "Luxury medical & private transportation.",      img: IMG.s_transport, url: "http://www.swiftcarenemt.com" },
+  { id: "12", name: "Luxury Transportation Plus", cat: "Luxury Transit",   tint: "noir",  est: "MMXXVI",  tagline: "Luxury medical & private transportation.",      img: IMG.s_transport, url: "http://www.swiftcarenemt.com" },
+  { id: "13", name: "Puriena",                     cat: "General Goods",    tint: "cream", est: "MMXXVI",  tagline: "Everyday essentials, curated.",                 img: IMG.s_puriena,   url: "https://puriena.com/" },
+  { id: "14", name: "Elixoria",                   cat: "General Goods",    tint: "sky",   est: "MMXXVI",  tagline: "Curated luxury & lifestyle goods.",             img: IMG.s_elixoria,  url: "https://www.elixoria.com/" },
 ];
 
 const ISSUE = {
@@ -305,7 +309,7 @@ function Footer({ setRoute }) {
           <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>LaDidiér</div>
         </div>
         <p className="muted" style={{ maxWidth: 36, fontSize: 13, lineHeight: 1.55, maxInlineSize: "32ch", margin: 0 }}>
-          A house of houses. Twelve stores, one magazine, and a quiet promise: live a little larger.
+          A house of houses. Fourteen stores, one magazine, and a quiet promise: live a little larger.
         </p>
         <div className="subs-inline" style={{ marginTop: 28 }}>
           <input placeholder="Your e-mail address" />

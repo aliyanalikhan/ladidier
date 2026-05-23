@@ -490,6 +490,58 @@ hr.rule-strong {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   PHONE — 480px breakpoint
+   ───────────────────────────────────────────────────────────── */
+
+/* Decoration strip */
+@media (max-width: 480px) {
+  /* D-02: hide decorative layers */
+  .ticker, .watermark, .float, .float-slow, .spotlight { display: none; }
+  /* D-03: remove 3D tilt — render as flat card */
+  .cover.tilt { transform: none; }
+  /* D-04: text-only hero-split */
+  .hero-split .ph { display: none; }
+}
+
+/* Typography */
+@media (max-width: 480px) {
+  .h1 { font-size: 40px; line-height: 0.92; }
+  .h2 { font-size: 30px; line-height: 0.95; }
+  .h3 { font-size: 22px; line-height: 1.1; }
+  .lede { font-size: 16px; line-height: 1.5; }
+}
+
+/* Layout */
+@media (max-width: 480px) {
+  /* RESP-02: hero manifest */
+  .hero-manifest { padding: 48px 16px 24px; min-height: auto; gap: 24px; }
+  .hero-manifest .h1 { max-width: none; }
+  /* RESP-03: hero split */
+  .hero-split { padding: 48px 16px 32px; gap: 24px; }
+  /* RESP-04: hero index */
+  .hero-index { padding: 40px 16px; gap: 24px; }
+  /* RESP-05: store row — D-05 */
+  .store-row { grid-template-columns: 32px 1fr auto; gap: 16px; padding: 16px 0; }
+  .store-row:hover { padding-inline: 0; }
+  .store-row .name { font-size: 22px; }
+  /* RESP-07: article cards single column */
+  .art-card { grid-template-columns: 1fr; }
+  /* RESP-08: article body horizontal padding — D-07 */
+  .container { padding-left: 16px; padding-right: 16px; }
+  .art-body { font-size: 16px !important; line-height: 1.65 !important; padding: 40px 16px !important; }
+  /* RESP-01: footer — D-08, D-09 */
+  .foot { grid-template-columns: 1fr; gap: 32px; }
+  .foot-base { flex-direction: column; gap: 8px; align-items: center; text-align: center; }
+}
+
+/* Tap targets — RESP-10, D-11 */
+@media (max-width: 480px) {
+  .btn { min-height: 44px; }
+  .subs-inline button { min-height: 44px; }
+  .foot ul a { min-height: 44px; display: flex; align-items: center; }
+}
+
+/* ─────────────────────────────────────────────────────────────
    MOBILE OVERLAY — full-screen nav overlay and all child states
    ───────────────────────────────────────────────────────────── */
 
