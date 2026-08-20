@@ -712,7 +712,7 @@ function StoresPage({ setRoute }) {
           </div>
           {STORES.map((s, i) => (
             <Reveal key={s.id} delay={i * 40}>
-              <div className="store-row" onClick={() => window.open(s.url, "_blank", "noopener,noreferrer")}>
+              <div className="store-row" aria-label={`Visit the Boutique — ${s.name}`} onClick={() => window.open(s.url, "_blank", "noopener,noreferrer")}>
                 <span className="num mono">{s.id}</span>
                 <div>
                   <div className="name">{s.name}</div>
@@ -746,7 +746,7 @@ function StoresPage({ setRoute }) {
                     <div style={{ marginTop: 14, fontSize: 13, fontStyle: "italic", color: "var(--ink)" }}>{s.tagline}</div>
                     <div className="flex between" style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
                       <span className="mono" style={{ fontSize: 11, color: "var(--mute)" }}>Est. {s.est}</span>
-                      <span className="mono" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".1em" }}>Enter →</span>
+                      <span className="mono" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".1em" }}>Visit the Boutique →</span>
                     </div>
                   </div>
                 </a>
