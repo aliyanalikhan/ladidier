@@ -8,14 +8,15 @@ LaDidiér is a luxury editorial portal for a house of eleven stores — jewelry,
 
 Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
 
-## Current Milestone: v1.0 — Mobile Responsiveness & Vercel Deploy
+## Current Milestone: v1.1 — Shopping Mall Conversion Pass
 
-**Goal:** Make the LaDidiér portal fully responsive across all screen sizes and deploy the updated site live on Vercel.
+**Goal:** Make the portal read and convert like a premium online shopping mall on the pages people land on first, and introduce a subtle "hidden perks" discovery feature.
 
 **Target features:**
-- Full-screen overlay mobile navigation (hamburger → overlay with all nav links)
-- Comprehensive mobile CSS pass — footer, heroes, store rows, plan cards, article/magazine pages
-- Vercel deployment of the updated responsive site
+- Copy rewrite on Home, Stores, and Magazine — shopping-mall tone, not house-listing tone
+- Stronger CTAs on those pages (Shop Now / Browse Categories / etc.)
+- Basic conversion cleanup on Home, Stores, and Magazine
+- Hidden Perks feature — subtle, premium-styled discoverable elements placed around the site, tied to a discount code or magazine subscribe prompt, unobtrusive by design (fully built, not just prototyped)
 
 ## Requirements
 
@@ -23,43 +24,46 @@ Every page must feel like opening a luxury magazine — and it must do so on any
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+- Full-screen overlay mobile navigation (hamburger → overlay with all nav links) — v1.0, Phase 1
+- Comprehensive mobile CSS pass — footer, heroes, store rows, plan cards, article/magazine pages — v1.0, Phase 2
+- Vercel deployment of the responsive site — v1.0, Phase 3 (confirmed live by user)
 
 ### Active
 
-- [ ] User sees a hamburger menu on screens ≤768px
-- [ ] Tapping hamburger opens a full-screen nav overlay with all navigation links
-- [ ] User can close the mobile nav overlay by tapping a close button or pressing Escape
-- [ ] Footer collapses to a single column on screens ≤480px
-- [ ] Hero sections (Manifest, Split, Index) display correctly on phone screens
-- [ ] Store rows remain readable and tappable on phone screens
-- [ ] Subscribe plan cards stack vertically on mobile
-- [ ] Article and Magazine page layouts adapt for phone width
-- [ ] Updated site deploys successfully on existing Vercel project
+- [ ] Home, Stores, and Magazine copy reads like a premium shopping mall, not a real-estate/house-listing site
+- [ ] Home, Stores, and Magazine each have a clear, prominent primary CTA (Shop Now / Browse Categories / etc.)
+- [ ] Basic conversion-cleanup pass applied to Home, Stores, and Magazine (clarity, hierarchy, friction removal)
+- [ ] A subtle, premium-styled "hidden perk" discovery element exists somewhere on the site
+- [ ] Finding a hidden perk surfaces a discount code or a magazine-subscribe prompt
+- [ ] Hidden perks are genuinely easy to miss — they do not distract from or block the shopping flow
 
 ### Out of Scope
 
 - Native mobile app — web-first is the current priority
 - Backend/API integration — the portal is a static/client-side site
-- New pages or features beyond responsiveness
+- Copy/CTA rewrites on About or Article pages (not primary landing pages this milestone)
+- Multiple/gamified hidden perks system (leaderboards, collection mechanics) — this milestone ships one working discovery mechanic
 
 ## Context
 
-The site is built with React 18 loaded via CDN (no build step), Babel standalone for JSX, and a single `styles.css`. A `vercel.json` already exists with a rewrite rule pointing `/` to `Ladidier Portal.html`. There is already a partial responsive breakpoint at `@media (max-width: 920px)` in `styles.css` that handles tablets — the mobile pass needs to extend this to ~480px and fill the nav gap entirely.
+The site is built with React 18 loaded via CDN (no build step), Babel standalone for JSX, and a single `styles.css`. Page content lives in `pages.jsx` (HomePage, MagazinePage, ArticlePage, StoresPage, SubscribePage, AboutPage), shared UI in `components.jsx`, and decorative elements in `ornaments.jsx`. Routing is a simple hash router in `app.jsx`. A subscribe flow already exists (localStorage-backed `ladidier_subscribed` flag).
 
-The user has an existing Vercel project connected to this codebase.
+v1.0 (mobile responsiveness) shipped and is confirmed live on Vercel by the user — the roadmap/state tracking for it was left partially stale (Phase 2/3 weren't formally closed out even though the work is done), but the milestone itself is complete. This new milestone continues phase numbering from where v1.0 left off.
 
 ## Constraints
 
 - **Tech stack**: React 18 CDN + Babel standalone + plain CSS — no npm, no build tools
-- **No breaking changes**: Tweaks panel and all desktop layouts must be preserved exactly
+- **No breaking changes**: Tweaks panel, existing routing, and the responsive layouts from v1.0 must be preserved exactly
+- **Hidden perks must stay hidden**: the discovery element must not add visible clutter, extra nav items, or interrupt the shopping/browsing flow
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Full-screen overlay nav (not drawer/dropdown) | Matches the luxury editorial feel of the brand | — Pending |
-| No mobile build pipeline | Site has no npm/webpack — keep it zero-build | — Pending |
+| Full-screen overlay nav (not drawer/dropdown) | Matches the luxury editorial feel of the brand | Shipped v1.0 |
+| No mobile build pipeline | Site has no npm/webpack — keep it zero-build | Shipped v1.0 |
+| Copy/CTA/conversion scope limited to Home, Stores, Magazine | These are the pages people land on first; About/Article deferred | — Pending |
+| Hidden perks ships as one real discovery mechanic, not a gamified system | Keep it subtle and low-effort to build/maintain per user's brief | — Pending |
 
 ## Evolution
 
@@ -79,4 +83,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-19 after milestone v1.0 started*
+*Last updated: 2026-08-20 after milestone v1.1 started*
