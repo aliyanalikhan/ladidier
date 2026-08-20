@@ -39,8 +39,8 @@ function HeroManifest({ setRoute }) {
 
       <Reveal delay={1100}>
         <div className="flex gap-16" style={{ flexWrap: "wrap", alignItems: "center" }}>
-          <button className="btn solid" onClick={() => setRoute("magazine")}>Read the issue</button>
-          <button className="btn" onClick={() => setRoute("stores")}>Enter the stores</button>
+          <button className="btn solid" onClick={() => setRoute("stores")}>Shop the Houses</button>
+          <button className="btn" onClick={() => setRoute("magazine")}>Read the issue</button>
           <div className="flex center gap-12" style={{ marginLeft: 24, color: "var(--mute)", fontSize: 13 }}>
             <span className="mono" style={{ letterSpacing: ".12em", textTransform: "uppercase" }}>Now reading ·</span>
             <span className="vmarquee">
@@ -82,7 +82,8 @@ function HeroSplit({ setRoute }) {
           to receive each new chapter at the door.
         </p>
         <div className="flex gap-16" style={{ marginTop: 40, flexWrap: "wrap", animation: "pageFade .9s 1.05s ease both" }}>
-          <button className="btn solid" onClick={() => setRoute("magazine")}>Open the issue</button>
+          <button className="btn solid" onClick={() => setRoute("stores")}>Shop the Houses</button>
+          <button className="btn" onClick={() => setRoute("magazine")}>Open the issue</button>
           <button className="btn ghost" onClick={() => setRoute("subscribe")}>How to subscribe →</button>
         </div>
 
