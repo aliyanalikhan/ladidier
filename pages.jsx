@@ -257,7 +257,10 @@ function StoresPreview({ setRoute }) {
                   <div className="display" style={{ fontSize: 22, fontWeight: 400, letterSpacing: "-.01em" }}>{s.name}</div>
                   <div className="mono" style={{ fontSize: 11, color: "var(--mute)" }}>{s.id}</div>
                 </div>
-                <div className="eyebrow" style={{ marginTop: 4 }}>{s.cat}</div>
+                <div className="flex between" style={{ marginTop: 4, alignItems: "baseline" }}>
+                  <div className="eyebrow">{s.cat}</div>
+                  <span className="mono" style={{ fontSize: 11, color: "var(--mute)" }}>Est. {s.est}</span>
+                </div>
               </a>
             </Reveal>
           ))}
