@@ -683,8 +683,8 @@ function StoresPage({ setRoute }) {
         </div>
         <div className="col gap-12">
           <p style={{ margin: 0, color: "var(--ink)", fontSize: 15 }}>
-            Each store stands on its own. Together, they form the LaDidiér universe —
-            united by craft, by patience, and by a refusal to rush a good thing.
+            Each house keeps its own hours and its own obsessions. Together they form the LaDidiér universe —
+            united by craft, by patience, and by a refusal to rush a good thing. Step through any door below and shop it at your leisure.
           </p>
           <div className="flex gap-16" style={{ marginTop: 12 }}>
             <button onClick={() => setView("list")}
