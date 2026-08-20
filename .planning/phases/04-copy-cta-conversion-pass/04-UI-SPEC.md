@@ -110,11 +110,11 @@ Not applicable — no shadcn, no component registry of any kind in this project.
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: FLAG (non-blocking — pre-existing sitewide type scale exceeds 2-weight guideline; phase adds no new sizes/weights, out of scope to remediate)
+- [x] Dimension 5 Spacing: FLAG (non-blocking — pre-existing sitewide spacing isn't on a strict 4px grid; phase adds no new spacing, out of scope to remediate)
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-08-20 (gsd-ui-checker)

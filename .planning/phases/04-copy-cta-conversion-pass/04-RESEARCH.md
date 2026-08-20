@@ -348,22 +348,19 @@ Not applicable in the conventional sense — this phase makes no library/framewo
 
 **If this table is empty:** N/A — see rows above.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should the newly-discovered "Download issue (PDF)" dead button (`pages.jsx:564`) be fixed in this phase?**
+1. **(RESOLVED — D-10) Should the newly-discovered "Download issue (PDF)" dead button (`pages.jsx:564`) be fixed in this phase?**
    - What we know: It's on `MagazinePage`, which is in this phase's scope; it has no `onClick`/`href`; CTA-07 literally requires "every CTA... resolves to a working destination — no dead-end sections" on Magazine.
-   - What's unclear: Whether a PDF asset exists to link to, or whether the right fix is removing/hiding the button instead of wiring it.
-   - Recommendation: Planner should include a small task to resolve this (check `/assets` for a PDF first; if none exists, the simplest CTA-07-satisfying fix is removing the button or repurposing it, e.g. into a second `setRoute("article")` or `setRoute("subscribe")` action, rather than leaving a functionless button on an in-scope page's audit).
+   - Resolution: User confirmed no PDF asset exists in the project. Decision captured as CONTEXT.md D-10 — repurpose into a working CTA (e.g. "View full issue →" wired to the flipbook) rather than removing it or faking a download. Implemented in plan 04-04.
 
-2. **`SubscribePage`'s "Access to all 11 stores" (line 805) — same stale-count bug as D-08, different page.**
+2. **(RESOLVED — deferred) `SubscribePage`'s "Access to all 11 stores" (line 805) — same stale-count bug as D-08, different page.**
    - What we know: `SubscribePage` is not one of the eight functions CONTEXT.md scopes this phase to (it's not Home/Stores/Magazine).
-   - What's unclear: Whether the user would want this caught now (cheap, same fix pattern) or deferred, since it's technically out of this phase's page scope.
-   - Recommendation: Do not fix in this phase's plan without explicit user sign-off (respect the CONTEXT.md boundary), but mention it to the user/PROJECT.md backlog so it isn't lost — it's the exact same bug class already validated as worth fixing once.
+   - Resolution: User chose to defer. Recorded in CONTEXT.md's Deferred Ideas as a candidate for a future `/gsd-capture` quick task or a Subscribe/Footer-focused phase. Not fixed by any Phase 4 plan.
 
-3. **`Footer`'s several `preventDefault()`-only links (Press, Contact, Concierge, Shipping, Returns, social icons) — same "dead CTA" pattern as D-09, but explicitly out of this phase's component-edit scope.**
+3. **(RESOLVED — deferred) `Footer`'s several `preventDefault()`-only links (Press, Contact, Concierge, Shipping, Returns, social icons) — same "dead CTA" pattern as D-09, but explicitly out of this phase's component-edit scope.**
    - What we know: `Footer` renders on every page including the three in this phase's scope, but CONTEXT.md explicitly excludes `components.jsx` from expected edits (aria-label only).
-   - What's unclear: Whether CTA-07's "no dead-end sections" is meant to reach into the sitewide footer or is scoped to each page's own primary content (hero/body sections), given the explicit component-edit boundary in CONTEXT.md.
-   - Recommendation: Treat as out of scope for this phase (footer is sitewide chrome, not page content, and CONTEXT.md is explicit about not touching `components.jsx` beyond an aria-label) — but flag for the user in case CTA-07's intent was broader than the CONTEXT.md code-context section implies.
+   - Resolution: User chose to defer — footer is sitewide chrome, not page content, and CONTEXT.md's component-edit boundary excludes it. Recorded in CONTEXT.md's Deferred Ideas. Plan 04-05 explicitly reports rather than fixes this during the friction audit.
 
 ## Environment Availability
 
