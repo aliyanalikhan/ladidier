@@ -423,8 +423,7 @@ function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
             <em style={{ fontStyle: "italic", color: "var(--gold)" }}>On Luxe</em> &amp; Larger Living.
           </h1>
           <p className="lede" style={{ marginTop: 28 }}>
-            The Spring · Summer issue. Thirty-two stories on the small obsessions that
-            make a life. Open to all readers, always.
+            The Spring · Summer issue. Thirty-two stories on the small obsessions that make a life — and the fourteen houses that made them. Open to all readers, always.
           </p>
         </div>
         <div className="col gap-12">
@@ -477,7 +476,7 @@ function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
                     Subscribe to See All Pages
                   </h2>
                   <p className="lede" style={{ fontSize: 16, marginTop: 14, color: "var(--ink)", maxWidth: "50ch", margin: "14px auto 0" }}>
-                    The Maiden Digital Edition is reserved for members. Join LaDidiér to unlock all 32 stories and receive quarterly printed copies at your door.
+                    The Maiden Digital Edition is reserved for members. Join LaDidiér to unlock all 32 stories, receive quarterly printed copies at your door, and shop the houses first.
                   </p>
                   
                   <form onSubmit={(e) => {
