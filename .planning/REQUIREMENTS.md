@@ -107,25 +107,25 @@ Deferred to future milestones. Tracked but not in current roadmap.
 | VERL-01 | Phase 3 | Complete |
 | VERL-02 | Phase 3 | Complete |
 | VERL-03 | Phase 3 | Complete |
-| CTA-01 | TBD | Pending |
-| CTA-02 | TBD | Pending |
-| CTA-03 | TBD | Pending |
-| CTA-04 | TBD | Pending |
-| CTA-05 | TBD | Pending |
-| CTA-06 | TBD | Pending |
-| CTA-07 | TBD | Pending |
-| PERK-01 | TBD | Pending |
-| PERK-02 | TBD | Pending |
-| PERK-03 | TBD | Pending |
-| PERK-04 | TBD | Pending |
-| PERK-05 | TBD | Pending |
-| PERK-06 | TBD | Pending |
+| CTA-01 | Phase 4 | Pending |
+| CTA-02 | Phase 4 | Pending |
+| CTA-03 | Phase 4 | Pending |
+| CTA-04 | Phase 4 | Pending |
+| CTA-05 | Phase 4 | Pending |
+| CTA-06 | Phase 4 | Pending |
+| CTA-07 | Phase 4 | Pending |
+| PERK-01 | Phase 5 | Pending |
+| PERK-02 | Phase 5 | Pending |
+| PERK-03 | Phase 5 | Pending |
+| PERK-04 | Phase 5 | Pending |
+| PERK-05 | Phase 5 | Pending |
+| PERK-06 | Phase 5 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 13 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 13 ⚠️ (roadmap creation next)
+- Mapped to phases: 13 (Phase 4: CTA-01..07, Phase 5: PERK-01..06)
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-05-19*
-*Last updated: 2026-08-20 — v1.1 requirements added, v1.0 marked shipped*
+*Last updated: 2026-08-20 — v1.1 requirements mapped to Phase 4 (Copy & CTA Conversion Pass) and Phase 5 (Hidden Perks Discovery Feature)*

@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shopping Mall Conversion Pass
-status: planning
-last_updated: "2026-08-20T14:17:07.132Z"
+status: roadmap_ready
+last_updated: "2026-08-20T00:00:00.000Z"
 last_activity: 2026-08-20
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,23 +17,25 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-19)
+See: .planning/PROJECT.md (updated 2026-08-20)
 
 **Core value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
-**Current focus:** Phase 02 — Responsive Layouts (next)
+**Current focus:** Phase 4 — Copy & CTA Conversion Pass (next)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-08-20 — Milestone v1.1 started
+Phase: 4 of 5 (Copy & CTA Conversion Pass) — ready to plan
+Plan: — of TBD in current phase
+Status: Roadmap approved, ready to plan Phase 4
+Last activity: 2026-08-20 — Roadmap created for v1.1 (Phase 4: Copy & CTA Conversion Pass, Phase 5: Hidden Perks Discovery Feature)
+
+Progress: [░░░░░░░░░░] 0% (v1.1)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
+- Total plans completed (v1.1): 0
 - Average duration: —
 - Total execution time: —
 
@@ -42,6 +44,8 @@ Last activity: 2026-08-20 — Milestone v1.1 started
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-mobile-navigation | 2 | ~35min | ~17min |
+| 02-responsive-layouts | — | — | — (shipped, log left stale) |
+| 03-vercel-deploy | — | — | — (shipped, log left stale) |
 
 *Updated after each plan completion*
 
@@ -51,14 +55,10 @@ Last activity: 2026-08-20 — Milestone v1.1 started
 
 - v1.0 init: Full-screen overlay nav chosen (matches luxury editorial brand feel)
 - v1.0 init: No mobile build pipeline — site is zero-build (React CDN + Babel standalone)
-- 01-01: Standalone @media (max-width: 768px) block added (not merged into 920px block) — keeps breakpoints cleanly separated
-- 01-01: Overlay uses opacity:0/pointer-events:none as hidden state (not display:none) — enables CSS animation without JS timing tricks
-- 01-01: Reused existing stgIn keyframe for link stagger — maintains animation vocabulary consistency
-- 01-01: border-left: 3px solid transparent reserved at rest on .mobile-overlay-link — prevents layout shift on .active
-- 01-02: MobileNav receives isClosing prop from Nav rather than owning animation state — single source of truth in Nav
-- 01-02: closeMenu uses 300ms setTimeout matching mobileOverlayOut CSS keyframe — ensures visual exit completes before unmount
-- 01-02: Search link onClick calls onClose only (no setRoute) — Search is not a routed page, consistent with desktop nav
-- 01-02: Nav return wrapped in React.Fragment to render MobileNav as sibling of nav element without wrapper div
+- v1.0 shipped 2026-08-20: Confirmed live on Vercel by user; Phase 2/3 tracking backfilled as complete
+- v1.1 scope: Copy/CTA/conversion work limited to Home, Stores, Magazine (About/Article deferred)
+- v1.1 scope: Hidden perks ships as one real discovery mechanic, not gamified (per user brief)
+- v1.1 roadmap: Phase 4 (copy/CTA, pure content edits) sequenced before Phase 5 (hidden perks, new `perks.jsx` file) so the perk reveal copy matches the finalized conversion tone
 
 ### Pending Todos
 
@@ -66,7 +66,8 @@ None yet.
 
 ### Blockers/Concerns
 
-None yet.
+- Phase 5: Discoverability paradox — hidden perk must stay genuinely hard to find while still being found in practice; validate with a cold-read test during/after Phase 5 execution.
+- Phase 5: `perks.jsx` script tag must be added to both `Ladidier Portal.html` and `Ladidier Portal-print.html` — `PrintApp` also renders `Footer`, so missing either causes a `ReferenceError`.
 
 ### Quick Tasks Completed
 
@@ -76,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-22T01:51:28.226Z
-Stopped at: Phase 2 UI-SPEC approved
-Resume file: .planning/phases/02-responsive-layouts/02-UI-SPEC.md
+Last session: 2026-08-20
+Stopped at: v1.1 ROADMAP.md and STATE.md created — Phase 4 and Phase 5 defined, 13/13 requirements mapped
+Resume file: None

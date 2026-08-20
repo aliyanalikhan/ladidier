@@ -1,16 +1,14 @@
-# Roadmap: LaDidiér Portal — v1.0 Mobile Responsiveness & Vercel Deploy
+# Roadmap: LaDidiér Portal
 
-## Overview
+## Milestones
 
-Three phases deliver the full v1.0 milestone. Phase 1 adds the mobile navigation overlay (a discrete, testable component). Phase 2 completes the CSS pass across every page component and layout. Phase 3 commits all changes, deploys to Vercel, and confirms the live site works on real devices. Each phase delivers a coherent, independently verifiable capability.
+- ✅ **v1.0 Mobile Responsiveness & Vercel Deploy** - Phases 1-3 (shipped 2026-08-20, confirmed live)
+- 🚧 **v1.1 Shopping Mall Conversion Pass** - Phases 4-5 (in progress)
 
 ## Phases
 
-- [x] **Phase 1: Mobile Navigation** - Hamburger button + full-screen overlay nav with close behavior and active-route highlight
-- [ ] **Phase 2: Responsive Layouts** - Full mobile CSS pass covering footer, heroes, store rows, plan cards, article/magazine pages, tweaks panel, and tap targets
-- [ ] **Phase 3: Vercel Deploy** - Commit all changes, push to repository, confirm live Vercel URL renders correctly on mobile and desktop
-
-## Phase Details
+<details>
+<summary>✅ v1.0 Mobile Responsiveness & Vercel Deploy (Phases 1-3) - SHIPPED 2026-08-20</summary>
 
 ### Phase 1: Mobile Navigation
 **Goal**: Users on phones can open, navigate, and close a full-screen overlay nav
@@ -22,6 +20,7 @@ Three phases deliver the full v1.0 milestone. Phase 1 adds the mobile navigation
   3. The overlay closes when the user taps the × button or presses Escape
   4. The currently active route is visually distinct from other links in the overlay
 **Plans**: 2 plans
+
 Plans:
 - [x] 01-01-PLAN.md — Mobile nav CSS: hamburger, overlay, link states, animations, media query
 - [x] 01-02-PLAN.md — React components: MobileNav overlay component + hamburger wiring in Nav
@@ -37,7 +36,7 @@ Plans:
   3. Store rows, subscribe plan cards, and magazine article grids stack to a single column on phone screens and remain tappable
   4. The tweaks panel opens full-width and is scrollable on a phone screen
   5. All interactive elements (buttons, nav links, store links) meet the 44px minimum tap target size
-**Plans**: TBD
+**Plans**: Complete (work confirmed live; formal plan log left stale — see STATE.md history)
 **UI hint**: yes
 
 ### Phase 3: Vercel Deploy
@@ -48,16 +47,55 @@ Plans:
   1. All responsive changes are committed to the repository with a clear commit message
   2. A push to the connected repository triggers a successful Vercel redeploy (no build errors)
   3. The live Vercel URL displays the mobile nav overlay and responsive layouts correctly on a real or simulated mobile device
+**Plans**: Complete (confirmed live by user 2026-08-20)
+
+</details>
+
+### 🚧 v1.1 Shopping Mall Conversion Pass (In Progress)
+
+**Milestone Goal:** Make the portal read and convert like a premium online shopping mall on Home, Stores, and Magazine, and introduce a subtle "hidden perks" discovery feature.
+
+#### Phase 4: Copy & CTA Conversion Pass
+**Goal**: Home, Stores, and Magazine read and convert like a premium shopping mall, with clear, working CTAs
+**Depends on**: Phase 3
+**Requirements**: CTA-01, CTA-02, CTA-03, CTA-04, CTA-05, CTA-06, CTA-07
+**Success Criteria** (what must be TRUE):
+  1. Home page shows one prominent primary shopping CTA (e.g. "Shop the Houses") positioned above the existing "Read the issue" CTA, and its copy reads in a shopping-mall voice rather than a house-listing/real-estate tone
+  2. Every store card on the Stores page has a "Visit the Boutique →" CTA linking to that store's existing URL, with est./category heritage microcopy shown more prominently than today
+  3. Stores page intro/section copy reads in a premium shopping-mall voice, not house-listing tone
+  4. Magazine landing page copy is reframed to invite shopping without disrupting the existing paywall/subscribe mechanics
+  5. Every CTA across Home, Stores, and Magazine resolves to a working destination — no dead-end sections
 **Plans**: TBD
+**UI hint**: yes
+
+#### Phase 5: Hidden Perks Discovery Feature
+**Goal**: A subtle, premium-styled discovery element reveals a discount code or subscribe prompt without disrupting browsing or shopping flow
+**Depends on**: Phase 4
+**Requirements**: PERK-01, PERK-02, PERK-03, PERK-04, PERK-05, PERK-06
+**Success Criteria** (what must be TRUE):
+  1. A single hidden-perk element exists on the site (e.g. in the Footer), styled to match existing ornament/typography language, with no visual signposting, nav entry, or onboarding tooltip pointing to it
+  2. The perk is reachable via click/tap and via keyboard focus (not hover-only), so it works on touch devices and for keyboard users
+  3. Activating the perk reveals a static, display-only discount code
+  4. The reveal branches on the existing `ladidier_subscribed` flag — subscribed users see the code only, unsubscribed users also see a subscribe-flow prompt
+  5. The perk reveal does not block, overlay-trap, or interrupt normal browsing/shopping flow
+**Plans**: TBD
+**UI hint**: yes
 
 ## Progress
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Mobile Navigation | 2/2 | Complete | 2026-05-19 |
-| 2. Responsive Layouts | 0/TBD | Not started | - |
-| 3. Vercel Deploy | 0/TBD | Not started | - |
+**Execution Order:**
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Mobile Navigation | v1.0 | 2/2 | Complete | 2026-05-19 |
+| 2. Responsive Layouts | v1.0 | -/- | Complete | 2026-08-20 |
+| 3. Vercel Deploy | v1.0 | -/- | Complete | 2026-08-20 |
+| 4. Copy & CTA Conversion Pass | v1.1 | 0/TBD | Not started | - |
+| 5. Hidden Perks Discovery Feature | v1.1 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-05-19 — v1.0 Mobile Responsiveness & Vercel Deploy*
 *Phase 1 planned: 2026-05-19 — 2 plans, 2 waves*
+*v1.0 confirmed shipped: 2026-08-20*
+*v1.1 roadmap added: 2026-08-20 — Phase 4 (Copy & CTA Conversion Pass), Phase 5 (Hidden Perks Discovery Feature)*
