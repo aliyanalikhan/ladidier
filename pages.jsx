@@ -133,9 +133,12 @@ function HeroIndex({ setRoute }) {
             This is the table of contents.
           </p>
         </div>
-        <button className="btn solid" style={{ alignSelf: "flex-start", animation: "pageFade .9s 1.15s ease both" }} onClick={() => setRoute("stores")}>
-          The full directory →
-        </button>
+        <div className="flex gap-16" style={{ alignSelf: "flex-start", flexWrap: "wrap", animation: "pageFade .9s 1.15s ease both" }}>
+          <button className="btn solid" onClick={() => setRoute("stores")}>
+            Shop the Houses →
+          </button>
+          <button className="btn ghost" onClick={() => setRoute("magazine")}>Read the issue</button>
+        </div>
       </div>
 
       <div>
