@@ -363,7 +363,7 @@ function SubscribeBanner({ setRoute }) {
           </p>
           <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
             <button className="btn solid" onClick={() => setRoute("subscribe")}>Choose your subscription</button>
-            <button className="btn ghost">Continue reading freely →</button>
+            <button className="btn ghost" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Continue reading freely →</button>
           </div>
         </div>
       </div>
