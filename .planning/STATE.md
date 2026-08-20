@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shopping Mall Conversion Pass
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-08-20T17:28:07.274Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-08-20T17:36:04.596Z"
 last_activity: 2026-08-20
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
-  percent: 20
+  completed_plans: 2
+  percent: 40
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-08-20)
 ## Current Position
 
 Phase: 04 (copy-cta-conversion-pass) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-08-20
 
-Progress: [██░░░░░░░░] 20%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Progress: [██░░░░░░░░] 20%
 
 *Updated after each plan completion*
 | Phase 04 P01 | 5min | 2 tasks | 1 files |
+| Phase 04 P02 | 5min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -62,6 +63,7 @@ Progress: [██░░░░░░░░] 20%
 - v1.1 scope: Hidden perks ships as one real discovery mechanic, not gamified (per user brief)
 - v1.1 roadmap: Phase 4 (copy/CTA, pure content edits) sequenced before Phase 5 (hidden perks, new `perks.jsx` file) so the perk reveal copy matches the finalized conversion tone
 - [Phase 04-01]: Reused existing on-voice string 'Shop the Houses' consistently across all three Home hero variants (HeroManifest, HeroSplit, HeroIndex) rather than three different phrasings — Per D-01's house-vocabulary rule and D-02's Tweaks-panel toggle guarantee — one consistent primary CTA string across all heroes prevents stale/inconsistent copy behind any variant
+- [Phase 04-02]: Used computed {STORES.length} form over hardcoded '14 Houses' per CONTEXT.md's discretion note preferring drift-proof option
 
 ### Pending Todos
 
@@ -80,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-20T17:28:07.257Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-08-20T17:36:04.583Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
