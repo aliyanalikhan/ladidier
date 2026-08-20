@@ -60,7 +60,7 @@ Each task was committed atomically:
 1. **Task 1: Promote shopping CTA to primary in HeroManifest and HeroSplit** - `20f0445` (feat)
 2. **Task 2: Align HeroIndex CTA voice and add its secondary reading CTA** - `9baf971` (feat)
 
-**Plan metadata:** _pending_ (docs: complete plan)
+**Plan metadata:** `fd893ed` (docs: complete plan)
 
 ## Files Created/Modified
 - `pages.jsx` - HeroManifest, HeroSplit, HeroIndex CTA rows reordered/reclassed/relabeled per D-01/D-02/D-03
