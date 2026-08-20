@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shopping Mall Conversion Pass
 status: executing
-stopped_at: Phase 4 UI-SPEC approved
-last_updated: "2026-08-20T17:18:23.375Z"
-last_activity: 2026-08-20 -- Phase 04 planning complete
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-08-20T17:28:07.274Z"
+last_activity: 2026-08-20
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 5
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 20
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-20)
 
 **Core value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
-**Current focus:** Phase 4 — Copy & CTA Conversion Pass (next)
+**Current focus:** Phase 04 — copy-cta-conversion-pass
 
 ## Current Position
 
-Phase: 4 of 5 (Copy & CTA Conversion Pass) — ready to plan
-Plan: — of TBD in current phase
+Phase: 04 (copy-cta-conversion-pass) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-08-20 -- Phase 04 planning complete
+Last activity: 2026-08-20
 
-Progress: [░░░░░░░░░░] 0% (v1.1)
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 | 03-vercel-deploy | — | — | — (shipped, log left stale) |
 
 *Updated after each plan completion*
+| Phase 04 P01 | 5min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -60,6 +61,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 - v1.1 scope: Copy/CTA/conversion work limited to Home, Stores, Magazine (About/Article deferred)
 - v1.1 scope: Hidden perks ships as one real discovery mechanic, not gamified (per user brief)
 - v1.1 roadmap: Phase 4 (copy/CTA, pure content edits) sequenced before Phase 5 (hidden perks, new `perks.jsx` file) so the perk reveal copy matches the finalized conversion tone
+- [Phase 04-01]: Reused existing on-voice string 'Shop the Houses' consistently across all three Home hero variants (HeroManifest, HeroSplit, HeroIndex) rather than three different phrasings — Per D-01's house-vocabulary rule and D-02's Tweaks-panel toggle guarantee — one consistent primary CTA string across all heroes prevents stale/inconsistent copy behind any variant
 
 ### Pending Todos
 
@@ -78,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-20T15:15:34.300Z
-Stopped at: Phase 4 UI-SPEC approved
-Resume file: .planning/phases/04-copy-cta-conversion-pass/04-UI-SPEC.md
+Last session: 2026-08-20T17:28:07.257Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

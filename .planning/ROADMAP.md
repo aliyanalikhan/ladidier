@@ -68,7 +68,7 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Promote a "Shop the Houses" primary CTA in all 3 Home hero variants, demote the reading CTA to secondary
+- [x] 04-01-PLAN.md — Promote a "Shop the Houses" primary CTA in all 3 Home hero variants, demote the reading CTA to secondary
 - [ ] 04-02-PLAN.md — Home StoresPreview: computed house count, heritage Est. microcopy on all 14 cards, "Discover the Directory →" CTA
 - [ ] 04-03-PLAN.md — Stores page: shopping-voice intro, "Visit the Boutique →" on Gallery cards, per-store aria-label on Index rows
 - [ ] 04-04-PLAN.md — Magazine shopping reframe (paywall mechanics untouched) + repair both dead CTAs (PDF button, SubscribeBanner)
