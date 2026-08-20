@@ -55,7 +55,7 @@ Plans:
 
 **Milestone Goal:** Make the portal read and convert like a premium online shopping mall on Home, Stores, and Magazine, and introduce a subtle "hidden perks" discovery feature.
 
-#### Phase 4: Copy & CTA Conversion Pass
+#### Phase 4: Copy & CTA Conversion Pass — COMPLETE 2026-08-21
 **Goal**: Home, Stores, and Magazine read and convert like a premium shopping mall, with clear, working CTAs
 **Depends on**: Phase 3
 **Requirements**: CTA-01, CTA-02, CTA-03, CTA-04, CTA-05, CTA-06, CTA-07
@@ -72,8 +72,9 @@ Plans:
 - [x] 04-02-PLAN.md — Home StoresPreview: computed house count, heritage Est. microcopy on all 14 cards, "Discover the Directory →" CTA
 - [x] 04-03-PLAN.md — Stores page: shopping-voice intro, "Visit the Boutique →" on Gallery cards, per-store aria-label on Index rows
 - [x] 04-04-PLAN.md — Magazine shopping reframe (paywall mechanics untouched) + repair both dead CTAs (PDF button, SubscribeBanner)
-- [ ] 04-05-PLAN.md — CTA-07 friction audit: static gate sweep + human click-through at desktop and ≤480px
+- [x] 04-05-PLAN.md — CTA-07 friction audit: static gate sweep + human click-through at desktop and ≤480px
 **UI hint**: yes
+**Status**: Complete (2026-08-21) — all 7 static gates PASS, developer approved live click-through
 
 #### Phase 5: Hidden Perks Discovery Feature
 **Goal**: A subtle, premium-styled discovery element reveals a discount code or subscribe prompt without disrupting browsing or shopping flow
@@ -98,7 +99,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Mobile Navigation | v1.0 | 2/2 | Complete | 2026-05-19 |
 | 2. Responsive Layouts | v1.0 | -/- | Complete | 2026-08-20 |
 | 3. Vercel Deploy | v1.0 | -/- | Complete | 2026-08-20 |
-| 4. Copy & CTA Conversion Pass | v1.1 | 0/5 | Planned | - |
+| 4. Copy & CTA Conversion Pass | v1.1 | 5/5 | Complete   | 2026-08-20 |
 | 5. Hidden Perks Discovery Feature | v1.1 | 0/TBD | Not started | - |
 
 ---

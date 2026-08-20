@@ -113,7 +113,7 @@ Deferred to future milestones. Tracked but not in current roadmap.
 | CTA-04 | Phase 4 | Complete |
 | CTA-05 | Phase 4 | Complete |
 | CTA-06 | Phase 4 | Complete |
-| CTA-07 | Phase 4 | Complete |
+| CTA-07 | Phase 4 | Complete (friction audit passed 2026-08-21) |
 | PERK-01 | Phase 5 | Pending |
 | PERK-02 | Phase 5 | Pending |
 | PERK-03 | Phase 5 | Pending |
