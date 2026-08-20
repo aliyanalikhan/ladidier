@@ -34,9 +34,10 @@ Declared values (must be multiples of 4), reusing the project's existing scale �
 | xs | 4px | Gap between trigger glyph and adjacent wordmark text, if any micro-adjustment needed |
 | sm | 8px | Gap between panel's Close button and subscribe CTA button (stacked) |
 | md | 16px | Vertical rhythm between eyebrow / headline / body / CTA rows inside the reveal panel |
-| lg | 24px | N/A this phase (reserved, not used) |
-| xl | 32px | Reveal panel outer padding (top/bottom), matching the `pages.jsx:473` `.paywall-gate` inline-override precedent (`padding: "32px 28px"`) |
-| — | 28px | Reveal panel outer padding (left/right) — reuses the exact `pages.jsx:473` precedent value (`padding: "32px 28px"`) rather than rounding to 24/32 |
+| lg | 24px | Reveal panel outer padding (left/right) |
+| xl | 32px | Reveal panel outer padding (top/bottom) — combined panel padding: `32px 24px` |
+
+Note on the panel padding value: `pages.jsx:473`'s `.paywall-gate` inline-override precedent uses `padding: "32px 28px"`. `28px` is a multiple of 4 but is **not** a member of this project's standard spacing set (`{4, 8, 16, 24, 32, 48, 64}`). This contract deviates from the exact `pages.jsx:473` value and rounds the left/right padding down to the nearest standard-set value, **24px**, giving `padding: "32px 24px"` for the reveal panel. This is a one-token difference from the `pages.jsx` precedent and is an intentional, deliberate exception to keep the panel's padding on-scale — not an oversight.
 
 Exceptions:
 - Trigger `<button>` (`.perk-mark`) must have a minimum 44×44px hit area even though the visible glyph is much smaller (site-wide convention, RESP-10) — use padding on the button itself to pad the visible glyph out to the tap-target minimum without visually enlarging the mark (the glyph stays a "small stray typographic detail" per D-02; only its invisible hit box is 44px).
@@ -58,6 +59,12 @@ Reuses existing type tokens from `styles.css` — no new sizes/weights invented 
 Font weights used across this contract: **400 (regular)** and **600 (semibold)** — exactly 2, per contract rule. 600 is reserved for the discount code display and button labels (`.btn` already uses `font-weight: 600`, `styles.css:183`); everything else is 400.
 
 Trigger glyph itself (`✦` or scaled `Flourish` diamond) is not prose typography — its size is a Spacing/Color concern (small, `--gold`, ~14-16px visual footprint) rather than a text role.
+
+---
+
+## Visual Hierarchy
+
+Primary visual anchor of the reveal panel: the discount code (`HOUSE10`), rendered at 24px in `--mono` with the `.gold-text` gradient-clip treatment (Display role, above). It is the largest, highest-contrast, and only gold-gradient text element inside the panel — everything else (eyebrow, heading, body copy, buttons) is deliberately smaller and/or lower-contrast so the eye lands on the code first. No other element in the panel competes for this role.
 
 ---
 
@@ -86,7 +93,7 @@ Accent reserved for: trigger glyph fill, reveal-panel border, discount-code text
 | Discount code (locked, D-06) | `HOUSE10` — static string, rendered plainly, never inside a "redeem"/"apply"/"check" UI |
 | Reveal panel body copy (locked framing, D-07) | "Present this at any Ladidiér house — online or in person." — honest "present/mention this" phrasing only; must NOT claim enforcement the static architecture can't back (no "one per visitor," no "limited to first N finders," no automated validation implication) |
 | Primary CTA — subscribe path (locked, D-08; unsubscribed visitors only) | "Also unlock the Sunday letter →" — routes via `setRoute("subscribe")`, closes panel on click |
-| Close button | "Close" |
+| Close button | "Close" — single-word label, no noun. This matches the site's existing convention for dismiss controls on non-modal/non-destructive panels (e.g. `MobileNav`'s close affordance); it is not paired with a specific noun because the panel has exactly one dismiss action and no ambiguity about what "Close" refers to. No change required. |
 | Empty state | Not applicable — this feature has no data-driven empty state. The closest analog is the undiscovered trigger itself, which per PERK-03 must carry zero explanatory copy, tooltip, or label of any kind before activation. |
 | Error state | Not applicable — no forms, no network calls, no validation exist in this feature (confirmed in RESEARCH.md Security Domain: V5 Input Validation "No"). |
 | Destructive confirmation | Not applicable — no destructive actions in this phase. |
@@ -111,3 +118,5 @@ Accent reserved for: trigger glyph fill, reveal-panel border, discount-code text
 - [ ] Dimension 6 Registry Safety: PASS
 
 **Approval:** pending
+</content>
+</invoke>
