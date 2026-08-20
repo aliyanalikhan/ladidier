@@ -65,7 +65,14 @@ Plans:
   3. Stores page intro/section copy reads in a premium shopping-mall voice, not house-listing tone
   4. Magazine landing page copy is reframed to invite shopping without disrupting the existing paywall/subscribe mechanics
   5. Every CTA across Home, Stores, and Magazine resolves to a working destination — no dead-end sections
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Promote a "Shop the Houses" primary CTA in all 3 Home hero variants, demote the reading CTA to secondary
+- [ ] 04-02-PLAN.md — Home StoresPreview: computed house count, heritage Est. microcopy on all 14 cards, "Discover the Directory →" CTA
+- [ ] 04-03-PLAN.md — Stores page: shopping-voice intro, "Visit the Boutique →" on Gallery cards, per-store aria-label on Index rows
+- [ ] 04-04-PLAN.md — Magazine shopping reframe (paywall mechanics untouched) + repair both dead CTAs (PDF button, SubscribeBanner)
+- [ ] 04-05-PLAN.md — CTA-07 friction audit: static gate sweep + human click-through at desktop and ≤480px
 **UI hint**: yes
 
 #### Phase 5: Hidden Perks Discovery Feature
@@ -91,7 +98,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Mobile Navigation | v1.0 | 2/2 | Complete | 2026-05-19 |
 | 2. Responsive Layouts | v1.0 | -/- | Complete | 2026-08-20 |
 | 3. Vercel Deploy | v1.0 | -/- | Complete | 2026-08-20 |
-| 4. Copy & CTA Conversion Pass | v1.1 | 0/TBD | Not started | - |
+| 4. Copy & CTA Conversion Pass | v1.1 | 0/5 | Planned | - |
 | 5. Hidden Perks Discovery Feature | v1.1 | 0/TBD | Not started | - |
 
 ---
@@ -99,3 +106,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 *Phase 1 planned: 2026-05-19 — 2 plans, 2 waves*
 *v1.0 confirmed shipped: 2026-08-20*
 *v1.1 roadmap added: 2026-08-20 — Phase 4 (Copy & CTA Conversion Pass), Phase 5 (Hidden Perks Discovery Feature)*
+*Phase 4 planned: 2026-08-20 — 5 plans, 5 waves (all sequential: every plan edits pages.jsx)*
