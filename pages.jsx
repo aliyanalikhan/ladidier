@@ -239,12 +239,12 @@ function StoresPreview({ setRoute }) {
       <div className="container">
         <div className="flex between" style={{ marginBottom: 56, alignItems: "flex-end", gap: 32, flexWrap: "wrap" }}>
           <div>
-            <div className="eyebrow" style={{ marginBottom: 14 }}>The Directory · 11 Houses</div>
+            <div className="eyebrow" style={{ marginBottom: 14 }}>The Directory · {STORES.length} Houses</div>
             <h2 className="display h2" style={{ margin: 0, maxWidth: "18ch" }}>
               Every door leads somewhere worth lingering.
             </h2>
           </div>
-          <button className="btn ghost" onClick={() => setRoute("stores")}>Open the directory →</button>
+          <button className="btn ghost" onClick={() => setRoute("stores")}>Discover the Directory →</button>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
