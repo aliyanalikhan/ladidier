@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shopping Mall Conversion Pass
-status: verifying
+status: ready_to_plan
 stopped_at: Completed 04-05-PLAN.md — Phase 4 complete
 last_updated: "2026-08-20T21:18:10.828Z"
 last_activity: 2026-08-20
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
   completed_plans: 5
   percent: 100
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-08-20)
 
 ## Current Position
 
-Phase: 04 (copy-cta-conversion-pass) — COMPLETE
-Plan: 5 of 5
-Status: Phase complete — ready for verification
+Phase: 5
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-08-20
 
 Progress: [██████████] 100%
@@ -47,6 +47,7 @@ Progress: [██████████] 100%
 | 01-mobile-navigation | 2 | ~35min | ~17min |
 | 02-responsive-layouts | — | — | — (shipped, log left stale) |
 | 03-vercel-deploy | — | — | — (shipped, log left stale) |
+| 04 | 5 | - | - |
 
 *Updated after each plan completion*
 | Phase 04 P01 | 5min | 2 tasks | 1 files |
