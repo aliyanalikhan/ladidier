@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shopping Mall Conversion Pass
 status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-08-20T17:36:04.596Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-08-20T17:43:29.088Z"
 last_activity: 2026-08-20
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
-  percent: 40
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-08-20)
 ## Current Position
 
 Phase: 04 (copy-cta-conversion-pass) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-08-20
 
-Progress: [████░░░░░░] 40%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Progress: [████░░░░░░] 40%
 *Updated after each plan completion*
 | Phase 04 P01 | 5min | 2 tasks | 1 files |
 | Phase 04 P02 | 5min | 2 tasks | 1 files |
+| Phase 04 P03 | 10min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,7 @@ Progress: [████░░░░░░] 40%
 - v1.1 roadmap: Phase 4 (copy/CTA, pure content edits) sequenced before Phase 5 (hidden perks, new `perks.jsx` file) so the perk reveal copy matches the finalized conversion tone
 - [Phase 04-01]: Reused existing on-voice string 'Shop the Houses' consistently across all three Home hero variants (HeroManifest, HeroSplit, HeroIndex) rather than three different phrasings — Per D-01's house-vocabulary rule and D-02's Tweaks-panel toggle guarantee — one consistent primary CTA string across all heroes prevents stale/inconsistent copy behind any variant
 - [Phase 04-02]: Used computed {STORES.length} form over hardcoded '14 Houses' per CONTEXT.md's discretion note preferring drift-proof option
+- [Phase 04-03]: No flexWrap/gap CSS fallback added to Gallery CTA row — worst-case text-width math confirmed clearance at both grid min-width and <=480px single-column widths
 
 ### Pending Todos
 
@@ -82,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-20T17:36:04.583Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-08-20T17:43:29.068Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None

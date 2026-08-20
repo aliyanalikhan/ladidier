@@ -41,8 +41,8 @@ Requirements for the "Shopping Mall Conversion Pass" milestone. Each maps to roa
 
 - [x] **CTA-01**: Home page has one clear, prominent primary shopping CTA (e.g. "Shop the Houses") positioned above the existing secondary "Read the issue" CTA
 - [x] **CTA-02**: Home page copy reads in a premium shopping-mall voice rather than house-listing/real-estate tone
-- [ ] **CTA-03**: Each store card on the Stores page has an explicit CTA ("Visit the Boutique →") linking to that store's existing URL
-- [ ] **CTA-04**: Stores page intro/section copy reads in a premium shopping-mall voice rather than house-listing tone
+- [x] **CTA-03**: Each store card on the Stores page has an explicit CTA ("Visit the Boutique →") linking to that store's existing URL
+- [x] **CTA-04**: Stores page intro/section copy reads in a premium shopping-mall voice rather than house-listing tone
 - [x] **CTA-05**: Store cards surface heritage microcopy (est./category fields) more prominently than today
 - [ ] **CTA-06**: Magazine landing page copy is reframed to invite shopping, without disrupting the existing paywall/subscribe mechanics
 - [ ] **CTA-07**: Home, Stores, and Magazine pages pass a friction audit — no dead-end sections, every CTA resolves to a working destination
@@ -109,8 +109,8 @@ Deferred to future milestones. Tracked but not in current roadmap.
 | VERL-03 | Phase 3 | Complete |
 | CTA-01 | Phase 4 | Complete |
 | CTA-02 | Phase 4 | Complete |
-| CTA-03 | Phase 4 | Pending |
-| CTA-04 | Phase 4 | Pending |
+| CTA-03 | Phase 4 | Complete |
+| CTA-04 | Phase 4 | Complete |
 | CTA-05 | Phase 4 | Complete |
 | CTA-06 | Phase 4 | Pending |
 | CTA-07 | Phase 4 | Pending |
