@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shopping Mall Conversion Pass
 status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-08-20T17:43:29.088Z"
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-08-20T17:54:26.870Z"
 last_activity: 2026-08-20
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
-  percent: 60
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-08-20)
 ## Current Position
 
 Phase: 04 (copy-cta-conversion-pass) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-08-20
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [██████░░░░] 60%
 | Phase 04 P01 | 5min | 2 tasks | 1 files |
 | Phase 04 P02 | 5min | 2 tasks | 1 files |
 | Phase 04 P03 | 10min | 2 tasks | 1 files |
+| Phase 04 P04 | 8min | 3 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Progress: [██████░░░░] 60%
 - [Phase 04-01]: Reused existing on-voice string 'Shop the Houses' consistently across all three Home hero variants (HeroManifest, HeroSplit, HeroIndex) rather than three different phrasings — Per D-01's house-vocabulary rule and D-02's Tweaks-panel toggle guarantee — one consistent primary CTA string across all heroes prevents stale/inconsistent copy behind any variant
 - [Phase 04-02]: Used computed {STORES.length} form over hardcoded '14 Houses' per CONTEXT.md's discretion note preferring drift-proof option
 - [Phase 04-03]: No flexWrap/gap CSS fallback added to Gallery CTA row — worst-case text-width math confirmed clearance at both grid min-width and <=480px single-column widths
+- [Phase 04-04]: Paywall/subscribe mechanic lines left byte-identical during the Magazine lede reframe, confirmed via git diff --stat scoped to the two paragraph bodies only
+- [Phase 04-04]: SubscribeBanner's dead-CTA fix applied once to the shared function body (no per-page branching), accepted five-page blast radius per plan's pre-approved scope exception
 
 ### Pending Todos
 
@@ -84,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-20T17:43:29.068Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-08-20T17:54:26.857Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
