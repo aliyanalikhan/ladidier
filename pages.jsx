@@ -567,7 +567,7 @@ function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
           </p>
           <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
             <button className="btn solid" onClick={() => setRoute("article")}>Read the letter</button>
-            <button className="btn">Download issue (PDF)</button>
+            <button className="btn" onClick={() => iframeRef.current && iframeRef.current.scrollIntoView({ behavior: "smooth", block: "center" })}>View full issue →</button>
           </div>
 
           <div style={{ marginTop: 56 }}>
