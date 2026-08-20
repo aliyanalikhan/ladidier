@@ -31,6 +31,9 @@ This phase makes Home, Stores, and Magazine read and convert like a premium shop
 ### Friction audit — concrete bugs found during discussion
 - **D-08:** Fix stale copy: `StoresPreview` on Home reads "The Directory · 11 Houses" but `STORES` has 14 entries. Update the copy to match the real count (or make it computed from `STORES.length` so it can't drift again).
 - **D-09:** Fix dead CTA: `SubscribeBanner`'s "Continue reading freely →" button (`pages.jsx`, rendered on both Home and Stores via the shared banner) has no `onClick` — it currently does nothing. Wire it to close/dismiss the banner context appropriately (e.g., no-op scroll-past is fine, but it must not be a inert-looking clickable button with zero behavior — at minimum it should behave as a clear "dismiss/continue" affordance consistent with its label).
+- **D-10:** Fix dead CTA (found during phase research): `MagazinePage`'s "Download issue (PDF)" button (`pages.jsx:564`) has no `onClick`/`href`, and no PDF file exists anywhere in the project. Repurpose it into a working CTA rather than removing it or faking a download — e.g. relabel to something like "View full issue →" and wire it to the existing flipbook (scroll to/focus the iframe, or trigger the same interaction as opening the issue). This is in-scope because `MagazinePage` is one of this phase's three target pages and CTA-07 requires every CTA to resolve to a working destination.
+
+**Note on SubscribeBanner's blast radius:** phase research found `SubscribeBanner` actually renders on 5 pages (Home, Stores, Magazine, Article, About), not just Home/Stores as originally scoped. Fixing D-09's dead button and applying D-01's CTA voice to this shared component will therefore also touch Article and About pages as an unavoidable side effect of editing one shared component — this is accepted as within scope since there's no per-page variant to change instead.
 
 ### Claude's Discretion
 - Exact final copy strings (headlines, ledes, button labels beyond the ones explicitly named above) — user approved the voice/direction, not literal final text. Planner/executor should draft copy in the elevated-editorial voice and it does not need a further user round-trip unless something is ambiguous.
@@ -85,6 +88,8 @@ This phase makes Home, Stores, and Magazine read and convert like a premium shop
 ## Deferred Ideas
 
 - **Explicit store cross-sell section inside Magazine** (linking specific articles/stories to the houses that inspired them) — user chose light-touch tone-only reframe for this phase. This is closer to a new capability than a copy pass; revisit in a future milestone if the light-touch version doesn't move conversion.
+- **`SubscribePage`'s stale "11 stores" count** (`pages.jsx:805`, same bug class as D-08) — found during phase research, but `SubscribePage` is outside this phase's Home/Stores/Magazine boundary. User chose to defer — candidate for a `/gsd-capture` quick task or a future phase touching Subscribe/Footer.
+- **`Footer`'s several dead `preventDefault()`-only links** — found during phase research, same "no dead-end CTAs" failure pattern as CTA-07, but `Footer`/`components.jsx` is outside this phase's scope. User chose to defer.
 
 </deferred>
 
