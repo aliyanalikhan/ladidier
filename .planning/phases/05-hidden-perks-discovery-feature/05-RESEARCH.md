@@ -356,17 +356,19 @@ Object.assign(window, { HiddenPerk });
 | A2 | `setRoute("subscribe")` (prop-threaded) is preferable to `location.hash = "subscribe"` for D-08's CTA | Pattern 1 | Low — both work correctly per `app.jsx`'s hashchange listener; the only difference is whether the scroll-to-top/replaceState behavior fires. If the planner prefers zero-prop composability (matching `ARCHITECTURE.md`'s "no required props" framing), `location.hash` remains a valid fallback |
 | A3 | `z-index: 500` (inherited unmodified from `ARCHITECTURE.md`'s suggestion) is an appropriate value between `.mobile-overlay` (100) and `.twk-panel` (2147483646) | Pattern 5 | Very low — any value in that range works; 500 was not independently re-derived this session, just re-confirmed as still valid given both bounding values are unchanged |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Exact panel anchor position (top/right offsets) relative to the Footer wordmark**
+1. **Exact panel anchor position (top/right offsets) relative to the Footer wordmark** — RESOLVED
    - What we know: Panel must be `position: fixed`, small, anchored "near" the Footer wordmark (D-03), not shifting Footer layout.
    - What's unclear: The Footer sits at the bottom of every page; a `position: fixed` panel anchored "near" it needs specific coordinates that work across both desktop and the ≤480px single-column footer layout (styles.css:535) without covering the panel's own trigger or overlapping the Tweaks panel (bottom-right, `.twk-panel`).
    - Recommendation: Leave exact pixel offsets to implementation (already flagged as Claude's Discretion in CONTEXT.md); verify at both desktop and ≤480px widths as part of the phase's done-criteria per Pitfall 8's mobile-regression guidance.
+   - RESOLVED: Plan 05-01 anchors the panel bottom-left at `left: 24px; bottom: 24px; max-width: 340px` (desktop), collapsing to `left/right/bottom: 16px; max-width: none` at ≤480px — clear of `.twk-panel` (bottom-right) and the Footer wordmark.
 
-2. **Whether to add `aria-expanded`/`aria-controls` to the trigger button for the panel's open state**
+2. **Whether to add `aria-expanded`/`aria-controls` to the trigger button for the panel's open state** — RESOLVED
    - What we know: `MobileNav`'s hamburger trigger uses `aria-expanded={menuOpen}` and `aria-controls="mobile-nav-overlay"` (components.jsx:140-141) as the established a11y-attribute convention for disclosure-pattern triggers in this codebase.
    - What's unclear: CONTEXT.md's discretion note only explicitly mentions `tabindex`, `focus-visible`, and `aria attributes` generically, without confirming whether the full `aria-expanded`/`aria-controls` pair (a heavier a11y treatment than a typical tooltip) is proportionate for a "genuinely easy to miss" easter-egg element, vs. a plainer `aria-label` alone (as used in the Code Examples draft above).
    - Recommendation: Mirror the existing `aria-expanded`/`aria-controls` convention for consistency and because it costs nothing extra — but this is a minor implementation detail, not a blocking decision.
+   - RESOLVED: Plan 05-01 Task 2 implements `aria-expanded={open} aria-controls="perk-reveal"` on the trigger, mirroring `MobileNav`'s convention.
 
 ## Environment Availability
 

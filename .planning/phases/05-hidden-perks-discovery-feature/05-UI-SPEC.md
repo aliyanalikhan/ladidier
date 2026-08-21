@@ -110,13 +110,13 @@ Accent reserved for: trigger glyph fill, reveal-panel border, discount-code text
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved (2026-08-21) — confirmed via `05-DISCUSSION-LOG.md` and `.planning/STATE.md` ("Phase 5 UI-SPEC approved"); checkboxes above were left unchecked at the time of approval and are corrected here for audit-trail consistency.
 </content>
 </invoke>
