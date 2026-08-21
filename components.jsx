@@ -307,6 +307,7 @@ function Footer({ setRoute }) {
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
           <Crest size={26} />
           <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>LaDidiér</div>
+          <HiddenPerk setRoute={setRoute} />
         </div>
         <p className="muted" style={{ maxWidth: 36, fontSize: 13, lineHeight: 1.55, maxInlineSize: "32ch", margin: 0 }}>
           A house of houses. Fourteen stores, one magazine, and a quiet promise: live a little larger.
