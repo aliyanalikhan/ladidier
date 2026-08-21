@@ -95,9 +95,15 @@ Plans:
 **UI hint**: yes
 
 #### Phase 6: Mall Treasure Hunt
-**Goal**: Visitors who explore multiple pages (Home, Stores/categories, and a Magazine/product page) can discover 3-4 small hidden icons (shopping bag, gift box, etc.); finding all of them triggers a "You found the treasure!" reveal with a discount code and a subscribe/WhatsApp capture prompt, encouraging multi-page browsing and magazine subscriber growth. Runs alongside the existing single hidden perk from Phase 5 (not a replacement), and is replayable across future magazine issues by repositioning icons or reskinning the reward.
+**Goal**: Visitors who explore multiple pages (Home, Stores, Magazine, Article) can discover 4 distinct hidden icons (shopping bag, gift box, plus 2 more); finding all of them within one session triggers a "You found the treasure!" reveal with a discount code distinct from Phase 5's HOUSE10, plus the same subscribe-flow prompt Phase 5 uses. Runs alongside the existing single hidden perk from Phase 5 (not a replacement) — this is a second, deliberately gamified discovery mechanic.
 **Depends on**: Phase 5
-**Requirements**: TBD
+**Requirements**: TREAS-01, TREAS-02, TREAS-03, TREAS-04, TREAS-05, TREAS-06
+**Success Criteria** (what must be TRUE):
+  1. Four distinct hidden icons exist across Home, Stores, Magazine, and Article, rendered as literal full-color e-commerce icons in randomized layout-safe positions per page load
+  2. Finding all 4 icons within one browser session reveals a "You found the treasure!" popup with a discount code distinct from HOUSE10
+  3. The reveal branches on the existing `ladidier_subscribed` flag — subscribed visitors see the code only, unsubscribed visitors also see a subscribe-flow CTA
+  4. A subtle nav-bar dot/glyph progress indicator shows found-count once at least 1 icon is found this session, invisible before that
+  5. Once a visitor completes the hunt once, the icons never reappear for them on any future visit or session
 **Plans**: 0 plans
 
 Plans:

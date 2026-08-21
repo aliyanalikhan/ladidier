@@ -56,6 +56,15 @@ Requirements for the "Shopping Mall Conversion Pass" milestone. Each maps to roa
 - [x] **PERK-05**: The perk reveal branches on the existing `ladidier_subscribed` flag — subscribed users see the code only, unsubscribed users also see a subscribe-flow prompt
 - [x] **PERK-06**: The hidden perk does not block, overlay-trap, or interrupt normal browsing/shopping flow
 
+### Mall Treasure Hunt
+
+- [ ] **TREAS-01**: Visitors can discover 4 distinct hidden icons (shopping bag, gift box, plus 2 more) placed across the Home, Stores, Magazine, and Article pages
+- [ ] **TREAS-02**: Each icon appears in one of 2-3 pre-defined layout-safe positions per page, randomly chosen on every fresh page load
+- [ ] **TREAS-03**: Finding all 4 icons within a single browser session triggers a "You found the treasure!" completion reveal with a discount code distinct from Phase 5's `HOUSE10`
+- [ ] **TREAS-04**: The completion reveal branches on the existing `ladidier_subscribed` flag — subscribed visitors see the code only, unsubscribed visitors also see a subscribe-flow CTA
+- [ ] **TREAS-05**: Once a visitor completes the hunt once, the icons never reappear for them on any future visit or session (persistent one-time-only completion)
+- [ ] **TREAS-06**: A subtle dot/glyph progress indicator in the nav bar shows found-count once at least 1 icon is found this session; invisible before that
+
 ## v2 Requirements
 
 Deferred to future milestones. Tracked but not in current roadmap.
@@ -83,7 +92,7 @@ Deferred to future milestones. Tracked but not in current roadmap.
 | Native mobile app | Web-first priority; app is a separate product decision |
 | Backend/API integration | Portal is a static/client-side site |
 | Real, validated/redeemable discount codes | No backend exists to validate against — a fake-validation code would be misleading |
-| Multiple hidden perks, leaderboards, or collection mechanics | Milestone scope is one working discovery mechanic, not gamification |
+| Leaderboards or competitive/social mechanics | Not requested; milestone scope is now two discovery mechanics (Phase 5 perk + Phase 6 treasure hunt), not a competitive game |
 | Copy/CTA rework on About or Article pages | Not primary landing pages this milestone |
 
 ## Traceability
@@ -120,12 +129,18 @@ Deferred to future milestones. Tracked but not in current roadmap.
 | PERK-04 | Phase 5 | Complete |
 | PERK-05 | Phase 5 | Complete |
 | PERK-06 | Phase 5 | Complete |
+| TREAS-01 | Phase 6 | Not started |
+| TREAS-02 | Phase 6 | Not started |
+| TREAS-03 | Phase 6 | Not started |
+| TREAS-04 | Phase 6 | Not started |
+| TREAS-05 | Phase 6 | Not started |
+| TREAS-06 | Phase 6 | Not started |
 
 **Coverage:**
-- v1.1 requirements: 13 total
-- Mapped to phases: 13 (Phase 4: CTA-01..07, Phase 5: PERK-01..06)
+- v1.1 requirements: 19 total
+- Mapped to phases: 19 (Phase 4: CTA-01..07, Phase 5: PERK-01..06, Phase 6: TREAS-01..06)
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-05-19*
-*Last updated: 2026-08-20 — v1.1 requirements mapped to Phase 4 (Copy & CTA Conversion Pass) and Phase 5 (Hidden Perks Discovery Feature)*
+*Last updated: 2026-08-22 — v1.1 requirements mapped to Phase 4 (Copy & CTA Conversion Pass), Phase 5 (Hidden Perks Discovery Feature), and Phase 6 (Mall Treasure Hunt, added mid-milestone)*
