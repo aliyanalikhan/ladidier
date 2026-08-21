@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shopping Mall Conversion Pass
 status: executing
-stopped_at: Phase 5 UI-SPEC approved
-last_updated: "2026-08-21T04:59:22.655Z"
-last_activity: 2026-08-21 -- Phase 05 planning complete
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-08-21T07:16:09.757Z"
+last_activity: 2026-08-21
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 8
-  completed_plans: 5
-  percent: 63
+  completed_plans: 6
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-20)
 
 **Core value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
-**Current focus:** Phase 04 — copy-cta-conversion-pass — COMPLETE; Phase 05 — hidden-perks-discovery-feature next
+**Current focus:** Phase 05 — hidden-perks-discovery-feature
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
+Phase: 05 (hidden-perks-discovery-feature) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-08-21 -- Phase 05 planning complete
+Last activity: 2026-08-21
 
-Progress: [██████████] 100%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [██████████] 100%
 | Phase 04 P03 | 10min | 2 tasks | 1 files |
 | Phase 04 P04 | 8min | 3 tasks | 1 files |
 | Phase 04 P05 | 12min | 2 tasks | 0 files |
+| Phase 05 P01 | 15min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Progress: [██████████] 100%
 - [Phase 04-04]: Paywall/subscribe mechanic lines left byte-identical during the Magazine lede reframe, confirmed via git diff --stat scoped to the two paragraph bodies only
 - [Phase 04-04]: SubscribeBanner's dead-CTA fix applied once to the shared function body (no per-page branching), accepted five-page blast radius per plan's pre-approved scope exception
 - [Phase 04-05]: CTA-07 friction audit closed — 7/7 static gates PASS (two count deviations traced to pre-existing out-of-scope occurrences, not defects) and developer approved live click-through of all CTAs on Home/Stores/Magazine at desktop and phone width. Phase 4 fully complete.
+- [Phase 05-01]: Reveal panel applied via combined className (paywall-gate perk-reveal[--first]) with zero inline style, per plan instruction to route all layout through Task 1's CSS classes
+- [Phase 05-01]: Outside-click handler checks containment against both panelRef and markRef to prevent close-then-reopen flicker on the trigger button
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-20T22:45:06.542Z
-Stopped at: Phase 5 UI-SPEC approved
-Resume file: .planning/phases/05-hidden-perks-discovery-feature/05-UI-SPEC.md
+Last session: 2026-08-21T07:16:09.739Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: None

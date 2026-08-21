@@ -97,3 +97,7 @@ No blockers. The discoverability-paradox validation noted in STATE.md's Blockers
 ---
 *Phase: 05-hidden-perks-discovery-feature*
 *Completed: 2026-08-21*
+
+## Self-Check: PASSED
+
+All created files found on disk (perks.jsx, styles.css) and all task commits (39daa3d, 9fe13f4) plus this summary's own commit verified present in git log.

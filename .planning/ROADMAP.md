@@ -89,7 +89,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Build perks.jsx (HiddenPerk, usePerkFound, HOUSE10 reveal panel) + .perk-mark/.perk-reveal styles
+- [x] 05-01-PLAN.md — Build perks.jsx (HiddenPerk, usePerkFound, HOUSE10 reveal panel) + .perk-mark/.perk-reveal styles
 - [ ] 05-02-PLAN.md — Wire it in: HiddenPerk mount in Footer + perks.jsx script tag in both HTML entry points
 - [ ] 05-03-PLAN.md — Phase gate: 10-gate static sweep + 6-requirement manual pass at desktop/≤480px + cold-read discoverability test
 **UI hint**: yes
@@ -105,7 +105,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Responsive Layouts | v1.0 | -/- | Complete | 2026-08-20 |
 | 3. Vercel Deploy | v1.0 | -/- | Complete | 2026-08-20 |
 | 4. Copy & CTA Conversion Pass | v1.1 | 5/5 | Complete   | 2026-08-20 |
-| 5. Hidden Perks Discovery Feature | v1.1 | 0/3 | Planned | - |
+| 5. Hidden Perks Discovery Feature | v1.1 | 1/3 | In Progress|  |
 
 ---
 *Roadmap created: 2026-05-19 — v1.0 Mobile Responsiveness & Vercel Deploy*
