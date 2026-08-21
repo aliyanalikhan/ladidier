@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 Mobile Responsiveness & Vercel Deploy** - Phases 1-3 (shipped 2026-08-20, confirmed live)
-- 🚧 **v1.1 Shopping Mall Conversion Pass** - Phases 4-5 (in progress)
+- 🚧 **v1.1 Shopping Mall Conversion Pass** - Phases 4-6 (in progress)
 
 ## Phases
 
@@ -53,7 +53,7 @@ Plans:
 
 ### 🚧 v1.1 Shopping Mall Conversion Pass (In Progress)
 
-**Milestone Goal:** Make the portal read and convert like a premium online shopping mall on Home, Stores, and Magazine, and introduce a subtle "hidden perks" discovery feature.
+**Milestone Goal:** Make the portal read and convert like a premium online shopping mall on Home, Stores, and Magazine, introduce a subtle "hidden perks" discovery feature, and add a multi-page "Mall Treasure Hunt" that rewards browsing with a subscriber-growth hook.
 
 #### Phase 4: Copy & CTA Conversion Pass — COMPLETE 2026-08-21
 **Goal**: Home, Stores, and Magazine read and convert like a premium shopping mall, with clear, working CTAs
@@ -94,10 +94,20 @@ Plans:
 - [ ] 05-03-PLAN.md — Phase gate: 10-gate static sweep + 6-requirement manual pass at desktop/≤480px + cold-read discoverability test
 **UI hint**: yes
 
+#### Phase 6: Mall Treasure Hunt
+**Goal**: Visitors who explore multiple pages (Home, Stores/categories, and a Magazine/product page) can discover 3-4 small hidden icons (shopping bag, gift box, etc.); finding all of them triggers a "You found the treasure!" reveal with a discount code and a subscribe/WhatsApp capture prompt, encouraging multi-page browsing and magazine subscriber growth. Runs alongside the existing single hidden perk from Phase 5 (not a replacement), and is replayable across future magazine issues by repositioning icons or reskinning the reward.
+**Depends on**: Phase 5
+**Requirements**: TBD
+**Plans**: 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 6 to break down)
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -106,6 +116,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 3. Vercel Deploy | v1.0 | -/- | Complete | 2026-08-20 |
 | 4. Copy & CTA Conversion Pass | v1.1 | 5/5 | Complete   | 2026-08-20 |
 | 5. Hidden Perks Discovery Feature | v1.1 | 1/3 | In Progress|  |
+| 6. Mall Treasure Hunt | v1.1 | 0/0 | Not started | - |
 
 ---
 *Roadmap created: 2026-05-19 — v1.0 Mobile Responsiveness & Vercel Deploy*
@@ -114,3 +125,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 *v1.1 roadmap added: 2026-08-20 — Phase 4 (Copy & CTA Conversion Pass), Phase 5 (Hidden Perks Discovery Feature)*
 *Phase 4 planned: 2026-08-20 — 5 plans, 5 waves (all sequential: every plan edits pages.jsx)*
 *Phase 5 planned: 2026-08-21 — 3 plans, 3 waves (sequential: build → wire → verify; Plan 02 would break the site if it landed before Plan 01)*
+*Phase 6 added: 2026-08-22 — Mall Treasure Hunt (multi-page hidden-icon hunt with subscribe/WhatsApp capture reward), runs alongside Phase 5's single hidden perk*

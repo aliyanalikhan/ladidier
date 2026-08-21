@@ -78,6 +78,10 @@ Progress: [█████████░] 88%
 - [Phase 05-01]: Outside-click handler checks containment against both panelRef and markRef to prevent close-then-reopen flicker on the trigger button
 - [Phase 05]: HiddenPerk mounted as sibling of Crest inside Footer's wordmark row (not repurposed Crest) per D-01, requiring zero prop plumbing beyond the setRoute Footer already received
 
+### Roadmap Evolution
+
+- Phase 6 added: Mall Treasure Hunt — multi-page hidden-icon hunt (3-4 icons across Home/Stores/Magazine) with a "You found the treasure!" reveal, discount code, and subscribe/WhatsApp capture prompt. Runs alongside Phase 5's single hidden perk (user chose "keep both, side by side" over replacing it). Depends on Phase 5.
+
 ### Pending Todos
 
 None yet.
