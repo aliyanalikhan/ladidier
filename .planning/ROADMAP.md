@@ -86,7 +86,12 @@ Plans:
   3. Activating the perk reveals a static, display-only discount code
   4. The reveal branches on the existing `ladidier_subscribed` flag — subscribed users see the code only, unsubscribed users also see a subscribe-flow prompt
   5. The perk reveal does not block, overlay-trap, or interrupt normal browsing/shopping flow
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Build perks.jsx (HiddenPerk, usePerkFound, HOUSE10 reveal panel) + .perk-mark/.perk-reveal styles
+- [ ] 05-02-PLAN.md — Wire it in: HiddenPerk mount in Footer + perks.jsx script tag in both HTML entry points
+- [ ] 05-03-PLAN.md — Phase gate: 10-gate static sweep + 6-requirement manual pass at desktop/≤480px + cold-read discoverability test
 **UI hint**: yes
 
 ## Progress
@@ -100,7 +105,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Responsive Layouts | v1.0 | -/- | Complete | 2026-08-20 |
 | 3. Vercel Deploy | v1.0 | -/- | Complete | 2026-08-20 |
 | 4. Copy & CTA Conversion Pass | v1.1 | 5/5 | Complete   | 2026-08-20 |
-| 5. Hidden Perks Discovery Feature | v1.1 | 0/TBD | Not started | - |
+| 5. Hidden Perks Discovery Feature | v1.1 | 0/3 | Planned | - |
 
 ---
 *Roadmap created: 2026-05-19 — v1.0 Mobile Responsiveness & Vercel Deploy*
@@ -108,3 +113,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 *v1.0 confirmed shipped: 2026-08-20*
 *v1.1 roadmap added: 2026-08-20 — Phase 4 (Copy & CTA Conversion Pass), Phase 5 (Hidden Perks Discovery Feature)*
 *Phase 4 planned: 2026-08-20 — 5 plans, 5 waves (all sequential: every plan edits pages.jsx)*
+*Phase 5 planned: 2026-08-21 — 3 plans, 3 waves (sequential: build → wire → verify; Plan 02 would break the site if it landed before Plan 01)*
