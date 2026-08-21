@@ -90,7 +90,7 @@ Plans:
 
 Plans:
 - [x] 05-01-PLAN.md — Build perks.jsx (HiddenPerk, usePerkFound, HOUSE10 reveal panel) + .perk-mark/.perk-reveal styles
-- [ ] 05-02-PLAN.md — Wire it in: HiddenPerk mount in Footer + perks.jsx script tag in both HTML entry points
+- [x] 05-02-PLAN.md — Wire it in: HiddenPerk mount in Footer + perks.jsx script tag in both HTML entry points
 - [ ] 05-03-PLAN.md — Phase gate: 10-gate static sweep + 6-requirement manual pass at desktop/≤480px + cold-read discoverability test
 **UI hint**: yes
 

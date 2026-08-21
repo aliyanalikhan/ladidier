@@ -51,7 +51,7 @@ Requirements for the "Shopping Mall Conversion Pass" milestone. Each maps to roa
 
 - [x] **PERK-01**: A single hidden-perk discovery element exists on the site (e.g. in the Footer), styled to match existing ornament/typography language
 - [x] **PERK-02**: The hidden perk is reachable via click/tap (not hover-only) and via keyboard focus, so it works on touch devices and for keyboard users
-- [ ] **PERK-03**: The hidden perk has no visual signposting, nav entry, or onboarding tooltip pointing to it — genuinely easy to miss
+- [x] **PERK-03**: The hidden perk has no visual signposting, nav entry, or onboarding tooltip pointing to it — genuinely easy to miss
 - [x] **PERK-04**: Activating the hidden perk reveals a static, display-only discount code
 - [x] **PERK-05**: The perk reveal branches on the existing `ladidier_subscribed` flag — subscribed users see the code only, unsubscribed users also see a subscribe-flow prompt
 - [x] **PERK-06**: The hidden perk does not block, overlay-trap, or interrupt normal browsing/shopping flow
@@ -116,7 +116,7 @@ Deferred to future milestones. Tracked but not in current roadmap.
 | CTA-07 | Phase 4 | Complete (friction audit passed 2026-08-21) |
 | PERK-01 | Phase 5 | Complete |
 | PERK-02 | Phase 5 | Complete |
-| PERK-03 | Phase 5 | Pending |
+| PERK-03 | Phase 5 | Complete |
 | PERK-04 | Phase 5 | Complete |
 | PERK-05 | Phase 5 | Complete |
 | PERK-06 | Phase 5 | Complete |
