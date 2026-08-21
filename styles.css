@@ -1010,3 +1010,89 @@ body::before {
     letter-spacing: .02em !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Hidden perk — discovery mark + reveal panel
+   ───────────────────────────────────────────────────────────── */
+.perk-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--gold);
+  font-size: 15px;
+  line-height: 1;
+  opacity: .55;
+  transition: opacity .3s ease;
+}
+.perk-mark:hover { opacity: .85; }
+.perk-mark:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+  opacity: .85;
+}
+
+.perk-reveal {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  margin: 0;
+  width: calc(100% - 48px);
+  max-width: 340px;
+  padding: 32px 24px;
+  z-index: 500;
+}
+.perk-reveal h3 {
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.2;
+  margin: 16px 0 0;
+}
+.perk-code {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
+  margin-top: 16px;
+  display: block;
+}
+.perk-reveal p {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 16px 0 0;
+}
+.perk-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.perk-reveal--first {
+  animation: perkRise .45s cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes perkRise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 480px) {
+  .perk-reveal {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .perk-reveal--first { animation: none !important; }
+}
