@@ -1,0 +1,97 @@
+/* ─────────────────────────────────────────────────────────────
+   LADIDIÉR — Mall treasure hunt
+   ───────────────────────────────────────────────────────────── */
+const { useState, useEffect, useRef } = React;
+
+const TREASURE_PROGRESS_KEY = "ladidier_treasure_progress";
+const TREASURE_COMPLETED_KEY = "ladidier_treasure_completed";
+const TREASURE_CODE = "HOUSE20"; // D-06, static, display-only
+const TREASURE_EVENT = "ladidier:treasure-found";
+
+function readProgress() {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(TREASURE_PROGRESS_KEY));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function isHuntComplete() {
+  return localStorage.getItem(TREASURE_COMPLETED_KEY) === "true";
+}
+
+function markIconFound(iconId) {
+  const current = readProgress();
+  const found = current.includes(iconId) ? current : [...current, iconId];
+  sessionStorage.setItem(TREASURE_PROGRESS_KEY, JSON.stringify(found));
+  const complete = found.length === TREASURE_ICONS.length;
+  if (complete) {
+    localStorage.setItem(TREASURE_COMPLETED_KEY, "true");
+  }
+  window.dispatchEvent(new CustomEvent(TREASURE_EVENT, { detail: { found, complete } }));
+  return found;
+}
+
+function useTreasureProgress() {
+  const [found, setFound] = useState(readProgress);
+  useEffect(() => {
+    const handler = (e) => setFound(e.detail.found);
+    window.addEventListener(TREASURE_EVENT, handler);
+    return () => window.removeEventListener(TREASURE_EVENT, handler);
+  }, []);
+  return found;
+}
+
+function BagIcon({ size = 24 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+      <path d="M5 8h14l-1.2 12.4a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9L5 8Z" fill="var(--blush)" />
+      <path d="M8 8V6a4 4 0 0 1 8 0v2" stroke="var(--gold)" strokeWidth="1.5" fill="none" />
+    </svg>
+  );
+}
+
+function GiftBoxIcon({ size = 24 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+      <path d="M4 9h16v11H4Z" fill="var(--sage)" />
+      <path d="M4 9h16v3H4Z" fill="var(--sage)" />
+      <path d="M12 9v11M4 9h16" stroke="var(--gold)" strokeWidth="1.5" fill="none" />
+      <path d="M12 9c-1-3-4.5-4.5-6-2.5S8 9 12 9Zm0 0c1-3 4.5-4.5 6-2.5S16 9 12 9Z" stroke="var(--gold)" strokeWidth="1.5" fill="none" />
+    </svg>
+  );
+}
+
+function TagIcon({ size = 24 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+      <path d="M11 4 20 13a1.5 1.5 0 0 1 0 2.1l-4.9 4.9a1.5 1.5 0 0 1-2.1 0L4 11V4h7Z" fill="var(--sky)" />
+      <circle cx="8" cy="8" r="1.4" stroke="var(--gold)" strokeWidth="1.5" fill="none" />
+      <path d="M5.5 4.5 4 6" stroke="var(--gold)" strokeWidth="1.5" fill="none" />
+    </svg>
+  );
+}
+
+function BowIcon({ size = 24 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+      <path d="M12 12c-2-4-8-4-8 0s6 4 8 0Zm0 0c2-4 8-4 8 0s-6 4-8 0Z" fill="var(--lilac)" />
+      <circle cx="12" cy="12" r="1.6" fill="var(--lilac)" stroke="var(--gold)" strokeWidth="1.5" />
+      <path d="M9 14c-1 2-1 4 0 6M15 14c1 2 1 4 0 6" stroke="var(--gold)" strokeWidth="1.5" fill="none" />
+    </svg>
+  );
+}
+
+const TREASURE_ZONES = [
+  { id: "left",   style: { top: 4,  left: "6%" } },
+  { id: "center", style: { top: 12, left: "calc(50% - 22px)" } },
+  { id: "right",  style: { top: 4,  right: "6%" } },
+];
+
+const TREASURE_ICONS = [
+  { id: "bag", page: "home",     label: "the shopping bag", Glyph: BagIcon,     zones: TREASURE_ZONES },
+  { id: "box", page: "stores",   label: "the gift box",     Glyph: GiftBoxIcon, zones: TREASURE_ZONES },
+  { id: "tag", page: "magazine", label: "the price tag",    Glyph: TagIcon,     zones: TREASURE_ZONES },
+  { id: "bow", page: "article",  label: "the ribbon",       Glyph: BowIcon,     zones: TREASURE_ZONES },
+];
