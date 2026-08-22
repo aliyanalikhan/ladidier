@@ -107,7 +107,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Build treasure.jsx core: sessionStorage progress layer + CustomEvent sync, 4 full-color SVG glyphs, TreasureIcon, TreasureProgress
+- [x] 06-01-PLAN.md — Build treasure.jsx core: sessionStorage progress layer + CustomEvent sync, 4 full-color SVG glyphs, TreasureIcon, TreasureProgress
 - [ ] 06-02-PLAN.md — TreasureHuntComplete popup (HOUSE20 + subscribe branch) + append the .treasure-* CSS block to styles.css
 - [ ] 06-03-PLAN.md — Wire it in: 4 page mounts, Nav dot cluster, app-root popup mount, script tag in both HTML entry points + print suppression
 - [ ] 06-04-PLAN.md — Phase gate: 12-gate static sweep + human verification of TREAS-01..06 at desktop and 375px + Phase 5 regression
