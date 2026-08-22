@@ -334,6 +334,7 @@ function HomePage({ setRoute, heroVariant }) {
       {heroVariant === "index"    && <HeroIndex    setRoute={setRoute} />}
 
       <StoreMarquee />
+      <TreasureIcon page="home" />
       <Manifesto />
       <FeaturedStories setRoute={setRoute} />
       <StoresPreview setRoute={setRoute} />
@@ -435,6 +436,7 @@ function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
         </div>
       </header>
 
+      <TreasureIcon page="magazine" />
       {/* Interactive Flipbook / Subscription Paywall Gate */}
       <section className="section container" style={{ borderTop: "1px solid var(--line)", paddingTop: 60, paddingBottom: 60 }}>
         <div>
@@ -607,6 +609,7 @@ function ArticlePage({ setRoute }) {
         </div>
       </header>
 
+      <TreasureIcon page="article" />
       <div className="container" style={{ maxWidth: 1280, margin: "0 auto" }}>
         <div className="ph photo" style={{ aspectRatio: "16/9", "--bg-image": `url(${IMG.articleHero})` }} data-tag="HERO · EDITORIAL" data-label="LARGE-FORMAT PHOTOGRAPH"></div>
       </div>
@@ -702,6 +705,7 @@ function StoresPage({ setRoute }) {
         </div>
       </header>
 
+      <TreasureIcon page="stores" />
       {view === "list" && (
         <section className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
           <div style={{ display: "flex", justifyContent: "space-between", padding: "16px 0", borderBottom: "1px solid var(--line-strong)" }}>
