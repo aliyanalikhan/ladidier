@@ -55,6 +55,9 @@
     .float, .float-slow, .cover.tilt { transform: none !important; }
     .marquee, .ticker, .vmarquee { display: none !important; }
 
+    /* No treasure hunt UI in print */
+    .treasure-layer, .treasure-icon, .treasure-progress, .treasure-reveal { display: none !important; }
+
     /* Tighten oversized hero on print */
     .hero-manifest, .hero-split, .hero-index {
       min-height: 0 !important;
@@ -86,6 +89,7 @@
   <script type="text/babel" src="tweaks-panel.jsx"></script>
   <script type="text/babel" src="ornaments.jsx"></script>
   <script type="text/babel" src="perks.jsx"></script>
+  <script type="text/babel" src="treasure.jsx"></script>
   <script type="text/babel" src="components.jsx"></script>
   <script type="text/babel" src="pages.jsx"></script>
   <script type="text/babel" src="print-app.jsx"></script>
