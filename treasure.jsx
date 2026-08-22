@@ -148,4 +148,59 @@ function TreasureProgress() {
   );
 }
 
-Object.assign(window, { TreasureIcon, TreasureProgress });
+function TreasureHuntComplete({ setRoute }) {
+  const [open, setOpen] = useState(false);
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.detail && e.detail.complete) setOpen(true); };
+    window.addEventListener(TREASURE_EVENT, handler);
+    return () => window.removeEventListener(TREASURE_EVENT, handler);
+  }, []);
+
+  const close = () => setOpen(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    const onEsc = (e) => { if (e.key === "Escape") close(); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [open]);
+
+  const isSubscribed = localStorage.getItem("ladidier_subscribed") === "true";
+
+  if (!open) return null;
+
+  return (
+    <div ref={panelRef} id="treasure-reveal" className="paywall-gate treasure-reveal">
+      <div className="eyebrow">The House Treasure</div>
+      <h3>You found the treasure!</h3>
+      <p className="treasure-lead">Your reward, for finding it all:</p>
+      <span className="treasure-code gold-text mono">{TREASURE_CODE}</span>
+      <p>Present this at any Ladidiér house — online or in person.</p>
+      <div className="treasure-actions">
+        {!isSubscribed && (
+          <button
+            type="button"
+            className="btn solid"
+            onClick={() => { close(); setRoute("subscribe"); }}
+          >
+            Also unlock the Sunday letter →
+          </button>
+        )}
+        <button type="button" className="btn ghost" onClick={close}>Close</button>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { TreasureIcon, TreasureProgress, TreasureHuntComplete });
