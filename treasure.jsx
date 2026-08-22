@@ -43,6 +43,7 @@ function useTreasureProgress() {
   return found;
 }
 
+/* Shopping bag — home page icon. Blush fill, gold strap. */
 function BagIcon({ size = 24 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
@@ -52,6 +53,7 @@ function BagIcon({ size = 24 }) {
   );
 }
 
+/* Gift box — stores page icon. Sage fill, gold ribbon and bow. */
 function GiftBoxIcon({ size = 24 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
@@ -63,6 +65,7 @@ function GiftBoxIcon({ size = 24 }) {
   );
 }
 
+/* Price tag — magazine page icon. Sky fill, gold hole and string. */
 function TagIcon({ size = 24 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
@@ -73,6 +76,7 @@ function TagIcon({ size = 24 }) {
   );
 }
 
+/* Ribbon / bow — article page icon. Lilac fill, gold knot and tails. */
 function BowIcon({ size = 24 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
