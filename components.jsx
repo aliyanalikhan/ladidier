@@ -133,6 +133,7 @@ function Nav({ route, setRoute }) {
           <a href="#search" onClick={(e) => e.preventDefault()}>Search</a>
           {item("subscribe", "Subscribe")}
           <a href="#account" onClick={(e) => e.preventDefault()} className="mono" style={{ fontSize: 11, letterSpacing: ".1em" }}>EN · USD</a>
+          <TreasureProgress />
           <button
             className="nav-hamburger"
             ref={hamburgerRef}
