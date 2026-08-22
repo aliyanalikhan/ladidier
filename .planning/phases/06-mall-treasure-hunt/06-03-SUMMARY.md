@@ -115,3 +115,16 @@ None - no external service configuration required.
 ---
 *Phase: 06-mall-treasure-hunt*
 *Completed: 2026-08-22*
+
+## Self-Check: PASSED
+
+- FOUND: pages.jsx
+- FOUND: components.jsx
+- FOUND: app.jsx
+- FOUND: Ladidier Portal.html
+- FOUND: Ladidier Portal-print.html
+- FOUND: .planning/phases/06-mall-treasure-hunt/06-03-SUMMARY.md
+- FOUND: a63d468 (Task 1 commit)
+- FOUND: b8e473f (Task 2 commit)
+- FOUND: f9f0692 (Task 3 commit)
+- FOUND: d70fe22 (SUMMARY.md commit)
