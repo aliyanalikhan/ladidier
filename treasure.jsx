@@ -95,3 +95,53 @@ const TREASURE_ICONS = [
   { id: "tag", page: "magazine", label: "the price tag",    Glyph: TagIcon,     zones: TREASURE_ZONES },
   { id: "bow", page: "article",  label: "the ribbon",       Glyph: BowIcon,     zones: TREASURE_ZONES },
 ];
+
+function TreasureIcon({ page }) {
+  const entry = TREASURE_ICONS.find((i) => i.page === page);
+  if (!entry) return null;
+
+  const found = useTreasureProgress();
+  const completed = isHuntComplete();
+  const [zone] = useState(() => entry.zones[Math.floor(Math.random() * entry.zones.length)]);
+
+  if (completed || found.includes(entry.id)) return null;
+
+  const Glyph = entry.Glyph;
+
+  return (
+    <div className="treasure-layer">
+      <button
+        type="button"
+        className="treasure-icon"
+        style={zone.style}
+        aria-label={`A house treasure — ${entry.label}`}
+        onClick={() => markIconFound(entry.id)}
+      >
+        <Glyph size={24} />
+      </button>
+    </div>
+  );
+}
+
+function TreasureProgress() {
+  const found = useTreasureProgress();
+  if (found.length === 0) return null;
+
+  return (
+    <div
+      className="treasure-progress"
+      role="status"
+      aria-label={`Treasure hunt progress: ${found.length} of 4 found`}
+    >
+      {TREASURE_ICONS.map((i) => (
+        <span
+          key={i.id}
+          className={`treasure-dot${found.includes(i.id) ? " is-found" : ""}`}
+          aria-hidden="true"
+        />
+      ))}
+    </div>
+  );
+}
+
+Object.assign(window, { TreasureIcon, TreasureProgress });
