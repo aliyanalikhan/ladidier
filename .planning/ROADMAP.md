@@ -104,10 +104,13 @@ Plans:
   3. The reveal branches on the existing `ladidier_subscribed` flag — subscribed visitors see the code only, unsubscribed visitors also see a subscribe-flow CTA
   4. A subtle nav-bar dot/glyph progress indicator shows found-count once at least 1 icon is found this session, invisible before that
   5. Once a visitor completes the hunt once, the icons never reappear for them on any future visit or session
-**Plans**: 0 plans
+**Plans**: 4 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 6 to break down)
+- [ ] 06-01-PLAN.md — Build treasure.jsx core: sessionStorage progress layer + CustomEvent sync, 4 full-color SVG glyphs, TreasureIcon, TreasureProgress
+- [ ] 06-02-PLAN.md — TreasureHuntComplete popup (HOUSE20 + subscribe branch) + append the .treasure-* CSS block to styles.css
+- [ ] 06-03-PLAN.md — Wire it in: 4 page mounts, Nav dot cluster, app-root popup mount, script tag in both HTML entry points + print suppression
+- [ ] 06-04-PLAN.md — Phase gate: 12-gate static sweep + human verification of TREAS-01..06 at desktop and 375px + Phase 5 regression
 **UI hint**: yes
 
 ## Progress
@@ -122,7 +125,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Vercel Deploy | v1.0 | -/- | Complete | 2026-08-20 |
 | 4. Copy & CTA Conversion Pass | v1.1 | 5/5 | Complete   | 2026-08-20 |
 | 5. Hidden Perks Discovery Feature | v1.1 | 1/3 | In Progress|  |
-| 6. Mall Treasure Hunt | v1.1 | 0/0 | Not started | - |
+| 6. Mall Treasure Hunt | v1.1 | 0/4 | Planned | - |
 
 ---
 *Roadmap created: 2026-05-19 — v1.0 Mobile Responsiveness & Vercel Deploy*
@@ -132,3 +135,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 *Phase 4 planned: 2026-08-20 — 5 plans, 5 waves (all sequential: every plan edits pages.jsx)*
 *Phase 5 planned: 2026-08-21 — 3 plans, 3 waves (sequential: build → wire → verify; Plan 02 would break the site if it landed before Plan 01)*
 *Phase 6 added: 2026-08-22 — Mall Treasure Hunt (multi-page hidden-icon hunt with subscribe/WhatsApp capture reward), runs alongside Phase 5's single hidden perk*
+*Phase 6 planned: 2026-08-22 — 4 plans, 4 waves (sequential: build core → popup+CSS → wire in → gate; every plan after 01 depends on the file the previous one created)*
