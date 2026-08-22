@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shopping Mall Conversion Pass
 status: executing
-stopped_at: Phase 06 UI-SPEC approved
-last_updated: "2026-08-22T09:45:08.703Z"
-last_activity: 2026-08-22 -- Phase 06 execution started
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-08-22T10:34:27.402Z"
+last_activity: 2026-08-22 -- Plan 03 (mall treasure hunt site wiring) complete
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 12
-  completed_plans: 7
-  percent: 58
+  completed_plans: 10
+  percent: 83
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-08-20)
 ## Current Position
 
 Phase: 06 (mall-treasure-hunt) — EXECUTING
-Plan: 1 of 4
+Plan: 4 of 4 (03 complete, 04 ready to execute)
 Status: Executing Phase 06
-Last activity: 2026-08-22 -- Phase 06 execution started
+Last activity: 2026-08-22 -- Plan 03 (mall treasure hunt site wiring) complete
 
-Progress: [█████████░] 88%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Progress: [█████████░] 88%
 | Phase 04 P05 | 12min | 2 tasks | 0 files |
 | Phase 05 P01 | 15min | 2 tasks | 2 files |
 | Phase 05 P02 | 8min | 2 tasks | 3 files |
+| Phase 06 P03 | 3min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,7 @@ Progress: [█████████░] 88%
 - [Phase 05-01]: Reveal panel applied via combined className (paywall-gate perk-reveal[--first]) with zero inline style, per plan instruction to route all layout through Task 1's CSS classes
 - [Phase 05-01]: Outside-click handler checks containment against both panelRef and markRef to prevent close-then-reopen flicker on the trigger button
 - [Phase 05]: HiddenPerk mounted as sibling of Crest inside Footer's wordmark row (not repurposed Crest) per D-01, requiring zero prop plumbing beyond the setRoute Footer already received
+- [Phase 06-03]: Kept every TreasureIcon insertion to a single bare line (no surrounding blank lines) so the content diff for each mount site is exactly one added line, matching the plan's insertions-only acceptance gates
 
 ### Roadmap Evolution
 
@@ -99,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-22T07:48:49.188Z
-Stopped at: Phase 06 UI-SPEC approved
-Resume file: .planning/phases/06-mall-treasure-hunt/06-UI-SPEC.md
+Last session: 2026-08-22T10:34:27.384Z
+Stopped at: Completed 06-03-PLAN.md
+Resume file: None

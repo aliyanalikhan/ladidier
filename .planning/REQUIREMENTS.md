@@ -58,12 +58,12 @@ Requirements for the "Shopping Mall Conversion Pass" milestone. Each maps to roa
 
 ### Mall Treasure Hunt
 
-- [ ] **TREAS-01**: Visitors can discover 4 distinct hidden icons (shopping bag, gift box, plus 2 more) placed across the Home, Stores, Magazine, and Article pages
-- [ ] **TREAS-02**: Each icon appears in one of 2-3 pre-defined layout-safe positions per page, randomly chosen on every fresh page load
-- [ ] **TREAS-03**: Finding all 4 icons within a single browser session triggers a "You found the treasure!" completion reveal with a discount code distinct from Phase 5's `HOUSE10`
-- [ ] **TREAS-04**: The completion reveal branches on the existing `ladidier_subscribed` flag — subscribed visitors see the code only, unsubscribed visitors also see a subscribe-flow CTA
-- [ ] **TREAS-05**: Once a visitor completes the hunt once, the icons never reappear for them on any future visit or session (persistent one-time-only completion)
-- [ ] **TREAS-06**: A subtle dot/glyph progress indicator in the nav bar shows found-count once at least 1 icon is found this session; invisible before that
+- [x] **TREAS-01**: Visitors can discover 4 distinct hidden icons (shopping bag, gift box, plus 2 more) placed across the Home, Stores, Magazine, and Article pages
+- [x] **TREAS-02**: Each icon appears in one of 2-3 pre-defined layout-safe positions per page, randomly chosen on every fresh page load
+- [x] **TREAS-03**: Finding all 4 icons within a single browser session triggers a "You found the treasure!" completion reveal with a discount code distinct from Phase 5's `HOUSE10`
+- [x] **TREAS-04**: The completion reveal branches on the existing `ladidier_subscribed` flag — subscribed visitors see the code only, unsubscribed visitors also see a subscribe-flow CTA
+- [x] **TREAS-05**: Once a visitor completes the hunt once, the icons never reappear for them on any future visit or session (persistent one-time-only completion)
+- [x] **TREAS-06**: A subtle dot/glyph progress indicator in the nav bar shows found-count once at least 1 icon is found this session; invisible before that
 
 ## v2 Requirements
 
@@ -129,12 +129,12 @@ Deferred to future milestones. Tracked but not in current roadmap.
 | PERK-04 | Phase 5 | Complete |
 | PERK-05 | Phase 5 | Complete |
 | PERK-06 | Phase 5 | Complete |
-| TREAS-01 | Phase 6 | Not started |
-| TREAS-02 | Phase 6 | Not started |
-| TREAS-03 | Phase 6 | Not started |
-| TREAS-04 | Phase 6 | Not started |
-| TREAS-05 | Phase 6 | Not started |
-| TREAS-06 | Phase 6 | Not started |
+| TREAS-01 | Phase 6 | Complete |
+| TREAS-02 | Phase 6 | Complete |
+| TREAS-03 | Phase 6 | Complete |
+| TREAS-04 | Phase 6 | Complete |
+| TREAS-05 | Phase 6 | Complete |
+| TREAS-06 | Phase 6 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 19 total
