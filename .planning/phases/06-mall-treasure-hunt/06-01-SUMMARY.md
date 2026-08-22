@@ -117,3 +117,12 @@ None - no external service configuration required.
 ---
 *Phase: 06-mall-treasure-hunt*
 *Completed: 2026-08-22*
+
+## Self-Check: PASSED
+
+- FOUND: treasure.jsx
+- FOUND: .planning/phases/06-mall-treasure-hunt/06-01-SUMMARY.md
+- FOUND: 37a0334 (Task 1 commit)
+- FOUND: 5bcf2d8 (Task 2 commit)
+- FOUND: 28d438e (doc-comment fix commit)
+- FOUND: 9d5dec6 (SUMMARY.md commit)
