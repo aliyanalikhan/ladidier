@@ -1,8 +1,4 @@
 {
-  "env": {
-    "STRIPE_PRICE_ANNUAL": "prod_UctjzjaoEYqqRn",
-    "STRIPE_PRICE_PATRON": "prod_UcthgAzXItNVEF"
-  },
   "rewrites": [
     { "source": "/", "destination": "/index.html" }
   ]

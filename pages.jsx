@@ -769,28 +769,55 @@ function StoresPage({ setRoute }) {
    ═══════════════════════════════════════════════════════════ */
 
 function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
-  const [plan, setPlan] = useState("annual");
+  const [plan, setPlan] = useState("online");
+  const [billing, setBilling] = useState("yearly");
   const [loading, setLoading] = useState(false);
+  const [prices, setPrices] = useState(null);
 
-  const handleSelectPlan = async (planType) => {
-    if (planType === "reader") {
+  // Stripe is the source of truth for what a plan costs, so the cards render
+  // whatever it reports. Nothing here records an amount, which is what keeps the
+  // displayed price from drifting away from what the customer is charged.
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/prices')
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setPrices(d); })
+      .catch((err) => console.error('Could not load prices:', err));
+    return () => { cancelled = true; };
+  }, []);
+
+  const priceLabel = (product) => {
+    const p = prices?.[product]?.[billing];
+    if (!p) return "—";
+    return new Intl.NumberFormat("en-IE", {
+      style: "currency",
+      currency: p.currency.toUpperCase(),
+      // Whole amounts read better without trailing zeros on a page like this.
+      minimumFractionDigits: p.amount % 100 === 0 ? 0 : 2,
+    }).format(p.amount / 100);
+  };
+
+  const handleSelectPlan = async (product) => {
+    if (product === "reader") {
       setIsSubscribed(true);
       localStorage.setItem("ladidier_subscribed", "true");
       setRoute("magazine");
       return;
     }
 
+    setPlan(product);
     setLoading(true);
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planType }),
+        // The server maps this key to a price id — the browser never names a price.
+        body: JSON.stringify({ planType: `${product}_${billing}` }),
       });
 
       if (!response.ok) throw new Error('Checkout response not ok');
       const data = await response.json();
-      
+
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -816,14 +843,37 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
         </div>
         <div>
           <p className="lede" style={{ margin: 0 }}>
-            Every story on Ladidier.com is open, today and tomorrow. A subscription is for the
-            readers who want the print edition at their door, early access to store drops,
-            and a Sunday letter from the editor.
+            Every story on Ladidier.com is open, today and tomorrow. A membership adds early
+            access to store drops and a Sunday letter from the editor — and, if you want the
+            object as well as the words, the print edition at your door.
           </p>
         </div>
       </header>
 
       <section className="section container">
+        {/* Billing interval. Switching it re-labels the cards and changes which
+            price key handleSelectPlan sends, so no separate plan list is needed. */}
+        <div className="flex" style={{ justifyContent: "center", gap: 0, marginBottom: 56 }}>
+          {[["monthly", "Monthly"], ["yearly", "Yearly"]].map(([key, label]) => {
+            const on = billing === key;
+            return (
+              <button
+                key={key}
+                className="btn"
+                onClick={() => setBilling(key)}
+                aria-pressed={on}
+                style={{
+                  background: on ? "var(--gold)" : "transparent",
+                  borderColor: on ? "var(--gold)" : "var(--line)",
+                  color: on ? "var(--noir)" : "var(--ink)",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
 
           <div className="plan-card" onClick={() => setPlan("reader")}
@@ -845,49 +895,59 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
             <button className="btn" onClick={() => handleSelectPlan("reader")} style={{ marginTop: "auto" }}>Continue, no charge</button>
           </div>
 
-          <div className="plan-card featured" onClick={() => setPlan("annual")}
-               style={{ transform: plan === "annual" ? "translateY(-6px)" : "none" }}>
+          <div className="plan-card featured" onClick={() => setPlan("online")}
+               style={{ transform: plan === "online" ? "translateY(-6px)" : "none" }}>
             <div className="flex between">
               <div className="eyebrow" style={{ color: "color-mix(in srgb, var(--bg) 65%, transparent)" }}>Plan II</div>
               <div className="eyebrow" style={{ color: "var(--gold)" }}>Most chosen</div>
             </div>
             <div>
-              <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>The Annual</div>
-              <div style={{ fontSize: 13, marginTop: 4, opacity: .7 }}>The full LaDidiér service.</div>
+              <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>ÉcLAT Online</div>
+              <div style={{ fontSize: 13, marginTop: 4, opacity: .7 }}>The magazine, in full.</div>
             </div>
-            <div className="price">€96<span style={{ fontSize: 16, opacity: .55, marginLeft: 6 }}>/year</span></div>
+            <div className="price">
+              {priceLabel("online")}
+              <span style={{ fontSize: 16, opacity: .55, marginLeft: 6 }}>
+                {billing === "yearly" ? "/year" : "/month"}
+              </span>
+            </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12, fontSize: 14 }}>
-              <li>· Print edition, four issues</li>
+              <li>· Every issue, the full archive</li>
               <li>· Early store access (48h)</li>
               <li>· Sunday letter from the editor</li>
               <li>· Members-only store events</li>
               <li>· 10% house credit on first order</li>
             </ul>
-            <button className="btn solid" disabled={loading} onClick={() => handleSelectPlan("annual")} style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" }}>
-              {loading && plan === "annual" ? "Redirecting..." : "Become a member"}
+            <button className="btn solid" disabled={loading} onClick={() => handleSelectPlan("online")} style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" }}>
+              {loading && plan === "online" ? "Redirecting..." : "Become a member"}
             </button>
           </div>
 
-          <div className="plan-card" onClick={() => setPlan("patron")}
-               style={plan === "patron" ? { borderColor: "var(--gold)" } : {}}>
+          <div className="plan-card" onClick={() => setPlan("hardcopy")}
+               style={plan === "hardcopy" ? { borderColor: "var(--gold)" } : {}}>
             <div className="flex between">
               <div className="eyebrow">Plan III</div>
               <div className="eyebrow">Limited · 250</div>
             </div>
             <div>
-              <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>The Patron</div>
+              <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>ÉcLAT Hard Copy</div>
               <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>For the devoted.</div>
             </div>
-            <div className="price">€240<span style={{ fontSize: 16, color: "var(--mute)", marginLeft: 6 }}>/year</span></div>
+            <div className="price">
+              {priceLabel("hardcopy")}
+              <span style={{ fontSize: 16, color: "var(--mute)", marginLeft: 6 }}>
+                {billing === "yearly" ? "/year" : "/month"}
+              </span>
+            </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12, fontSize: 14 }}>
-              <li>· Everything in Annual</li>
+              <li>· Everything in Online</li>
               <li>· Hand-numbered print edition</li>
               <li>· Annual atelier visit (one house)</li>
               <li>· Direct line to the concierge</li>
               <li>· Name in the back of the magazine</li>
             </ul>
-            <button className="btn" disabled={loading} onClick={() => handleSelectPlan("patron")}>
-              {loading && plan === "patron" ? "Redirecting..." : "Apply as patron"}
+            <button className="btn" disabled={loading} onClick={() => handleSelectPlan("hardcopy")}>
+              {loading && plan === "hardcopy" ? "Redirecting..." : "Take the print edition"}
             </button>
           </div>
         </div>
@@ -899,7 +959,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
             {[
               ["When does the paywall arrive?", "Eventually, but never for the Editor's Letter or the cover story. The rest will move to members-only over the coming year. We will tell you, twice, before it happens."],
               ["Will I still receive the stores' product news?", "Yes. The store mailing lists are separate; you control each one from your account."],
-              ["Can I gift a membership?", "Yes — gift Annual or Patron from any membership card, including a hand-tied print certificate."],
+              ["Can I gift a membership?", "Yes — gift Online or Hard Copy from any membership card, including a hand-tied print certificate."],
               ["Refunds?", "Within 30 days, no questions. We trust you to be honest; we'll do the same."],
             ].map(([q, a], i) => (
               <details key={i} style={{ borderBottom: "1px solid var(--line)", padding: "20px 0" }}>

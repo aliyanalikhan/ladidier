@@ -1,14 +1,7 @@
 import Stripe from 'stripe';
+import { PRICE_ENV } from '../lib/plans.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-// Amount, currency and interval all live on the Price in the Stripe Dashboard.
-// The €96 / €240 figures in pages.jsx are display copy — if you change a price
-// in Stripe, update the copy to match.
-const PRICE_ENV = {
-  annual: 'STRIPE_PRICE_ANNUAL',
-  patron: 'STRIPE_PRICE_PATRON',
-};
 
 // Resolved product -> price lookups, kept for the life of a warm instance so a
 // repeat checkout does not pay for the extra round trip.
