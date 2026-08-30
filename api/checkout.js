@@ -1,7 +1,5 @@
-import Stripe from 'stripe';
 import { PRICE_ENV } from '../lib/plans.js';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+import { getStripe } from '../lib/stripe.js';
 
 // Resolved product -> price lookups, kept for the life of a warm instance so a
 // repeat checkout does not pay for the extra round trip.
@@ -10,7 +8,7 @@ const priceCache = new Map();
 // The env vars accept either a Price id (price_…) or a Product id (prod_…).
 // A Product is only a name; the amount and interval live on its Price, so a
 // prod_ id has to be resolved before it can go in line_items.
-async function resolvePriceId(configured) {
+async function resolvePriceId(stripe, configured) {
   if (configured.startsWith('price_')) return configured;
 
   if (!configured.startsWith('prod_')) {
@@ -49,6 +47,14 @@ async function resolvePriceId(configured) {
 }
 
 export async function POST(request) {
+  let stripe;
+  try {
+    stripe = getStripe();
+  } catch (err) {
+    console.error(`[stripe] ${err.message}`);
+    return Response.json({ error: 'Stripe is not configured' }, { status: 500 });
+  }
+
   let planType;
   try {
     ({ planType } = await request.json());
@@ -70,7 +76,7 @@ export async function POST(request) {
 
   let price;
   try {
-    price = await resolvePriceId(configured);
+    price = await resolvePriceId(stripe, configured);
   } catch (err) {
     console.error(`[stripe] could not resolve ${envName}: ${err.message}`);
     return Response.json({ error: 'Checkout is not configured' }, { status: 500 });

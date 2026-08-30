@@ -1,14 +1,12 @@
-import Stripe from 'stripe';
 import { PRICE_ENV, PRODUCTS } from '../lib/plans.js';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+import { getStripe } from '../lib/stripe.js';
 
 // Amounts change rarely, so hold the last answer for the life of a warm
 // instance rather than calling Stripe on every page view.
 const TTL_MS = 5 * 60 * 1000;
 let cache = null;
 
-async function loadPrices() {
+async function loadPrices(stripe) {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.data;
 
   // One retrieve per configured plan, in parallel. A plan whose env var is
@@ -55,8 +53,16 @@ async function loadPrices() {
 }
 
 export async function GET() {
+  let stripe;
   try {
-    const prices = await loadPrices();
+    stripe = getStripe();
+  } catch (err) {
+    console.error(`[stripe] ${err.message}`);
+    return Response.json({ error: 'Stripe is not configured' }, { status: 500 });
+  }
+
+  try {
+    const prices = await loadPrices(stripe);
     return Response.json(prices, {
       // Let the CDN serve this so a burst of visitors doesn't become a burst of
       // Stripe calls; stale-while-revalidate keeps it warm without blocking.

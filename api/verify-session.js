@@ -1,10 +1,18 @@
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+import { getStripe } from '../lib/stripe.js';
 
 // A session id in the URL proves only that someone reached the success page.
 // Ask Stripe whether that session was actually paid before granting access.
 export async function POST(request) {
+  let stripe;
+  try {
+    stripe = getStripe();
+  } catch (err) {
+    // A config fault must not look like "not paid" — that would deny access to
+    // someone who really did pay, with no way to tell the two cases apart.
+    console.error(`[stripe] ${err.message}`);
+    return Response.json({ paid: false, error: 'Stripe is not configured' }, { status: 500 });
+  }
+
   let sessionId;
   try {
     ({ sessionId } = await request.json());
