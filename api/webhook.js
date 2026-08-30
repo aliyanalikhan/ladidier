@@ -4,7 +4,7 @@ export async function POST(request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) {
     console.error('[stripe] STRIPE_WEBHOOK_SECRET is not set');
-    return new Response('Webhook not configured', { status: 500 });
+    return new Response('Signing secret not configured', { status: 500 });
   }
 
   let stripe;
@@ -14,7 +14,7 @@ export async function POST(request) {
     // 500 rather than 400 on purpose: Stripe retries 5xx for up to three days,
     // so events survive a misconfiguration instead of being dropped as invalid.
     console.error(`[stripe] ${err.message}`);
-    return new Response('Webhook not configured', { status: 500 });
+    return new Response('API key not configured', { status: 500 });
   }
 
   // Signature verification needs the exact bytes Stripe sent. Read the body as
