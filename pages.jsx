@@ -786,16 +786,28 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
     return () => { cancelled = true; };
   }, []);
 
+  // en-US renders USD as "$60" rather than "US$60", and still gives "€96" for
+  // euro, so this reads correctly whichever currency the Stripe prices use.
+  const money = (amount, currency) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency.toUpperCase(),
+      // Whole amounts read better without trailing zeros on a page like this.
+      minimumFractionDigits: amount % 100 === 0 ? 0 : 2,
+    }).format(amount / 100);
+
   const priceLabel = (product) => {
     const p = prices?.[product]?.[billing];
-    if (!p) return "—";
-    return new Intl.NumberFormat("en-IE", {
-      style: "currency",
-      currency: p.currency.toUpperCase(),
-      // Whole amounts read better without trailing zeros on a page like this.
-      minimumFractionDigits: p.amount % 100 === 0 ? 0 : 2,
-    }).format(p.amount / 100);
+    return p ? money(p.amount, p.currency) : "—";
   };
+
+  // Show the free tier's zero in whatever currency the paid plans are in, rather
+  // than a hardcoded symbol that could contradict them.
+  const freeCurrency =
+    prices?.online?.[billing]?.currency ?? prices?.hardcopy?.[billing]?.currency;
+  const freeLabel = freeCurrency ? money(0, freeCurrency) : "Free";
+
+  const perLabel = billing === "yearly" ? "/year" : "/month";
 
   const handleSelectPlan = async (product) => {
     if (product === "reader") {
@@ -886,7 +898,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
               <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>Reader</div>
               <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>For the casual visitor.</div>
             </div>
-            <div className="price">€0<span style={{ fontSize: 16, color: "var(--mute)", marginLeft: 6 }}>/mo</span></div>
+            <div className="price">{freeLabel}<span style={{ fontSize: 16, color: "var(--mute)", marginLeft: 6 }}>{perLabel}</span></div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12, fontSize: 14 }}>
               <li>· Unlimited story reading</li>
               <li>· Access to all 11 stores</li>
@@ -908,7 +920,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
             <div className="price">
               {priceLabel("online")}
               <span style={{ fontSize: 16, opacity: .55, marginLeft: 6 }}>
-                {billing === "yearly" ? "/year" : "/month"}
+                {perLabel}
               </span>
             </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12, fontSize: 14 }}>
@@ -936,7 +948,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
             <div className="price">
               {priceLabel("hardcopy")}
               <span style={{ fontSize: 16, color: "var(--mute)", marginLeft: 6 }}>
-                {billing === "yearly" ? "/year" : "/month"}
+                {perLabel}
               </span>
             </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12, fontSize: 14 }}>
