@@ -54,12 +54,50 @@ function App() {
   // simple hash routing
   useEffect(() => {
     const fromHash = () => {
-      const h = window.location.hash.replace(/^#/, "") || "home";
+      const h = window.location.hash.replace(/^#/, "").split('?')[0] || "home";
       setRoute(h);
     };
     fromHash();
     window.addEventListener("hashchange", fromHash);
     return () => window.removeEventListener("hashchange", fromHash);
+  }, []);
+
+  // Returning from Stripe Checkout. The session id in the URL is not proof of
+  // payment on its own, so confirm it server-side before unlocking anything.
+  useEffect(() => {
+    const sessionId = new URLSearchParams(window.location.search).get("session_id");
+    if (!sessionId) return;
+
+    let cancelled = false;
+    const backToSubscribe = () =>
+      history.replaceState(null, "", `${window.location.pathname}#subscribe`);
+
+    (async () => {
+      try {
+        const res = await fetch("/api/verify-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        });
+        const data = await res.json();
+        if (cancelled) return;
+
+        if (data.paid) {
+          setIsSubscribed(true);
+          localStorage.setItem("ladidier_subscribed", "true");
+          setRoute("magazine");
+          // Drop session_id from the address bar so it is not shared or reused.
+          history.replaceState(null, "", `${window.location.pathname}#magazine`);
+        } else {
+          backToSubscribe();
+        }
+      } catch (err) {
+        console.error("Could not verify checkout session:", err);
+        if (!cancelled) backToSubscribe();
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, []);
 
   const go = (r) => {

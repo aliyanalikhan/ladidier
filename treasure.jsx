@@ -89,7 +89,7 @@ function BowIcon({ size = 24 }) {
 
 const TREASURE_ZONES = [
   { id: "left",   style: { top: 4,  left: "6%" } },
-  { id: "center", style: { top: 12, left: "calc(50% - 22px)" } },
+  { id: "center", style: { top: 12, left: "calc(50% - 32px)" } },
   { id: "right",  style: { top: 4,  right: "6%" } },
 ];
 
@@ -121,7 +121,7 @@ function TreasureIcon({ page }) {
         aria-label={`A house treasure — ${entry.label}`}
         onClick={() => markIconFound(entry.id)}
       >
-        <Glyph size={24} />
+        <Glyph size={40} />
       </button>
     </div>
   );

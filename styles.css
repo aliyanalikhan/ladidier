@@ -1109,25 +1109,57 @@ body::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 64px;
+  height: 64px;
   padding: 0;
   margin: 0;
-  background: none;
-  border: 0;
+  background: var(--bg);
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--gold) 40%, transparent), 0 0 15px color-mix(in srgb, var(--gold) 30%, transparent);
   cursor: pointer;
   line-height: 1;
   z-index: 3;
   opacity: 1;
-  transition: transform .3s ease;
+  transition: transform .3s ease, box-shadow .3s ease;
+  animation: treasure-bounce 1s cubic-bezier(0.28, 0.84, 0.42, 1) infinite alternate;
 }
+
+.treasure-icon::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  animation: treasure-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes treasure-bounce {
+  0% { transform: scale(1) translateY(0); }
+  100% { transform: scale(1.15) translateY(-6px); box-shadow: 0 15px 35px color-mix(in srgb, var(--gold) 60%, transparent), 0 0 25px color-mix(in srgb, var(--gold) 50%, transparent); }
+}
+
+@keyframes treasure-ping {
+  0% { transform: scale(1); opacity: 0.8; }
+  75%, 100% { transform: scale(1.8); opacity: 0; }
+}
+
 .treasure-icon:hover,
 .treasure-icon:focus-visible {
-  transform: scale(1.08);
+  animation-play-state: paused;
+  transform: scale(1.2) translateY(-4px);
+  box-shadow: 0 20px 40px color-mix(in srgb, var(--gold) 70%, transparent), 0 0 30px color-mix(in srgb, var(--gold) 60%, transparent);
+}
+.treasure-icon:hover::before,
+.treasure-icon:focus-visible::before {
+  animation: none;
+  opacity: 0;
 }
 .treasure-icon:focus-visible {
-  outline: 1px solid var(--gold);
-  outline-offset: 2px;
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
 }
 
 .treasure-progress {

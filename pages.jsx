@@ -770,11 +770,38 @@ function StoresPage({ setRoute }) {
 
 function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
   const [plan, setPlan] = useState("annual");
+  const [loading, setLoading] = useState(false);
 
-  const handleSelectPlan = (planType) => {
-    setIsSubscribed(true);
-    localStorage.setItem("ladidier_subscribed", "true");
-    setRoute("magazine");
+  const handleSelectPlan = async (planType) => {
+    if (planType === "reader") {
+      setIsSubscribed(true);
+      localStorage.setItem("ladidier_subscribed", "true");
+      setRoute("magazine");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planType }),
+      });
+
+      if (!response.ok) throw new Error('Checkout response not ok');
+      const data = await response.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert('Failed to initiate checkout. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -836,8 +863,8 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
               <li>· Members-only store events</li>
               <li>· 10% house credit on first order</li>
             </ul>
-            <button className="btn solid" onClick={() => handleSelectPlan("annual")} style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" }}>
-              Become a member
+            <button className="btn solid" disabled={loading} onClick={() => handleSelectPlan("annual")} style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" }}>
+              {loading && plan === "annual" ? "Redirecting..." : "Become a member"}
             </button>
           </div>
 
@@ -859,7 +886,9 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
               <li>· Direct line to the concierge</li>
               <li>· Name in the back of the magazine</li>
             </ul>
-            <button className="btn" onClick={() => handleSelectPlan("patron")}>Apply as patron</button>
+            <button className="btn" disabled={loading} onClick={() => handleSelectPlan("patron")}>
+              {loading && plan === "patron" ? "Redirecting..." : "Apply as patron"}
+            </button>
           </div>
         </div>
 
