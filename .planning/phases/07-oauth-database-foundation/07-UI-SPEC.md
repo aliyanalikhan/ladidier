@@ -42,22 +42,20 @@ instead. Registry safety gate: not applicable.
 
 ## Spacing Scale
 
-This phase introduces no new spacing tokens. It reuses the project's existing established
-values exactly, per CONTEXT.md's instruction to reuse the draft plan's UI specifics verbatim
-for in-scope surfaces:
+This phase introduces two new spacing values (both on the standard 8-point scale) for the
+Subscribe-page sign-in row it adds; everything else this phase touches reuses pre-existing,
+untouched project spacing and is documented as an exception below rather than as a table row:
 
 | Token | Value | Usage in this phase |
 |-------|-------|----------------------|
-| Nav item gap | 28px | Existing `.nav-right` gap (unchanged) — the new sign-in element becomes one more flex child in this row |
-| Row gap | 12px | Gap between the muted label and the ghost button in the Subscribe page sign-in row |
+| Row gap | 8px | Gap between the muted label and the ghost button in the new Subscribe page sign-in row. Chosen over 16px because the label and button read as one tightly-coupled unit (the label exists only to explain the adjacent button), not two independent elements needing breathing room. |
 | Row bottom margin | 24px | Space between the sign-in row and the billing-interval toggle below it |
 
-Exceptions: none — this phase adds zero new spacing values; it only positions existing-styled
-elements, reusing the `.btn`/`.btn.ghost` classes as-is rather than declaring new padding. (The
-project's own base scale is not a strict 8-point system — e.g. the existing `.btn` rule uses
-`14px 22px` padding, and `.nav` uses 18px vertical padding — but both are pre-existing, global,
-out-of-scope conventions this phase does not touch or introduce; they are not declared spacing
-values of this contract.)
+Exceptions (pre-existing, unchanged, out of this phase's scope — not declared spacing values of
+this contract): the existing `.nav-right` flex gap of 28px, which the new Nav sign-in indicator
+simply joins as one more flex child without modifying; the existing `.btn` rule's `14px 22px`
+padding, reused as-is by the new Subscribe row's ghost button; and the existing `.nav` rule's
+18px vertical padding. This phase does not touch or introduce any of these three values.
 
 ---
 
@@ -169,7 +167,7 @@ toggle in the returned JSX:
 
 ```jsx
 {authReady && (
-  <div className="flex" style={{ justifyContent: "center", alignItems: "center", gap: 12, marginBottom: 24 }}>
+  <div className="flex" style={{ justifyContent: "center", alignItems: "center", gap: 8, marginBottom: 24 }}>
     {!user ? (
       <>
         <span className="muted" style={{ fontSize: 13 }}>Members sign in with Google.</span>
