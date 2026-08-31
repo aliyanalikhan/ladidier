@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Shopping Mall Conversion Pass
-current_phase: 06
-current_phase_name: mall-treasure-hunt
-status: executing
-stopped_at: Completed quick task 260831-ndu (Home page real ÉCLAT Vol. 2 content)
-last_updated: "2026-08-31T11:56:36.379Z"
-last_activity: 2026-08-22
-last_activity_desc: Plan 03 (mall treasure hunt site wiring) complete
+milestone: v1.2
+milestone_name: Accounts & Cross-Device Membership
+status: planning
+last_updated: "2026-08-31T22:00:26.286Z"
+last_activity: 2026-09-01
 progress:
-  total_phases: 3
-  completed_phases: 2
-  total_plans: 12
-  completed_plans: 11
-  percent: 67
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-08-31)
 
 ## Current Position
 
-Phase: 06 (mall-treasure-hunt) — EXECUTING
-Plan: 4 of 4 (03 complete, 04 ready to execute)
-Status: Executing Phase 06
-Last activity: 2026-08-22 -- Plan 03 (mall treasure hunt site wiring) complete
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-09-01 — Milestone v1.2 started
 
 ## Out-of-band work
 
