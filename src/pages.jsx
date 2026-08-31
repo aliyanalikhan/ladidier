@@ -9,7 +9,6 @@ import {
   STORIES,
   Crest,
   Reveal,
-  MagazineCover,
   StoreMarquee,
 } from './components.jsx';
 import {
@@ -116,7 +115,7 @@ function HeroSplit({ setRoute }) {
       </div>
 
       <div style={{ position: "relative" }} className="float-slow">
-        <MagazineCover tint={ISSUE.cover} vol={ISSUE.vol} no={ISSUE.no} season={ISSUE.season} title={ISSUE.title} tilt />
+        <div className="ph photo" style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }} data-tag="Vol. 2 · Sep 2026" data-label="THE COVER"></div>
         <div className="mono" style={{ position: "absolute", right: 0, top: -28, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--mute)" }}>
           ↘ Current issue
         </div>
@@ -194,7 +193,7 @@ function HeroIndex({ setRoute }) {
 
 /* Featured stories strip on home */
 function FeaturedStories({ setRoute }) {
-  const featured = STORIES.slice(0, 4);
+  const featured = ISSUE_HIGHLIGHTS.slice(0, 3);
   return (
     <section className="section container">
       <div className="flex between" style={{ marginBottom: 56, alignItems: "flex-end", gap: 32, flexWrap: "wrap" }}>
@@ -210,25 +209,25 @@ function FeaturedStories({ setRoute }) {
       <div className="magazine-featured-grid" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 40 }}>
         {/* Lead story */}
         <Reveal>
-          <article className="art-card lift" onClick={() => setRoute("article")} style={{ cursor: "pointer" }}>
-            <div className="ph photo" style={{ aspectRatio: "4/5", "--bg-image": `url(${featured[0].img})` }} data-tag={featured[0].kicker} data-label="EDITORIAL · LEAD"></div>
+          <article className="art-card lift">
+            <div className="ph photo" style={{ aspectRatio: "4/5", "--bg-image": `url(${featured[0].img})` }} data-tag={featured[0].kicker} data-label="ÉCLAT VOL. 2"></div>
             <div>
               <div className="eyebrow" style={{ marginBottom: 8 }}>{featured[0].kicker}</div>
               <h3 className="art-title" style={{ fontSize: "clamp(28px, 2.4vw, 40px)" }}>{featured[0].title}</h3>
-              <div className="art-meta" style={{ marginTop: 16 }}>{featured[0].author} · {featured[0].read} read</div>
+              <div className="art-meta" style={{ marginTop: 16 }}>{featured[0].dek}</div>
             </div>
           </article>
         </Reveal>
 
         <div className="col gap-32">
           {featured.slice(1, 3).map((s, i) => (
-            <Reveal key={s.id} delay={(i+1)*80}>
-              <article className="art-card lift" onClick={() => setRoute("article")} style={{ cursor: "pointer", gridTemplateColumns: "1fr", display: "grid", gap: 14 }}>
-                <div className="ph photo" style={{ aspectRatio: "16/10", "--bg-image": `url(${s.img})` }} data-tag={s.kicker} data-label="STORY"></div>
+            <Reveal key={s.title} delay={(i+1)*80}>
+              <article className="art-card lift" style={{ gridTemplateColumns: "1fr", display: "grid", gap: 14 }}>
+                <div className="ph photo" style={{ aspectRatio: "16/10", "--bg-image": `url(${s.img})` }} data-tag={s.kicker} data-label="ÉCLAT VOL. 2"></div>
                 <div>
                   <div className="eyebrow" style={{ marginBottom: 6 }}>{s.kicker}</div>
                   <h3 className="art-title">{s.title}</h3>
-                  <div className="art-meta" style={{ marginTop: 10 }}>{s.author} · {s.read}</div>
+                  <div className="art-meta" style={{ marginTop: 10 }}>{s.dek}</div>
                 </div>
               </article>
             </Reveal>
@@ -239,13 +238,12 @@ function FeaturedStories({ setRoute }) {
           <div className="mono" style={{ fontSize: 11, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--mute)", paddingBottom: 12, borderBottom: "1px solid var(--line-strong)" }}>
             Also in the issue
           </div>
-          {STORIES.slice(4, 8).map((s, i) => (
-            <a key={s.id} href="#" onClick={(e) => { e.preventDefault(); setRoute("article"); }}
-               className="lift" style={{ paddingBlock: 14, borderBottom: "1px solid var(--line)", display: "block" }}>
+          {ISSUE_HIGHLIGHTS.slice(3, 6).map((s, i) => (
+            <div key={s.title} style={{ paddingBlock: 14, borderBottom: "1px solid var(--line)" }}>
               <div className="eyebrow" style={{ marginBottom: 6 }}>{s.kicker}</div>
               <div className="art-title" style={{ fontSize: 18 }}>{s.title}</div>
-              <div className="art-meta" style={{ marginTop: 6 }}>{s.author} · {s.read}</div>
-            </a>
+              <div className="art-meta" style={{ marginTop: 6 }}>{s.dek}</div>
+            </div>
           ))}
         </div>
       </div>
