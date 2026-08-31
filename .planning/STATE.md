@@ -35,6 +35,8 @@ Last activity: 2026-08-22 -- Plan 03 (mall treasure hunt site wiring) complete
 
 ## Out-of-band work
 
+**⚠ PRODUCTION IS CURRENTLY RUNNING STRIPE TEST MODE (as of 2026-09-01).** At the user's request, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and all four `STRIPE_PRICE_*` env vars on Vercel Production were swapped from live to Stripe test-mode values so the ÉCLAT Vol. 2 gating feature (260901-1lc) could be tested end-to-end on ladidier.com with a real Stripe Checkout flow. **No real customer can complete a real purchase until this is reverted.** A full test subscription (Online, test card 4242...) was created and verified to correctly unlock the in-site reader and PDF download. Reverting requires the LIVE `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` values again — Vercel stores these as write-only "Secret" type vars, so neither Claude nor the account owner can read the old values back via CLI/dashboard; the user must re-reveal them from the Stripe Dashboard (Developers → API keys) and hand them over (or swap back directly in Vercel's dashboard). The four price env vars can be safely reverted to their original live `price_`/`prod_` values once known. **Any future session picking up this project should check `vercel env ls` / ask the user before assuming Production is on live keys.**
+
 Paid Stripe membership was built and shipped to production on 2026-08-31 **outside the phase structure** — it belongs to no numbered phase and the progress counters above deliberately exclude it. It reversed the "no backend/API" scope decision; see PROJECT.md Key Decisions and Known Gaps. Phase 06 Plan 04 remains the next tracked item.
 
 Progress: [████████░░] 83%
