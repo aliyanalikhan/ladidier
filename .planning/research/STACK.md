@@ -1,102 +1,153 @@
 # Stack Research
 
-**Domain:** Client-side conversion copy/CTA rework + hidden-perks discovery mechanic (zero-build React CDN site)
-**Researched:** 2026-08-20
-**Confidence:** HIGH
+**Domain:** Adding Google OAuth login + persistent user database to a zero-build, serverless-functions-only Vercel app (with existing Stripe Checkout)
+**Researched:** 2026-09-01
+**Confidence:** MEDIUM (npm registry checked directly for versions/deprecation status — HIGH; broader ecosystem/best-practice claims cross-checked across multiple independent sources but not Context7/library-doc verified — MEDIUM)
+
+## Verdict on the 2026-08-31 draft plan
+
+The draft plan at `.planning/quick/260831-8ug-.../260831-8ug-PLAN.md` is **still current and should be treated as validated, not stale**. Every one of its five technical decisions holds up against research made today (2026-09-01):
+
+| Decision in the draft plan | Status |
+|---|---|
+| `@neondatabase/serverless` (not `@vercel/postgres`) | **Confirmed correct.** `@vercel/postgres` is deprecated on npm today; its own deprecation notice literally points at Neon's SDKs. |
+| Hand-rolled Google OAuth with `fetch`, no library | **Confirmed reasonable** — see below, with one nuance worth calling out explicitly. |
+| HMAC-signed httpOnly cookie via `crypto.subtle` | **Confirmed current best practice** for this runtime; no change needed. |
+| `stripe_customer_id` stored on the user row (not looked up by email at request time) | **Confirmed as Stripe's own recommended pattern.** |
+| Lazy env-var reads inside handlers, never module scope | Not a research question — this is your own established house convention (matches `lib/stripe.js`) and remains correct. |
+
+The one thing NOT in the draft plan that's worth adding to it: **flag the Node.js runtime version** before this work ships (see Vercel gotchas below) — this is new information as of September 2026, not something the 2026-08-31 plan could have known.
 
 ## Recommended Stack
 
-### Core Technologies
-
-No new core technologies are required. The copy/CTA rework is a content and CSS change to existing JSX (`pages.jsx`, `components.jsx`). The hidden-perks mechanic is fully achievable with browser-native APIs already in use elsewhere in this codebase — adding any library (even via CDN `<script>`) would be scope creep against the milestone's own constraint ("no npm, no build tools") and against the "unobtrusive by design" / "not a gamified system" requirement.
+### Core Technologies (new additions only)
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| Web Storage API (`localStorage`) | Native (all evergreen browsers) | Persist "perk found" state across visits | Already the project's exact pattern — `app.jsx:50` reads `ladidier_subscribed` via `localStorage.getItem` in a `useState` lazy initializer, and `pages.jsx:481,766` write it via `localStorage.setItem`. Reuse this identical pattern for a new `ladidier_perk_found` (or similarly named) key — zero new concepts for the codebase to carry. |
-| `IntersectionObserver` | Native (all evergreen browsers) | Trigger a reveal only when the hidden element scrolls into view | Already used twice in `ornaments.jsx` (`CountUp`, `RomanReveal`) for scroll-triggered animation. This is the established "reveal on scroll" primitive in this project — reuse it rather than inventing a new one. |
-| CSS custom properties + `mousemove` listener | Native | Cursor-driven, hover-triggered subtle reveal (e.g. a gold glow that "finds" the perk under the cursor) | Already implemented as the `Spotlight` component in `ornaments.jsx:135-153`, which tracks `--mx`/`--my` CSS vars from `mousemove` and is consumed by `.spotlight` in `styles.css:739-747`. The same technique (container-relative mouse tracking → CSS var → `background: radial-gradient(...)`) is the natural mechanism for a "you have to notice it" discovery element. |
-| CSS `@keyframes` + `transition` | Native | Reveal/hide animation (fade, scale, shimmer) for the perk element and its popover | Matches every existing animation in `styles.css` (`stgIn`, `lrDraw`, `floaty`, `drift`, `pageFade`, `mobileOverlayIn/Out`) — all hand-written CSS keyframes, no animation library anywhere in the codebase. |
-| `prefers-reduced-motion` media query | Native | Disable/simplify the reveal animation for users who request reduced motion | Already respected at `styles.css:917-920` for `.stg-i`, `.lr-draw path`, marquees, tickers. Any new reveal animation must be added to that existing media query block, not skipped. |
+| `@neondatabase/serverless` | `1.1.0` (current, verified via `npm view`) | Postgres client for `lib/db.js` | The only non-deprecated path to Postgres from a Vercel serverless function today. MIT, zero runtime dependencies, official Neon package, and the exact one Neon's/Vercel's own migration guides point at now that `@vercel/postgres` (last version `0.10.0`) carries an npm deprecation notice telling installers to move to it. |
+| Google OAuth 2.0 authorization-code flow via `fetch` (no package) | n/a — built on Node's global `fetch` | Login | Hand-rolling three `fetch` calls (redirect to `accounts.google.com`, POST to `oauth2.googleapis.com/token`, decode the returned `id_token`) is well inside "reasonable and secure" for this specific flow — see the dedicated section below for why the usual "never hand-roll OAuth" warning doesn't fully apply here. |
+| Web Crypto (`crypto.subtle`, global) | n/a — built into Node runtime | Session cookie HMAC signing/verification | `globalThis.crypto.subtle` is stable in every Node.js version Vercel currently runs (20/22/24). It's already this codebase's house style (`api/webhook.js`'s `constructEventAsync` uses the same primitive family for Stripe's own signature verification), so this is consistency, not a new pattern. |
 
-### Supporting Libraries
+### Supporting Libraries — none needed
 
-None. There is no supporting-library gap for this milestone — see "What NOT to Use" below for the libraries that were considered and rejected.
-
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| — | — | — | No additions needed; all required behavior is covered by native Web APIs already patterned in this codebase. |
+No new package is needed beyond `@neondatabase/serverless`. Specifically:
+- **No JWT/JOSE library** for verifying the Google `id_token` — see rationale below.
+- **No auth framework** (NextAuth/Auth.js, Lucia, etc.) — these assume a framework-shaped app (Next.js API routes, a router, middleware chain) that this project deliberately doesn't have. Bolting one onto four standalone web-handler files would fight the zero-dependency, zero-framework house style rather than serve it.
+- **No dotenv** — Node 20+'s built-in `--env-file` flag (already used by the draft plan's `scripts/db-setup.mjs`) covers local env loading without a dependency.
 
 ### Development Tools
 
-No new tools. Continue editing `.jsx` files directly and testing via the existing zero-build `Ladidier Portal.html` (React 18.3.1 UMD + Babel standalone 7.29.0 in-browser JSX transform, both loaded via `unpkg` with SRI `integrity` hashes — confirmed unchanged in `Ladidier Portal.html:16-18`).
-
 | Tool | Purpose | Notes |
 |------|---------|-------|
-| Browser DevTools → Application → Local Storage | Manually clear/inspect `ladidier_perk_found` during testing | Same workflow already used for `ladidier_subscribed`. |
-| Browser DevTools → Rendering → Emulate `prefers-reduced-motion` | Verify the perk reveal degrades correctly | Required check given the existing reduced-motion contract in `styles.css`. |
+| `vercel dev` | Local serving of `/api/*` routes | Required — `vite`'s dev server does not proxy to `api/`, so OAuth callback and DB routes must be hand-tested through `vercel dev`, not `npm run dev`. Already noted correctly in the draft plan. |
+| `vercel env pull .env.local` | Sync Postgres connection string + OAuth secrets locally | Confirm which name Vercel actually injects (`DATABASE_URL`, `POSTGRES_URL`, or both) after provisioning — this varies by how the Neon integration is installed. |
 
 ## Installation
 
 ```bash
-# No installation required.
-# This is a zero-build project: React 18, ReactDOM 18, and Babel standalone
-# are already loaded via <script> tags with Subresource Integrity hashes in
-# "Ladidier Portal.html". No package.json, no npm install, no bundler.
-# All new code for this milestone is added directly to existing .jsx files.
+# Core (the only new package)
+npm install @neondatabase/serverless
+
+# Nothing else — Google OAuth uses global fetch, session signing uses global crypto.subtle
 ```
+
+## Answers to the Five Specific Questions
+
+### 1. Is `@neondatabase/serverless` + Vercel's Neon integration still current in 2026?
+
+**Yes, unchanged and confirmed.** `npm view @vercel/postgres deprecated` returns an explicit deprecation notice: *"choose an alternate storage solution from the Vercel Marketplace... migrate to Neon's SDKs."* `@neondatabase/serverless` is at `1.1.0`, MIT licensed, zero runtime dependencies, actively published by the official Neon org — the same package the draft plan already switched to.
+
+One small, non-blocking UI change since the draft plan was written: Vercel's own docs now describe provisioning as going through **Vercel Marketplace → the Neon integration → Install**, rather than the plan's phrasing of "Storage tab → Create Database → Postgres." In practice the Storage tab still routes there, so Task 2's dashboard instructions in the draft plan will still work, but if the exact button labels don't match, that's why — not a sign anything is broken.
+
+### 2. Is hand-rolling Google OAuth with `fetch` still reasonable, or is there a lightweight library worth adding?
+
+**Reasonable, with an important nuance the draft plan already got right.** Google's own documentation is often quoted as "never hand-roll ID token verification — use a client library," and blanket web advice repeats that. But that blanket advice is about tokens arriving over an **untrusted channel** (e.g., handed to your server by client-side JS after a browser redirect). This project's flow is different: the `id_token` is fetched by *your server*, directly, from `oauth2.googleapis.com/token`, over TLS, authenticated with your `client_secret` in a server-to-server POST. Google's own backend-auth documentation states exactly this exception: when you obtain the ID token this way, you already know it came from Google, and it's acceptable to decode it without a JWKS signature check — the network trust boundary is doing that job instead.
+
+That means for *this specific flow*, no JWT library is needed to reduce risk — decoding the payload is a two-line base64url split, which is what the draft plan already does, plus its own manual claim checks (`aud`, `iss`, `exp`, `email_verified`). Those claim checks are the part that actually matters and the draft plan already has them.
+
+If you ever change the flow to accept an ID token from the *browser* directly (e.g., Google Identity Services' one-tap/button flow posting a token to your server instead of a full redirect), that would cross back into the "must verify signature via JWKS" case — at that point, `jose` (npm, zero runtime dependencies, tree-shakeable, actively maintained) would be the lightweight addition worth making, in preference to `google-auth-library` (which pulls in `gaxios` and other Google Cloud-shaped dependencies this project doesn't otherwise need). Not needed now — noted for if the login method ever changes.
+
+### 3. Best-practice way to store/verify HMAC-signed session cookies with Web Crypto on Vercel?
+
+The draft plan's design is current best practice, unchanged:
+- `crypto.subtle.importKey('raw', ..., { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])` built lazily from `SESSION_SECRET`, mirroring `getStripe()`'s lazy-construction pattern.
+- Cookie value as `base64url(payload) + '.' + base64url(hmac)`.
+- Verification recomputes the HMAC and compares in **constant time** (accumulate an XOR/difference over every byte, compare once at the end) rather than a short-circuiting `===`, which is the standard mitigation for timing side-channels on a MAC comparison.
+- `HttpOnly; Secure; SameSite=Lax` — Lax, not Strict, specifically because the OAuth return trip from `accounts.google.com` arrives as a cross-site top-level GET, which `SameSite=Strict` would drop the state cookie on.
+
+No changes needed here; this is exactly the shape a hand-rolled signed-cookie session takes across every current reference for Vercel/Workers/Node Web Crypto usage, and it already matches this codebase's own `constructEventAsync` precedent in `api/webhook.js`.
+
+### 4. How should `users` link to Stripe — create-or-lookup-by-email?
+
+**Store `stripe_customer_id` on the user row; do not look up by email at request time.** This matches Stripe's own stated guidance, not just a convention: Stripe does **not** enforce email uniqueness across customers, so relying on `customers.list({ email })` or the Customer Search API as your source of truth for "does this person already have a Stripe customer" is explicitly discouraged by Stripe — two different real customers, or the same person checking out twice before your DB write lands, can produce ambiguous or duplicate matches. Stripe's documented recommendation is to keep your own mapping of identity → `stripe_customer_id`.
+
+Concretely, for this project:
+- Add a nullable `stripe_customer_id text` column to `users`.
+- On first checkout attempt (not first login — a signed-in user who never buys shouldn't need a Stripe customer at all), if the user row has no `stripe_customer_id`, create one with `stripe.customers.create({ email, metadata: { user_id } }, { idempotencyKey: ... })` and persist the returned id back onto the user row before creating the Checkout Session. Use an **idempotency key** (Stripe's own mechanism, already available on the `stripe` package already installed) derived from something stable like the user's id, so a retried request from a flaky connection can't create a second Stripe customer for the same person.
+- Pass that `customer` id into `stripe.checkout.sessions.create({ customer: stripe_customer_id, ... })` instead of (or alongside) `customer_email`, so the resulting subscription is attached to a durable customer record you can look up again later for the billing-management part of the account page (Stripe Billing Portal, or listing invoices/subscriptions by customer id) — this is what makes "membership follows the account across devices" actually work, versus the existing per-Checkout-Session cookie approach.
+- This is purely additive to the existing Stripe integration; nothing in `lib/stripe.js`, `lib/membership.js`, or the webhook needs to change for this milestone's scope (account page billing management is a read against the stored customer id, and the existing entitlement path can remain untouched, exactly as the draft plan's constraints already require).
+
+### 5. Vercel-specific gotchas for Postgres connection pooling?
+
+**The connection-pooling concern mostly doesn't apply to the driver this project uses — but there is one live gotcha unrelated to pooling that needs attention before this ships.**
+
+- `neon(connectionString)` — the HTTP-mode client this draft plan's `lib/db.js` design already uses via the tagged template — issues each query as a **stateless HTTPS fetch**, not a persistent TCP connection. There is no connection pool to exhaust, no cold-start connection-setup penalty to worry about, and no "too many connections" failure mode from concurrent serverless invocations, because there's nothing being held open between them. This is exactly the right driver mode for this app's one-query-per-request pattern, and no additional pooling configuration (PgBouncer, `-pooler` connection string, `@vercel/functions`' `attachDatabasePool`) is needed or beneficial here.
+- The pooling machinery that *does* come up in Vercel+Postgres research (PgBouncer via `pg`/`node-postgres`, `attachDatabasePool`) is for the TCP driver path, which is the *other* way to talk to Neon/Postgres from Vercel — not applicable unless this project later needs interactive multi-statement transactions or long-lived connections, at which point `Pool`/`Client` over WebSockets (still from `@neondatabase/serverless`) is the documented next step, not a different package.
+- One real limit worth knowing: the HTTP driver caps request/response size at 64 MB — irrelevant at this project's scale (small identity/address rows) but worth knowing if a future migration script ever bulk-inserts.
+- If a single request ever needs more than one write to be atomic (e.g., inserting a user row and an address row together), reach for `sql.transaction()` — the HTTP client's built-in non-interactive batched-transaction helper — rather than switching drivers.
+- **The actual gotcha to flag for this milestone:** Vercel is deprecating **Node.js 20** for Builds and Functions on **October 1, 2026** — one month from today. This project's `package.json` has no `engines` field pinning a Node version, meaning it's running on whatever the Vercel project's dashboard setting currently specifies. Before or alongside this milestone's work, confirm the Vercel project's Node.js version is set to 22 or later (Project Settings → General → Node.js Version) — this isn't specific to the OAuth/DB work, but landing new serverless routes is a natural moment to check it, since a function that starts failing to deploy in early October would look exactly like a self-inflicted regression from this milestone's code if not checked now.
 
 ## Alternatives Considered
 
 | Recommended | Alternative | When to Use Alternative |
 |-------------|-------------|--------------------------|
-| Native CSS `:hover` / `mousemove` reveal (extends `Spotlight` pattern) | `framer-motion` / `react-spring` via CDN `<script>` | Only if the project ever adopts a build step — these libraries assume ES module bundling for tree-shaking and don't have a clean, small UMD CDN story. Not appropriate here. |
-| Native CSS keyframes for reveal/sparkle | `canvas-confetti` (CDN, ~3.5KB gzip, MIT, no deps) | Only if the brand direction explicitly wants a literal confetti burst. Confirmed viable via jsDelivr/unpkg CDN with no build step if ever needed — but the milestone brief explicitly says "not a gamified system" and "unobtrusive," and a confetti burst reads as playful/gamified, which conflicts with the luxury-editorial tone already established by the existing gold-glow/laurel-draw ornament vocabulary. Recommend against for this milestone. |
-| Static, single hardcoded discount code string | Client-side "generated" per-visit code (`crypto.randomUUID()`, random alphanumeric, etc.) | Only if there is a backend or third-party service (e.g., Shopify, a coupon API) to validate codes against. This project has no backend (explicitly out of scope in `PROJECT.md`), so a per-user "generated" code cannot be validated by anyone downstream — it would look real but be functionally meaningless, which is worse than a plain static code. A single static/rotating-by-hand code (e.g. `LADIDIER15`) that store staff can honor manually is the honest, working pattern for a static site. |
-| `localStorage` boolean flag, same shape as `ladidier_subscribed` | `sessionStorage`, cookies, or a custom "perk state" context/reducer | `sessionStorage` would forget the perk on tab close (undesirable — a "found perk" should stay found). Cookies add server-round-trip overhead and consent-banner concerns for zero benefit on a static site. A dedicated context/reducer is unnecessary architecture for one boolean flag when the sibling `isSubscribed` flag already lives as plain `useState` + `localStorage` in `app.jsx`. |
-| Native `<details>`/`<summary>` as an *option* for the reveal container | Custom `useState`-driven show/hide `<div>` | `<details>` gives free keyboard/screen-reader accessibility for the "opened" state, but its default disclosure triangle and browser-styling quirks fight the bespoke gold/serif aesthetic. Recommend a controlled `<div>` (matching how every other overlay in this app, e.g. mobile nav, is built) unless accessibility auditing later flags a gap. |
+| `@neondatabase/serverless` (`neon()` HTTP mode) | `@neondatabase/serverless` `Pool`/`Client` (WebSocket mode) | Only if this project later needs interactive, multi-round-trip transactions across several dependent statements — not needed for the users/addresses schema in the draft plan. |
+| `@neondatabase/serverless` | `@neondatabase/vercel-postgres-compat` | Only relevant if migrating an *existing* codebase that already imports `import { sql } from '@vercel/postgres'` and wants a drop-in shim rather than a rewrite. This project has no existing Postgres code at all, so there's nothing to shim — go straight to the real package, as the draft plan already does. |
+| Hand-rolled OAuth + manual claim checks | `jose` for full JWKS signature verification | If the login method ever changes to accept an ID token handed to the server by browser-side JS (rather than fetched server-to-server from Google's token endpoint), signature verification becomes mandatory and `jose` is the right lightweight addition at that point. |
+| Hand-rolled OAuth | Auth.js / NextAuth, Lucia, Clerk, etc. | If this project ever adopts a framework (Next.js, etc.) or needs more than one login provider — a full auth library earns its dependency weight once there's more than one provider's worth of OAuth-flow edge cases to maintain. For "Google only, forever" on four static handler files, it's more machinery than the problem needs. |
+| `stripe_customer_id` stored on user row | Stripe Customer Search API (`customers.search`) at request time | Never as the source of truth for this project — Stripe explicitly warns Search is eventually consistent (can lag up to ~an hour during incidents) and unsuitable for read-after-write flows like "did we just create this customer." |
 
 ## What NOT to Use
 
 | Avoid | Why | Use Instead |
 |-------|-----|--------------|
-| Any new npm package, even "install later" | Milestone constraint is explicit: "no npm, no build tools." Adding a package.json now creates a half-migrated state (some code assumes a bundler, most doesn't) and breaks the project's core selling point of zero-build simplicity. | Native browser APIs, or a CDN `<script>` with pinned version + SRI hash only if genuinely unavoidable (none needed this milestone). |
-| A "real" discount-code generation/validation scheme (HMAC-signed codes, per-user codes, expiry logic) | There is no backend to check signatures or expiry against, and the milestone explicitly excludes backend/API work. Building crypto-flavored code generation with no server to validate it is false security theater — it looks functional but validates nothing. | One static, human-readable code (or a small fixed set of them) that staff can honor manually; treat it as marketing copy, not a security mechanism. |
-| Gamification primitives (progress bars, "X of Y perks found," collectible badges, leaderboards) | Explicitly out of scope per `PROJECT.md`: "Multiple/gamified hidden perks system (leaderboards, collection mechanics) — this milestone ships one working discovery mechanic." | A single discovery element, single reveal, single localStorage flag. |
-| Third-party animation/confetti/particle libraries loaded via CDN | Adds an external network dependency (with its own CDN uptime risk) and a tone (playful/gamey) that doesn't match the luxury-editorial ornament vocabulary already established. Also inconsistent with the fact that zero external libraries beyond React/Babel exist in this codebase today. | Extend `ornaments.jsx` with a small hand-drawn SVG "spark"/shimmer component in the same style as `Laurel`/`Flourish`/`DecoCorner`, animated with a new CSS `@keyframes` block. |
-| A generic analytics/AB-testing SDK to "measure conversion" | Not requested in `PROJECT.md` requirements, and pulling in an SDK for this milestone is scope creep beyond "copy rewrite + CTA + hidden perk." | If conversion measurement is wanted later, treat as a separate, explicitly-scoped milestone decision — Vercel Analytics (already compatible with static Vercel deployments) would be the lowest-friction native option if/when requested. |
-| Building the "hidden perk" as a new top-level route (`#perks`) or nav item | Milestone constraint: "must not add visible clutter, extra nav items, or interrupt the shopping/browsing flow." A route implies discoverability via navigation, which defeats "hidden." | An in-page element embedded inside an existing ornament/section on Home, Stores, or Magazine, revealed only by hover/scroll-into-view/click — no routing change, no nav change. |
+| `@vercel/postgres` | Deprecated on npm as of its own package metadata; Vercel's white-labeled Postgres storage was retired in favor of the Neon Marketplace integration. New installs will start from a dead end. | `@neondatabase/serverless` |
+| `google-auth-library` | Full Google API client SDK — pulls in `gaxios` and other Google Cloud-shaped dependencies for a feature this project can get from three `fetch` calls. Overkill for "verify one ID token." | Nothing (hand-rolled `fetch`), or `jose` if signature verification ever becomes necessary |
+| `jsonwebtoken` (the older, CommonJS, `Buffer`-oriented JWT library) | Not needed at all for this milestone (no signature verification is being done), and if it ever is needed, `jose` is the actively-recommended modern successor built on Web Crypto, which is already this project's cryptography primitive of choice. | `jose`, only if the login flow changes to require JWKS verification |
+| Looking up Stripe customers by email at checkout time | Stripe does not enforce email uniqueness; two customers can share an email, and Search/List-by-email is eventually consistent — not safe for "does this user already have a customer" logic. | Store `stripe_customer_id` on the `users` row; create once with an idempotency key |
+| A full auth framework (NextAuth/Auth.js/Lucia) | Assumes a router/middleware-chain shape this project's four standalone `export async function GET/POST` handlers don't have; would be more surface area to maintain than the one-provider flow it replaces. | Hand-rolled OAuth, as already planned |
 
 ## Stack Patterns by Variant
 
-**If the reveal trigger is hover-based (desktop-first):**
-- Extend the existing `Spotlight` pattern (`ornaments.jsx:135-153`) — track `mousemove` over a container, expose `--mx`/`--my` CSS vars, and gate the perk's opacity/`pointer-events` on proximity to a fixed target point (e.g. `Math.hypot` distance check on mousemove) rather than a literal `:hover` on a tiny element (which is hard to hit and thus hard to test, not "subtle-but-findable").
-- Pair with a `touchstart`/long-press fallback for mobile, since hover doesn't exist there (see next variant).
+**If this milestone's login flow ever grows to accept a client-side Google Identity Services token (not just the server-to-server redirect flow):**
+- Add `jose` and verify the ID token's signature against Google's JWKS (`https://www.googleapis.com/oauth2/v3/certs`).
+- Because a token arriving via browser JS is no longer covered by Google's "received directly from the token endpoint" exemption — it's back to an untrusted channel.
 
-**If the reveal trigger needs to work on mobile/touch (the responsive layouts from v1.0 must be preserved):**
-- Use a tap-and-hold (`touchstart` + timer, cancel on `touchend`/`touchmove`) or double-tap on the same ornament element, not a hover-only mechanism — hover has no equivalent on touch devices and the perk must be reachable on the mobile layouts already shipped in Phase 2.
-- Keep the same `IntersectionObserver` scroll-reveal gate on both desktop and mobile so the element only becomes interactive once it's actually been scrolled into view (avoids a dead hotspot the user never scrolls past).
-
-**If the perk's payload is a discount code:**
-- Render it as inline text plus a "Copy code" button using `navigator.clipboard.writeText()` — native Clipboard API, requires a secure context (HTTPS), which the existing Vercel deployment already satisfies. No fallback library needed; `document.execCommand('copy')` is deprecated and unnecessary here.
-
-**If the perk's payload is a magazine-subscribe prompt instead of a code:**
-- Reuse the existing `ladidier_subscribed` flag/flow from `app.jsx`/`pages.jsx` rather than building a second subscribe mechanism — the perk reveal should just surface the same subscribe CTA/form already validated in v1.0's `SubscribePage`, in a more premium/gift-like wrapper.
+**If a future feature needs multi-statement atomic writes (e.g., creating a user and an address transactionally):**
+- Use `sql.transaction([...])` from `@neondatabase/serverless`'s HTTP client rather than switching to `Pool`/WebSocket mode.
+- Because the HTTP client already supports non-interactive batched transactions, and switching drivers would add connection-lifecycle management (`pool.end()`) this app doesn't otherwise need.
 
 ## Version Compatibility
 
 | Package A | Compatible With | Notes |
 |-----------|------------------|-------|
-| React 18.3.1 (UMD, `unpkg`, SRI-pinned) | Babel standalone 7.29.0 (UMD, `unpkg`, SRI-pinned) | Confirmed unchanged in `Ladidier Portal.html:16-18` — this milestone does not touch these versions or the script-loading order (`ornaments.jsx` → `components.jsx` → `pages.jsx` → `app.jsx`, each `type="text/babel"`). New hidden-perk code should load in the same order (helper components in `ornaments.jsx`, page-level wiring in `pages.jsx`/`app.jsx`) to avoid `ReferenceError`s from Babel's in-browser, load-order-dependent global evaluation. |
-| `IntersectionObserver` | All evergreen browsers (Chrome, Firefox, Safari, Edge) | No polyfill present or needed in this codebase; already relied on unconditionally in `ornaments.jsx`. |
-| `navigator.clipboard.writeText()` | Secure contexts only (HTTPS) | Vercel deployment (`vercel.json` present, confirmed live per `PROJECT.md`) is HTTPS by default — no gap. |
+| `@neondatabase/serverless@1.1.0` | Node.js 20/22/24 (Vercel Node runtime), `"type": "module"` (already set in this project's `package.json`) | No known incompatibilities; ships ESM, matches this project's existing module type. |
+| `crypto.subtle` (global) | Node.js 20/22/24 | Stable; no polyfill needed on any Node version Vercel currently supports. |
+| `stripe@22.6.0` (already installed) | `idempotencyKey` option on `customers.create` | No version bump needed — idempotency keys are a long-standing feature of the Stripe Node SDK already in use. |
 
 ## Sources
 
-- Direct codebase inspection (`app.jsx`, `ornaments.jsx`, `pages.jsx`, `styles.css`, `Ladidier Portal.html`) — HIGH confidence, this is the authoritative source for "what pattern to reuse."
-- [MDN: Clipboard.writeText()](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) — HIGH confidence, confirms secure-context requirement, satisfied by existing Vercel HTTPS deployment.
-- [canvas-confetti on jsDelivr](https://www.jsdelivr.com/package/npm/canvas-confetti) / [UNPKG](https://unpkg.com/browse/canvas-confetti@1.6.0) — MEDIUM confidence (WebSearch, cross-referenced across jsDelivr/unpkg/cdnjs/GitHub listings), used only to confirm this alternative is CDN-viable before recommending against it on tone/scope grounds, not stack grounds.
-- `.planning/PROJECT.md` — HIGH confidence, source of milestone constraints ("no npm, no build tools," "hidden perks must stay hidden," backend explicitly out of scope).
+- `npm view @neondatabase/serverless version / dependencies / license` — direct npm registry query, confirms `1.1.0`, MIT, zero dependencies (HIGH confidence, primary source)
+- `npm view @vercel/postgres deprecated` — direct npm registry query, confirms deprecation notice text verbatim (HIGH confidence, primary source)
+- Neon docs, "Migrate from Vercel Postgres SDK to the Neon serverless driver" (neon.com/guides/vercel-sdk-migration) and "Vercel Postgres Transition Guide" (neon.com/docs/guides/vercel-postgres-transition-guide) — cross-checked against the npm deprecation notice (MEDIUM confidence)
+- Neon docs, serverless driver reference (neon.com/docs/serverless/serverless-driver) — confirms HTTP-mode has no persistent connections / no pooling requirement, `transaction()` for batched writes, 64MB request cap (MEDIUM confidence)
+- Google Identity docs, "Authenticate with a backend server" (developers.google.com/identity/sign-in/web/backend-auth) — source for the token-endpoint signature-verification exemption (MEDIUM confidence, cross-checked across two searches with consistent wording)
+- Google Identity docs, "Verify the Google ID token on your server side" (developers.google.com/identity/gsi/web/guides/verify-google-id-token) — general JWKS-verification guidance, used as the contrast case (MEDIUM confidence)
+- `jose` npm package page and GitHub (panva/jose) — zero-dependency, Web-Crypto-based JWT library, cited as the fallback option (MEDIUM confidence)
+- Stripe community discussion + Stripe idempotency documentation (stripe.com/blog/idempotency, docs.stripe.com/api/idempotent_requests) — source for "Stripe does not enforce email uniqueness, maintain your own mapping" guidance (MEDIUM confidence, Stripe's own words quoted from search results)
+- Vercel changelog, "Node.js 20 is being deprecated" (vercel.com/changelog/node-js-20-is-being-deprecated) — Oct 1, 2026 deprecation date (MEDIUM confidence, time-sensitive — verify directly in Vercel dashboard before shipping)
+- Vercel Marketplace / Neon integration docs (vercel.com/docs/marketplace-storage, vercel.com/marketplace/neon) — current provisioning flow terminology (MEDIUM confidence)
 
 ---
-*Stack research for: LaDidiér Portal v1.1 — Shopping Mall Conversion Pass*
-*Researched: 2026-08-20*
+*Stack research for: Google OAuth + persistent user DB + Stripe-customer linking, added to an existing zero-build React CDN + Vercel serverless-functions app*
+*Researched: 2026-09-01*

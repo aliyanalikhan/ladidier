@@ -1,215 +1,244 @@
 # Architecture Research
 
-**Domain:** Zero-build client-side React app (CDN React + Babel-standalone) — conversion copy pass + client-only "hidden perk" discovery mechanic
-**Researched:** 2026-08-20
-**Confidence:** HIGH (grounded directly in the existing codebase; no external ecosystem uncertainty — this is an integration question, not a technology-selection question)
+**Domain:** Adding Google OAuth + Postgres accounts, with Stripe-customer linking, to an existing Stripe-only serverless (Vercel) app
+**Researched:** 2026-09-01
+**Confidence:** HIGH — based directly on reading the live codebase (`api/entitlement.js`, `lib/membership.js`, `lib/stripe.js`, `api/checkout.js`, `api/verify-session.js`, `api/webhook.js`, `src/app.jsx`, `src/pages.jsx`, `src/components.jsx`, `package.json`, `index.html`) and the existing unexecuted draft plan `.planning/quick/260831-8ug-.../260831-8ug-PLAN.md`, not on general web research. This is a codebase-specific integration design, not an ecosystem survey.
 
 ## Standard Architecture
 
 ### System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│  index.html — loads, in order (global, non-module <script> tags):   │
-│  React 18 UMD → ReactDOM UMD → Babel standalone →                   │
-│  tweaks-panel.jsx → ornaments.jsx → [NEW] perks.jsx →                │
-│  components.jsx → pages.jsx → app.jsx                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                         app.jsx (App shell)                          │
-│  ┌───────────┐  hash router   ┌────────────────────────────────┐    │
-│  │  Tweaks   │◄──state (t)───►│  route switch → Page component  │    │
-│  │  Panel    │                │  isSubscribed (App-level state, │    │
-│  └───────────┘                │  localStorage: ladidier_subscribed)│  │
-│                                └────────────────────────────────┘    │
-│  <Nav/> (every route) · <main>{page}</main> · <Footer/> (every route)│
-├─────────────────────────────────────────────────────────────────────┤
-│  pages.jsx           components.jsx        [NEW] perks.jsx           │
-│  HomePage            Nav / MobileNav        HiddenPerk (mark+modal)  │
-│  MagazinePage         Footer  ← integration usePerkFound() hook      │
-│  StoresPage           StoreMarquee          PERK_CODE (static const) │
-│  SubscribePage        MagazineCover                                  │
-│  ArticlePage, AboutPage                                              │
-├─────────────────────────────────────────────────────────────────────┤
-│  ornaments.jsx (pure decorative, stateless-except-animation)         │
-│  Laurel · Flourish · DecoCorner · Monogram · VerticalRule · Stagger  │
-├─────────────────────────────────────────────────────────────────────┤
-│  localStorage (only persistence layer — no backend, no cart/API)     │
-│  ladidier_subscribed  ·  [NEW] ladidier_perk_found                   │
-└─────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                         BROWSER (React 18, no build-tool                │
+│                         constraint violated already: Vite bundles it)   │
+├────────────────────────────────────────────────────────────────────────┤
+│  src/app.jsx (hash router)                                              │
+│    ├─ isMember  (legacy, per-browser)   ──┐                             │
+│    ├─ user / authReady  (NEW, per-account)─┤─► OR'd into effective      │
+│    └─ route switch → pages.jsx             │    "can see digital issue" │
+├────────────────────────────────────────────────────────────────────────┤
+│                    VERCEL SERVERLESS FUNCTIONS (api/)                   │
+│                                                                          │
+│  LEGACY LANE (untouched, byte-for-byte)   NEW LANE (this milestone)     │
+│  ┌───────────────────────────────┐        ┌──────────────────────────┐ │
+│  │ api/checkout.js*    (MODIFIED)│        │ api/auth/google.js       │ │
+│  │ api/verify-session.js         │        │ api/auth/callback.js     │ │
+│  │ api/entitlement.js            │        │ api/auth/me.js           │ │
+│  │ api/webhook.js                │        │ api/auth/logout.js       │ │
+│  │ api/prices.js                 │        │ api/address.js           │ │
+│  └───────────────┬───────────────┘        │ api/account/status.js   │ │
+│                  │                        │ api/account/portal.js   │ │
+│                  │                        └────────────┬─────────────┘ │
+├──────────────────┼─────────────────────────────────────┼───────────────┤
+│                  ▼                                      ▼               │
+│  lib/membership.js (untouched)          lib/session.js (new)            │
+│  lib/stripe.js (untouched, SHARED) ◄────┴── lib/account.js (new)        │
+│                  │                              │                       │
+│                  │                       lib/db.js (new)                │
+├──────────────────┼──────────────────────────────┼───────────────────────┤
+│                  ▼                              ▼                       │
+│             Stripe API                   Neon/Postgres (via             │
+│      (checkout.sessions,                 @neondatabase/serverless)      │
+│       customers, subscriptions,                 │                      │
+│       billingPortal)                     Google OAuth (accounts.google) │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
+
+*`api/checkout.js` is the one legacy file that must be touched — both by the old draft plan (login gate, hardcopy address) and by this milestone (customer creation/linking). Everything else in the legacy lane stays byte-for-byte.
 
 ### Component Responsibilities
 
-| Component / File | Responsibility | Notes |
+| Component | Responsibility | Status this milestone |
 |-----------|----------------|------------------------|
-| `app.jsx` | Route switch, theme (Tweaks), lifts `isSubscribed` state, renders `Nav`/`Footer` on every route | No changes needed for perks if perk state is self-contained (see Pattern 2) |
-| `pages.jsx` | Page-level content/copy, page-specific layout (HomePage, StoresPage, MagazinePage, SubscribePage) | Copy/CTA rework happens entirely here — no structural change needed |
-| `components.jsx` | Shared, stateful, cross-page UI: `Nav`, `MobileNav`, `Footer`, `StoreMarquee`, `MagazineCover`, catalog data (`STORES`, `ISSUE`, `STORIES`) | `Footer` is the one component guaranteed to render on **every** route (rendered by `app.jsx` outside the route switch) — the natural sitewide hook point |
-| `ornaments.jsx` | Pure decorative SVG/animation primitives, no state, no localStorage, no business logic | Do not add perk state/logic here — keep it strictly visual vocabulary |
-| **`perks.jsx` (new)** | Owns the entire hidden-perk feature: storage key, static code constant, `usePerkFound()` hook, the trigger mark, and the reveal panel | Mirrors how `ornaments.jsx`/`components.jsx`/`tweaks-panel.jsx` are each a self-contained global-scope file exporting via `Object.assign(window, {...})` |
-| `styles.css` | Single stylesheet; `.paywall-gate` (gold-border/cream-bg card), `.ornament-divider`, `.mobile-overlay` (`z-index:100`), `.twk-panel` (`z-index:2147483646`) already establish the visual/z-index vocabulary to reuse | New perk-reveal panel should reuse `.paywall-gate` styling conventions, not invent a new visual language |
+| `lib/stripe.js` | Lazy singleton Stripe client | Untouched — reused (imported) by every new Stripe-touching module |
+| `lib/membership.js` | Cookie name, `ACTIVE_STATUSES` set, `readCookie`, per-browser entitlement cache | Untouched — `ACTIVE_STATUSES` is imported/reused, not re-declared, by the new account-status endpoint |
+| `api/entitlement.js` | Per-browser (cookie) "is this Checkout Session's subscription active" | Untouched, no new logic added |
+| `api/verify-session.js` | Confirms a just-completed Checkout Session, sets `ladidier_member_session` | Untouched |
+| `api/webhook.js` | Signature-verified audit log of Stripe events | Untouched |
+| `api/checkout.js` | Creates a Checkout Session | Modified (already scheduled by the draft plan for the login gate + hardcopy address gate); this milestone adds one more responsibility: find-or-create the caller's Stripe Customer and pass `customer:` into `sessions.create` |
+| `lib/db.js` (new) | Owns the Postgres schema and every parameterised query — the draft plan's own convention ("the only place that knows the schema") | New — extend with one additive column and two new query functions |
+| `lib/session.js` (new) | HMAC-signed httpOnly session cookie (`ladidier_session`) and OAuth state cookie | New, as drafted |
+| `lib/account.js` (new) | Orchestrates `lib/db.js` + `lib/stripe.js` to answer "what is this signed-in user's Stripe customer id, and is it active" — the seam that keeps Stripe-customer logic out of `lib/db.js` (pure SQL) and out of `api/checkout.js` (route handler) | New — this milestone's addition, not in the draft plan |
+| `api/auth/google.js`, `api/auth/callback.js`, `api/auth/me.js`, `api/auth/logout.js` | Google OAuth 2.0 flow, session issuance | New, as drafted — unchanged by this milestone |
+| `api/address.js` | In-app Hard Copy delivery address, keyed to the signed-in user | New, as drafted — unchanged by this milestone |
+| `api/account/status.js` (new) | Given a session, return profile + live Stripe membership status for that **account** (not that browser) | New — this milestone |
+| `api/account/portal.js` (new) | Given a session, mint a Stripe Billing Portal URL for that account's customer | New — this milestone |
 
 ## Recommended Project Structure
 
-No folder restructuring — the project is intentionally flat (no `src/`, no bundler, no modules). Add one file at the repo root, alongside the existing four, and one new `<script>` tag in the HTML shell(s):
-
 ```
-Ladidier/
-├── tweaks-panel.jsx     # unchanged
-├── ornaments.jsx        # unchanged — do not touch for this milestone
-├── perks.jsx            # NEW — hidden-perk feature (state, trigger, reveal UI)
-├── components.jsx       # ONE new line: <HiddenPerk /> inside <Footer>
-├── pages.jsx            # copy/CTA edits only (Home/Stores/Magazine functions)
-├── app.jsx              # unchanged (no prop threading needed — see Pattern 2)
-├── styles.css           # append perk-mark + perk-reveal rules; reuse .paywall-gate pattern
-├── Ladidier Portal.html # add <script type="text/babel" src="perks.jsx"></script>
-└── Ladidier Portal-print.html # ALSO needs the script tag — confirmed below
+api/
+├── auth/
+│   ├── google.js       # unchanged from draft plan
+│   ├── callback.js     # unchanged from draft plan
+│   ├── me.js            # unchanged from draft plan
+│   └── logout.js        # unchanged from draft plan
+├── account/             # NEW this milestone
+│   ├── status.js        # GET — profile + live membership status for the account
+│   └── portal.js        # POST — Stripe Billing Portal redirect URL
+├── address.js            # unchanged from draft plan
+├── checkout.js           # MODIFIED (draft plan's login gate/address gate + this
+│                          #   milestone's customer find-or-create)
+├── entitlement.js         # DO NOT TOUCH
+├── verify-session.js      # DO NOT TOUCH
+├── webhook.js             # DO NOT TOUCH
+└── prices.js              # DO NOT TOUCH
+lib/
+├── stripe.js              # DO NOT TOUCH — imported by lib/account.js and api/account/*
+├── membership.js          # DO NOT TOUCH — ACTIVE_STATUSES imported by lib/account.js
+├── db.js                  # extend: add stripe_customer_id column + 2 query fns
+├── session.js              # unchanged from draft plan
+├── shipping.js             # unchanged from draft plan
+└── account.js              # NEW — Stripe-customer linking + status logic
+src/
+├── app.jsx                 # extend: add an ADDITIVE effect/state for account-based
+│                            #   entitlement; add "account" route case
+├── pages.jsx                # extend: add AccountPage; SubscribePage unaffected beyond
+│                            #   the draft plan's own edits
+└── components.jsx           # extend: Nav gets a real account link (currently a dead
+                              #   `href="#account"` stub that only renders "EN · USD")
 ```
 
 ### Structure Rationale
 
-- **New file, not a new folder:** the project has zero build tooling — every `.jsx` file is a `<script type="text/babel">` tag evaluated in global scope. Adding a folder would break nothing technically, but it would be inconsistent with the existing flat, five-file convention and would need path updates in two HTML entry files for no benefit.
-- **`perks.jsx` sits between `ornaments.jsx` and `components.jsx` in load order** because: it may reuse ornament primitives (e.g., borrowing the `Laurel` berry-dot visual language for the trigger mark) — so it must load *after* `ornaments.jsx` — and it is consumed by `components.jsx` (`Footer`) — so it must load *before* `components.jsx`. Load order only matters here for readability/consistency; because these are plain global scripts (not ES modules) and all component functions are invoked later at render time (after all five files have finished evaluating and `ReactDOM.createRoot(...).render(<App/>)` runs at the very end of `app.jsx`), a perk component technically works regardless of exact position as long as it loads before `app.jsx`. Still, follow the dependency-order convention already established (`ornaments` → `components` → `pages` → `app`) rather than relying on that leniency.
-- **Not inside `ornaments.jsx`:** ornaments.jsx has zero business logic and zero localStorage today — every export is a pure, stateless (or purely-animation-state) SVG component. Hidden perks need localStorage persistence, a reveal modal, conditional copy branching on subscription status, and click handling — a fundamentally different responsibility (feature logic + UI) than "decorative visual vocabulary." Folding it in would blur that boundary and make `ornaments.jsx` (loaded first, used everywhere including Hero variants, About page, MagazineCover) the wrong place to reason about a discovery mechanic's state machine.
-- **Not inside `components.jsx` or `pages.jsx`:** both files are already sizeable (423 and 953 lines respectively) and have clear existing identities (shared chrome; page content). A milestone-scoped feature like this benefits from being isolated in its own file — smaller diff footprint, easy to find/remove/toggle off later, and it keeps the "one discovery mechanic, not a system" constraint physically visible as one file.
+- **`api/account/` as its own folder, not a modification to `api/entitlement.js`.** `api/entitlement.js` answers one question — "does this cookie's Checkout Session still have an active subscription" — for the pre-login flow. Bolting a second, unrelated question ("does this logged-in user have an active subscription via their linked customer") onto the same file conflates two independent trust boundaries (cookie vs. session) in one handler, and violates the draft plan's own hard constraint that `api/entitlement.js` must keep working byte-for-byte. A sibling endpoint costs nothing and keeps the diff on the do-not-touch file at zero.
+- **`lib/account.js` as a new layer above `lib/db.js`, not folded into `lib/db.js`.** The draft plan's own comment on `lib/db.js` calls it "the only place that knows the schema" — i.e., SQL only. Stripe-customer find-or-create logic needs both a DB read/write and a Stripe API call; putting that orchestration in `lib/db.js` would make it import `lib/stripe.js`, which breaks the existing separation (`lib/stripe.js` and `lib/membership.js` currently know nothing about Postgres, and should stay that way). `lib/account.js` is the seam: it imports both `lib/db.js` and `lib/stripe.js`, but neither of those needs to know about the other.
 
 ## Architectural Patterns
 
-### Pattern 1: Self-contained feature file with a single sitewide mount point
+### Pattern 1: Two independent, additive entitlement lanes (do not merge)
 
-**What:** `perks.jsx` exports one composite component, `<HiddenPerk />`, that internally bundles the trigger mark + the reveal panel + its own hook. The rest of the app only needs **one line** added: `<HiddenPerk />` inside `Footer` in `components.jsx`.
-**When to use:** Exactly this case — a feature that must have minimal blast radius, needs no coordination with routing, and must not visibly disturb any existing page.
-**Trade-offs:** Extremely low integration risk (one call site). Slight trade-off: if a second placement is wanted later (e.g., also inside the Home hero), that's a one-line addition per page, not a refactor — the component takes no required props.
+**What:** The pre-login cookie flow (`ladidier_member_session` → `api/entitlement.js`) and the new logged-in flow (`ladidier_session` → `api/account/status.js`) are two separate, parallel checks that both terminate in "is a subscription active," but never share a code path or a cookie.
 
-**Why `Footer` specifically:** `app.jsx` renders `<Footer setRoute={go} />` *outside* the route switch (line 88), so it mounts on **every** route already — Home, Stores, Magazine, Subscribe, Article, About — with zero new plumbing. This satisfies "elements placed around the site" without needing per-page wiring, and keeps the trigger present even if a future milestone wants it discoverable from a page outside this milestone's Home/Stores/Magazine copy scope.
+**When to use:** Exactly this situation — an existing entitlement mechanism has live paying users depending on it, and a new identity layer is being added that must not regress them, and migration between the two is explicitly out of scope for this milestone (per PROJECT.md: "Existing pre-login Stripe subscribers are NOT migrated in this milestone").
 
-**Example:**
+**Trade-offs:** A member who bought before signing in with Google, then later signs in, gets **two disconnected identities** — the browser's Checkout Session cookie and a fresh, unlinked `users` row — until a future migration milestone reconciles them by email or a claim flow. This is a known, accepted gap, not an oversight; do not try to silently auto-link by matching email in `api/account/status.js`, since an unverified match on Stripe's `customer_details.email` from the anonymous flow is not proof of account ownership — that reconciliation deserves its own reviewed design.
+
+**Example (client-side OR, additive to the existing effect in `src/app.jsx`):**
 ```jsx
-// components.jsx — inside Footer(), near the existing (currently no-op) <Crest/> + wordmark:
-<div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
-  <Crest size={26} />
-  <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>LaDidiér</div>
-  <HiddenPerk />
-</div>
+// Existing effect (UNTOUCHED): sets isMember from the per-browser cookie via /api/entitlement.
+// NEW, separate effect, added alongside it — never inside it:
+useEffect(() => {
+  if (!authReady || !user) return;
+  let cancelled = false;
+  fetch("/api/account/status", { credentials: "same-origin" })
+    .then((r) => r.json())
+    .then((d) => { if (!cancelled && d.active) setIsMember(true); })
+    .catch((err) => console.error("Could not verify account membership:", err));
+  return () => { cancelled = true; };
+}, [authReady, user]);
 ```
+`setIsMember(true)` only ever turns access **on** from the new lane; it never turns it off, so a false/slow response from the new endpoint cannot revoke access the legacy cookie already granted — the legacy effect remains the sole authority for revocation, exactly as it is today.
 
-Note: `Crest()` currently `return`s `null` in six call sites across `components.jsx`/`pages.jsx` (Footer, all three Home hero variants, About page). It is tempting to repurpose it as the perk's visual host since it's already "reserved" real estate — **do not**. `Crest` is called from six different contexts with six different sizes/colors and no clear owner intent; overloading a shared, multiply-instantiated placeholder with click/localStorage/modal logic would make the trigger appear (invisibly, since it renders nothing) in unrelated places like the About page and every hero variant, which is unpredictable and hard to reason about. Keep `Crest` untouched and give the perk its own dedicated, single-instance component instead.
+### Pattern 2: Link the Stripe Customer at checkout-creation time, not at webhook or verify-session time
 
-### Pattern 2: Self-contained state, not lifted to App
+**What:** Because the draft plan already gates `POST /api/checkout` behind a signed-in session (Task 5 of the draft plan), by the time a request reaches `stripe.checkout.sessions.create`, the caller's `uid` is already known. Find-or-create the user's Stripe Customer **inside `api/checkout.js`**, before creating the Checkout Session, and pass `customer: stripeCustomerId` (replacing the plain `customer_email` the draft plan proposed). Persist the customer id on the `users` row immediately.
 
-**What:** Unlike `isSubscribed` (lifted to `app.jsx` state because three different pages — Home, Magazine, Subscribe — must all read *and* the Magazine paywall must react to it), perk-found state has exactly one owner: the `HiddenPerk` component itself. Use a local hook (`usePerkFound`) defined and consumed entirely inside `perks.jsx`.
-**When to use:** When a piece of state has a single consumer and no other component needs to branch on it. This avoids widening `App`'s or any page component's prop signature — a real constraint here since the milestone's "no breaking changes" requirement explicitly protects existing routing/prop contracts.
-**Trade-offs:** If a later milestone wants e.g. a Nav badge for "perk found," the flag would need to be lifted then — acceptable, since that's explicitly out of scope now ("one working discovery mechanic," not a gamified system with persistent UI indicators).
+**When to use:** Any time the identity that needs linking to a Stripe object is already authenticated before that Stripe object is created — this avoids needing to react to Stripe's asynchronous webhook or the return-trip `verify-session` call to discover "whose purchase was this," which would require touching two do-not-touch files.
+
+**Trade-offs:** This only links customers for **new** checkouts created after this milestone ships. It does not, and should not, try to retroactively link old Checkout Sessions or Stripe Customers created before login existed — that is exactly the deferred migration.
 
 **Example:**
-```jsx
-// perks.jsx
-const PERK_FOUND_KEY = "ladidier_perk_found"; // same naming convention as ladidier_subscribed
-const PERK_CODE = "HOUSE10"; // static, display-only — see Pattern 3
+```js
+// inside api/checkout.js POST, after the session/login-gate check the draft
+// plan already adds, and before stripe.checkout.sessions.create:
+import { ensureStripeCustomer } from '../lib/account.js';
 
-function usePerkFound() {
-  const [found, setFound] = useState(() => localStorage.getItem(PERK_FOUND_KEY) === "true");
-  const markFound = () => {
-    localStorage.setItem(PERK_FOUND_KEY, "true");
-    setFound(true);
-  };
-  return { found, markFound };
+const customerId = await ensureStripeCustomer(session.uid, session.email, stripe);
+// ... sessions.create({ ..., customer: customerId, /* no customer_email */ })
+```
+```js
+// lib/account.js
+import { getSql } from './db.js';      // or getStripeCustomerId/linkStripeCustomer helpers in lib/db.js
+import { ACTIVE_STATUSES } from './membership.js';
+
+// Idempotent by design: re-reads the column after an optimistic UPDATE so a
+// double-click race creates at most one extra, unused Stripe Customer rather
+// than two conflicting rows in `users`.
+export async function ensureStripeCustomer(userId, email, stripe) {
+  const existing = await getStripeCustomerId(userId);
+  if (existing) return existing;
+
+  const customer = await stripe.customers.create({ email, metadata: { user_id: String(userId) } });
+  const linked = await linkStripeCustomerIfUnset(userId, customer.id);
+  return linked; // returns the id that actually won the race, not necessarily customer.id
 }
 ```
 
-The one place `perks.jsx` legitimately *reads* (never writes) app-level state is the existing `ladidier_subscribed` key, to decide reveal-panel content (see Data Flow below). This is a read-only cross-feature dependency via the same localStorage key `app.jsx`/`pages.jsx` already write to — no prop threading required, and no risk of the perk feature ever touching subscription state.
+### Pattern 3: Account/billing status delegates to Stripe's hosted Billing Portal, never reimplements cancel/manage
 
-### Pattern 3: Display-only discount code — no validation logic, ever
+**What:** `api/account/portal.js` calls `stripe.billingPortal.sessions.create({ customer, return_url })` and returns the URL for the client to redirect to. The account page never calls `stripe.subscriptions.update` / `.del` directly.
 
-**What:** The discount code is a hardcoded string constant shown to the user on discovery, persisted so repeat visits show the *same* code (not regenerated), with zero validation, expiry-checking, or "redemption" logic against anything.
-**When to use:** Any time a static/client-only site wants to represent a discount code with no backend or cart to enforce it against.
-**Trade-offs:** None of the usual code-validation trade-offs apply, because there is nothing to validate against. See Anti-Pattern 1 below for why building fake validation is actively harmful.
+**When to use:** Whenever "manage or cancel" is a requirement and Stripe is already the source of truth for subscription state — exactly this project's existing philosophy (`lib/stripe.js`'s whole reason for existing is "the only question is 'is this subscription still paid for', which Stripe already answers").
 
-**Example:**
-```jsx
-// perks.jsx — reveal content branches on the *existing* subscribe flag, read-only
-function PerkReveal({ onClose }) {
-  const isSubscribed = localStorage.getItem("ladidier_subscribed") === "true";
-  return (
-    <div className="paywall-gate" style={{ /* reuse existing gold-border/cream-bg treatment */ }}>
-      <div className="eyebrow">A House Secret</div>
-      <h3>Your code: <span className="gold-text mono">{PERK_CODE}</span></h3>
-      <p>Present this at any Ladidiér house — online or in person.</p>
-      {!isSubscribed && (
-        <button className="btn solid" onClick={() => { onClose(); location.hash = "subscribe"; }}>
-          Also unlock the Sunday letter →
-        </button>
-      )}
-      <button className="btn ghost" onClick={onClose}>Close</button>
-    </div>
-  );
-}
-```
+**Trade-offs:** Requires enabling the Customer Portal in the Stripe Dashboard (a `user_setup` dashboard task, same category as the OAuth consent screen in the draft plan) and, since production currently runs Stripe **test-mode** keys (per PROJECT.md, 2026-09-01), the portal must be tested in test mode and re-verified after the pending revert to live keys. Saves rebuilding proration/cancellation UI and logic that Stripe already ships.
 
 ## Data Flow
 
-### Perk Discovery Flow
+### Request Flow — Account/Billing page
 
 ```
-User clicks HiddenPerk mark (Footer, any route)
+Account page mounts
     ↓
-usePerkFound().markFound()
-    ↓                                      ↓
-localStorage.setItem                  setFound(true) → re-render
-("ladidier_perk_found","true")             ↓
-                                       PerkReveal panel opens (position: fixed,
-                                       styled like .paywall-gate, z-index between
-                                       .mobile-overlay [100] and .twk-panel [2147483646] —
-                                       e.g. 500)
-                                            ↓
-                              reads localStorage.getItem("ladidier_subscribed")
-                              (read-only; existing key owned by app.jsx/pages.jsx)
-                                            ↓
-                         isSubscribed=true → show code only
-                         isSubscribed=false → show code + "Subscribe" CTA → #subscribe route
+GET /api/auth/me            (unchanged, draft plan)  → { user: { id, email, name, picture } }
+    ↓ (parallel)
+GET /api/account/status     (NEW)                     → { linked, active, status, plan, currentPeriodEnd }
+    │
+    ├─ readSession(cookie) → uid                       [lib/session.js, unchanged]
+    ├─ getStripeCustomerId(uid)                         [lib/db.js / lib/account.js]
+    │     └─ no row / no customer id → { linked: false, active: false }   (no Stripe call — cheap default)
+    └─ has customer id → stripe.subscriptions.list({ customer, status: 'all' })
+          └─ map status through ACTIVE_STATUSES          [imported from lib/membership.js, NOT re-declared]
+    ↓
+User clicks "Manage billing"
+    ↓
+POST /api/account/portal    (NEW) → { url }  → window.location.href = url
+    ↓
+Stripe-hosted portal: cancel / update payment method / view invoices
+    ↓
+return_url back to #account → GET /api/account/status re-fetched to reflect the change
 ```
 
 ### Key Data Flows
 
-1. **Perk found state:** One-directional, one-owner. `HiddenPerk` writes `ladidier_perk_found`; nothing else in the app reads or writes that key. On return visits, `usePerkFound()`'s lazy `useState` initializer reads it once at mount, so a user who already found the perk can see it reflected immediately (e.g., a small "already found" visual state on the mark, optional) without any cross-file coordination.
-2. **Subscription cross-read:** `perks.jsx` reads (never writes) the pre-existing `ladidier_subscribed` key that `app.jsx` (line 50) and `pages.jsx` (lines 481, 766) already own, purely to decide reveal-panel copy. This is the *only* coupling point between the new feature and existing state, and it's read-only — zero risk of the perk feature corrupting the subscribe flow.
-3. **Copy/CTA changes:** Pure JSX/text edits inside `pages.jsx` functions (`HomePage`, `StoresPage`, `MagazinePage`, and shared `SubscribeBanner`). No new state, no new files. Independent of the perk data flow entirely — these two workstreams don't share files except that `SubscribeBanner`'s copy tone should stay consistent with whatever `PerkReveal` says (soft coordination, not code coupling).
+1. **Sign-in → link (new, once per user):** Google OAuth (draft plan, unchanged) creates/updates a `users` row keyed on `google_sub`. The **first paid checkout** after that (this milestone) is what actually creates the Stripe Customer and writes `stripe_customer_id` — signing in alone does not create a Stripe Customer, since a Reader-tier (free) user may never need one.
+2. **Legacy entitlement (unchanged):** `ladidier_member_session` cookie → `api/entitlement.js` → Stripe Checkout Session → expanded subscription status. Zero new code touches this path.
+3. **Account entitlement (new):** `ladidier_session` cookie → `api/account/status.js` → `users.stripe_customer_id` → Stripe Customer's subscriptions → status, reusing `ACTIVE_STATUSES` from `lib/membership.js` so "what counts as active" can never drift between the two lanes.
+4. **Client merge (new, additive):** `src/app.jsx`'s existing `isMember` effect is left alone; a second effect ORs in the account-based result. Revocation authority stays entirely with the existing legacy effect.
 
 ## Scaling Considerations
 
-Not applicable in the traditional sense — this is a static site with no backend, no user accounts, and no traffic-driven bottlenecks to plan around. The only "scale" axis that matters is feature scope creep:
-
 | Scale | Architecture Adjustments |
 |-------|--------------------------|
-| Single perk, single code (this milestone) | `perks.jsx` as designed: one constant, one hook, one mount point |
-| Multiple perks / seasonal rotation (explicitly out of scope) | Would need an array of `{id, code, foundKey}` and a small registry — still no backend required, still localStorage, but `usePerkFound` would need to become `usePerksState(id)`. Do not build this now — YAGNI, and PROJECT.md explicitly excludes it |
-| Real redemption / inventory-aware codes | Would require an actual backend and checkout integration on each of the 14 independently-hosted stores (`STORES[].url` — all external domains, not part of this codebase) — a different project entirely, not a "phase" of this one |
+| Current (single-digit to low hundreds of members) | Exactly as designed above — no caching needed on `api/account/status.js` beyond `Cache-Control: private, no-store` (matching the existing `PRIVATE` header pattern in `api/entitlement.js`/`api/auth/me.js`) |
+| Growth | If `api/account/status.js` calls become frequent (e.g. rendered on every page, not just the account page), add the same short-TTL in-memory per-warm-instance cache pattern `lib/membership.js` already uses for `checkActiveMembership` — keyed on `stripe_customer_id` instead of session id |
+| Much larger | Neon/Postgres connection handling via `@neondatabase/serverless` is already HTTP-based (no pooled TCP connections to manage) per the draft plan's package choice, so this does not become a bottleneck before Stripe API rate limits would |
 
 ### Scaling Priorities
 
-1. **Not a concern this milestone.** The single biggest risk is scope creep toward a "real" coupon system — resist it; PROJECT.md's Out of Scope section already forbids backend/API work and gamified multi-perk systems.
-
-> **Note added 2026-08-31:** PROJECT.md no longer forbids backend/API work — paid membership shipped with serverless functions in `api/`. The conclusion above still holds for *discount codes*: `HOUSE10`/`HOUSE20` remain display-only, and redemption would still need integration with 14 independently-hosted stores. The reasoning stands; only the citation of the Out of Scope constraint is stale.
+1. **First bottleneck:** Stripe API calls per account-status check, if the account page is polled aggressively — mitigate with the same TTL-cache pattern already established in `lib/membership.js`, applied inside `lib/account.js` rather than duplicated.
+2. **Second bottleneck:** `ensureSchema()`'s one DDL round-trip per cold start (already an accepted, documented trade-off in the draft plan's threat register) — adding one more `alter table` statement for `stripe_customer_id` does not change this risk profile.
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: Building fake "validation" for the discount code
+### Anti-Pattern 1: Modifying `api/entitlement.js` to also check the session cookie
 
-**What people do:** Add client-side logic that pretends to check the code — expiry countdowns tied to fake state, a "redeem" button that shows a fake success/error, regex validation on a code re-entry field, or a simulated "already used" check.
-**Why it's wrong:** There is no cart, checkout, or order system anywhere in this codebase — `STORES[].url` sends users to 14 separate, independently-run external stores (their own domains, their own platforms). This portal has no authority to validate or redeem anything. Fake validation UI would actively mislead users into thinking the code is being checked against something real, when it categorically cannot be (no backend, explicitly out of scope per PROJECT.md). It also adds meaningless complexity and testing surface for zero benefit.
-**Do this instead:** A single static, display-only code (Pattern 3). Optionally, phrase the reveal copy honestly as a house-wide code to "present" or "mention" at any store, rather than implying an automated checkout discount.
+**What people do:** Add an `else if (session) { check stripe_customer_id }` branch to the existing entitlement handler so there's "one endpoint" for membership status.
+**Why it's wrong:** Violates the explicit, hard constraint carried over from the draft plan ("the existing paid-member entitlement path must keep working byte-for-byte") and conflates two independent trust boundaries (an anonymous Checkout Session cookie vs. an authenticated user session) in a file whose entire job today is answering one narrow question correctly for the pre-login flow. It also makes the do-not-touch list meaningless the moment it's convenient to ignore.
+**Do this instead:** A sibling `api/account/status.js`, with the client-side OR happening in `src/app.jsx`, not on the server.
 
-### Anti-Pattern 2: Prop-drilling perk state through `App` → route switch → every page
+### Anti-Pattern 2: Replacing `ladidier_member_session`/`ladidier_member` with the new session everywhere
 
-**What people do:** Lift perk state to `app.jsx` (mirroring `isSubscribed`) and pass `perkFound`/`setPerkFound` into every page component "for consistency," even though only one component (the trigger/reveal) ever needs it.
-**Why it's wrong:** Widens `app.jsx`'s route-switch prop signatures (lines 76-81) for no functional benefit, increases the diff surface against the "no breaking changes to existing routing" constraint, and couples an isolated feature to the app shell unnecessarily.
-**Do this instead:** Self-contained hook inside `perks.jsx` (Pattern 2). Only lift state later if a genuine second consumer emerges.
+**What people do:** Treat the new `ladidier_session` as a full replacement and rip out the old cookie plumbing since "now we have real accounts."
+**Why it's wrong:** Every live paying member today has no `users` row and no Google session — only the old cookie. Removing or bypassing the old lane locks out every current paying customer the moment this ships, which is the one outcome both PROJECT.md and the draft plan explicitly forbid.
+**Do this instead:** Coexist. New session is the primary check for anyone signed in; old cookie logic is untouched and remains the only check for anyone who bought before this milestone and never signs in.
 
-### Anti-Pattern 3: Repurposing the existing no-op `Crest` component as the trigger
+### Anti-Pattern 3: Linking Stripe customers by matching email address after the fact
 
-**What people do:** Notice `Crest()` already returns `null` and is called in six places, and "activate" it as the hidden perk to save writing a new component.
-**Why it's wrong:** `Crest` is invoked with six different sizes/colors across unrelated contexts (Footer, three Home hero variants, About page) with no documented single intent. Giving it click/localStorage/modal behavior would make the perk trigger silently appear in all six places at once, including the About/hero-variant pages this milestone doesn't touch for copy — unpredictable and hard to review or roll back as one clean feature.
-**Do this instead:** A dedicated, single-instance `<HiddenPerk />` component mounted once in `Footer` (Pattern 1). Leave `Crest` exactly as-is.
+**What people do:** In `api/account/status.js`, if there's no `stripe_customer_id`, fall back to `stripe.customers.list({ email: user.email })` and auto-link the first match.
+**Why it's wrong:** `customer_details.email` on an old, pre-login Checkout Session is unverified user input from Stripe's own hosted form, not proof that the Google-authenticated visitor now looking at the account page is the same person. Silently attaching someone else's subscription (or a wrong one, if there are multiple Stripe Customers sharing an email) is an entitlement/PII leak. This is precisely the "claim by email" flow PROJECT.md defers to a later milestone specifically because it needs its own verification step (e.g., re-confirming via the email itself), not an implicit lookup.
+**Do this instead:** Leave `linked: false` for these users this milestone; design the claim flow later, deliberately, per PROJECT.md's own deferred-scope note.
 
 ## Integration Points
 
@@ -217,30 +246,44 @@ Not applicable in the traditional sense — this is a static site with no backen
 
 | Service | Integration Pattern | Notes |
 |---------|---------------------|-------|
-| None (by design) | — | PROJECT.md explicitly puts "Backend/API integration" out of scope; the 14 store URLs (`STORES[].url` in `components.jsx`) are plain outbound links (`window.open(url, "_blank")` in `StoresPage`), not API integrations |
+| Google OAuth 2.0 / OIDC | Hand-rolled `fetch`-based flow, four routes under `api/auth/` (already designed in the draft plan) | No new integration needed beyond the draft plan; this milestone does not add scopes or touch the OAuth routes |
+| Stripe (Customers, Billing Portal) | New calls via the **existing, shared** `getStripe()` singleton from `lib/stripe.js` — `stripe.customers.create`, `stripe.subscriptions.list`, `stripe.billingPortal.sessions.create` | Do not construct a second Stripe client; do not duplicate `ACTIVE_STATUSES`. Verify Billing Portal is enabled in the Stripe Dashboard (test mode first, given the current test-key state noted in PROJECT.md) |
+| Neon/Postgres | `@neondatabase/serverless`, via `lib/db.js`'s lazy `sql` wrapper (already designed in the draft plan) | This milestone's only schema change: one additive, nullable `stripe_customer_id text unique` column on `users` — added via the same `ensureSchema()` memoised-DDL pattern, not a new migration mechanism |
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| `perks.jsx` ↔ `components.jsx` (`Footer`) | Direct JSX mount: `<HiddenPerk />` | One-line integration point; no props required in either direction |
-| `perks.jsx` ↔ `app.jsx` / `pages.jsx` (subscribe flow) | Read-only `localStorage.getItem("ladidier_subscribed")` | No prop threading; perk feature never writes this key |
-| `perks.jsx` ↔ `ornaments.jsx` | Perk mark may visually reuse ornament primitives (e.g., a small gold dot in the `Laurel`/`DecoCorner` visual language) | Load-order dependency only (`perks.jsx` after `ornaments.jsx`); no behavioral coupling |
-| Copy/CTA edits ↔ `pages.jsx` | Direct in-place JSX/text edits to `HomePage`, `StoresPage`, `MagazinePage`, `SubscribeBanner` | No new components required; `Nav`'s existing "Shop"-style CTAs in `components.jsx` are untouched unless the milestone explicitly calls for a Nav copy change |
-| HTML entry points | Both `Ladidier Portal.html` (loads `app.jsx`) and `Ladidier Portal-print.html` (loads `print-app.jsx`) need the new `<script type="text/babel" src="perks.jsx"></script>` tag inserted between the existing `ornaments.jsx` and `components.jsx` tags | Confirmed: `print-app.jsx` (`PrintApp`) renders `<Footer setRoute={noop} />` (line 66) to produce a stacked, print-all-pages snapshot of every route for PDF/print export. If `<HiddenPerk />` is added inside `Footer` but `perks.jsx` is only added to `Ladidier Portal.html`, `Ladidier Portal-print.html` will throw a `ReferenceError: HiddenPerk is not defined` at render time and the entire print snapshot will fail to render. Both HTML files must get the script tag. (The perk trigger being clickable inside a print snapshot is harmless/irrelevant — this is an internal print-export utility, not a real user path — but the missing reference is a hard crash, not a cosmetic issue.) |
+| `api/checkout.js` (modified) ↔ `lib/account.js` (new) | Direct function call (`ensureStripeCustomer`) | The one legacy file this milestone must touch; keep the diff to "gate + find-or-create customer," nothing else |
+| `api/account/status.js` (new) ↔ `lib/membership.js` (untouched) | Import of `ACTIVE_STATUSES` only | Read-only reuse; `lib/account.js`/`api/account/*` must never write to or wrap `MEMBER_COOKIE` — that cookie belongs solely to the legacy lane |
+| `src/app.jsx` (extended) ↔ `api/account/status.js` (new) | `fetch`, additive `useEffect`, OR'd into `isMember` | Must not replace or reorder the existing entitlement effect; new effect can only ever set `isMember` to `true`, never `false` |
+| `src/components.jsx` `Nav` (extended) ↔ `src/app.jsx` | Existing prop-drilling pattern (`route`, `setRoute`) | The current `href="#account"` link is a dead stub (`onClick` calls `preventDefault()` and renders "EN · USD") — repurpose or replace it deliberately; do not leave two competing `#account` behaviors |
 
-## Suggested Build Order
+## Answers to the Specific Integration Questions
 
-1. **Copy/CTA rework first** (Home, Stores, Magazine in `pages.jsx`, plus `SubscribeBanner`). Zero new files, zero new state — pure content editing on the existing component tree. Establishes final "shopping mall" tone and finalized CTA wording.
-2. **Hidden perk feature second** (`perks.jsx` + one-line `Footer` integration + HTML script tag + CSS additions reusing `.paywall-gate`). Sequenced after copy so the reveal panel's tone/CTA phrasing (e.g., "Shop Now"-style verbs, subscribe CTA wording) matches whatever the copy pass lands on, rather than needing a second editing pass. Fully independent technically — could be built in parallel — but sequencing this way avoids rework and keeps each phase's diff reviewable in isolation (copy-only PR, then feature-only PR).
+1. **Coexist, don't replace.** `ladidier_member_session`/`ladidier_member`/`ladidier_subscribed` stay exactly as they are (already true per the draft plan's own constraint list). The new `ladidier_session` becomes the primary check for anyone who signs in; the old cookie flow remains the sole and unmodified fallback/authority for anyone who hasn't. Client-side, this is one additive `useEffect` in `src/app.jsx` that can only turn `isMember` on, never off.
 
-Rationale for this order over the reverse: the perk reveal panel's subscribe-upsell copy is explicitly meant to echo the site's conversion voice ("surfaces a discount code or a magazine-subscribe prompt") — building it before the tone is finalized risks a second copy pass on the modal.
+2. **`lib/account.js`, new, alongside `lib/db.js`/`lib/session.js`.** It owns the "find-or-create Stripe Customer for this user" and "is this account's linked customer active" logic, importing `lib/db.js` (SQL) and `lib/stripe.js` (the existing shared Stripe client) — neither of which should import the other. `api/entitlement.js` is **not modified**; a new `api/account/status.js` sits beside it, reading the session and calling `lib/account.js`.
+
+3. **`GET /api/account/status` + `POST /api/account/portal`.** Status reuses `ACTIVE_STATUSES` imported from `lib/membership.js` (no duplicated logic) and the shared `getStripe()` client from `lib/stripe.js`. Manage/cancel is delegated entirely to Stripe's hosted Billing Portal rather than reimplementing subscription mutation.
+
+4. **No new tooling — the project already runs through Vite** (`package.json`'s `vite build`, `index.html`'s `<script type="module" src="/src/main.jsx">`), despite PROJECT.md's "no build step" framing referring to *not needing a bundler pipeline decision*, not literal CDN/Babel-in-browser (there is no CDN `<script>` tag for React in `index.html` — it's a module entry point). Add `AccountPage` to `src/pages.jsx` following the existing page-component pattern (see `SubscribePage`), export it, import it in `src/app.jsx`, add a `case "account":` to the route switch, and give it a real link in `Nav` (`src/components.jsx`) — most naturally by replacing the currently-dead `href="#account"` stub rather than adding a second, confusingly-named nav entry.
+
+5. **Build order:**
+   1. Draft plan's own baseline, unmodified in intent: `lib/db.js` (users/addresses schema) + `lib/session.js` + the four `api/auth/*` routes + the checkout login gate — this is prerequisite identity infrastructure this milestone builds on, not replaces.
+   2. Schema extension: add `stripe_customer_id` to `users` in `lib/db.js`'s `ensureSchema()`.
+   3. `lib/account.js`: find-or-create/link logic, built and unit-testable against the extended schema before touching any route.
+   4. Modify `api/checkout.js` again (on top of the draft plan's own edit) to call `ensureStripeCustomer` and pass `customer:` instead of `customer_email`.
+   5. `api/account/status.js` and `api/account/portal.js` — depend on step 3/4 having a real, linked customer to query against.
+   6. Client: additive `isMember` effect in `src/app.jsx`, then `AccountPage` in `src/pages.jsx`, then the `Nav` link — UI is last because it's a pure consumer of every API above.
+   7. Regression pass covering both the draft plan's own verification list (pre-login member cookie untouched, Reader one-click unlock unchanged, `git diff` touches none of the four do-not-touch files) and this milestone's additions (new checkout creates and links a Stripe Customer exactly once even under a double-click race; account page reflects Stripe status; Billing Portal cancel round-trips back to an updated status).
 
 ## Sources
 
-- Direct codebase inspection (HIGH confidence, primary source): `/Users/aech/Documents/Ladidier/app.jsx`, `components.jsx`, `ornaments.jsx`, `pages.jsx`, `tweaks-panel.jsx`, `styles.css`, `Ladidier Portal.html`, `.planning/PROJECT.md`
-- No external ecosystem research was needed — this is a pure integration-architecture question answered entirely from the existing, already-shipped codebase conventions (script load order, `Object.assign(window, {...})` export pattern, `ladidier_subscribed` localStorage precedent, `.paywall-gate`/`.mobile-overlay` z-index and styling conventions)
+- Direct codebase reads (HIGH confidence, primary source): `api/entitlement.js`, `lib/membership.js`, `lib/stripe.js`, `api/checkout.js`, `api/verify-session.js`, `api/webhook.js`, `lib/plans.js`, `src/app.jsx`, `src/pages.jsx` (SubscribePage), `src/components.jsx` (Nav), `package.json`, `index.html`
+- `.planning/PROJECT.md` — milestone goal, requirements, deferred-migration decision, current test-mode-keys caveat
+- `.planning/quick/260831-8ug-user-should-login-before-subscription-al/260831-8ug-PLAN.md` — baseline OAuth/DB/session architecture, do-not-touch list, threat register (used as the validated starting point per the research brief)
 
 ---
-*Architecture research for: Zero-build client-side React conversion pass + hidden-perk discovery mechanic (LaDidiér Portal v1.1)*
-*Researched: 2026-08-20*
+*Architecture research for: adding accounts (Google OAuth + Postgres + Stripe-customer linking) to an existing Stripe-only serverless app*
+*Researched: 2026-09-01*

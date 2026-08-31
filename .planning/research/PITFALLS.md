@@ -1,160 +1,226 @@
 # Pitfalls Research
 
-**Domain:** Conversion-copy/CTA rework + hidden-discovery mechanic on an existing luxury editorial site (React 18 CDN, no build step, static/client-side)
-**Researched:** 2026-08-20
-**Confidence:** MEDIUM — grounded in current CRO/UX/accessibility sources plus direct inspection of this codebase (`styles.css`, `app.jsx`, `pages.jsx`); no domain-specific case study exists for "luxury editorial portal adds hidden perk," so synthesis is from adjacent domains (luxury ecommerce CRO, easter-egg UX, WCAG hover/focus rules).
+**Domain:** Adding Google OAuth + Postgres + Stripe-customer linking to an existing live-payments site (LaDidiér Portal, v1.2)
+**Researched:** 2026-09-01
+**Confidence:** MEDIUM (websearch-derived findings cross-checked across multiple sources; codebase-specific findings are HIGH — read directly from `api/entitlement.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js`, `api/checkout.js`, and the draft plan)
+
+This file is scoped to what changes because a real, paying customer base already exists on `ladidier.com`. Generic OAuth/Stripe/Postgres advice is included only where it explains *why* a specific line in this codebase is dangerous to get wrong.
 
 ## Critical Pitfalls
 
-### Pitfall 1: "Shopping Mall" Copy Drifts Into Mass-Market Ecommerce Voice
+### Pitfall 1: `customer_email` on Checkout Session creates a second Stripe Customer instead of reusing the pre-login one
 
 **What goes wrong:**
-Copy rewritten toward "shop now" urgency imports generic ecommerce tone — exclamation points, all-caps sale banners, "LIMITED TIME," "BUY NOW 50% OFF" — that reads like a discount retailer, not a luxury house. The brand feel (quiet, editorial, restrained) breaks even though every literal requirement ("clear CTA," "shopping mall not house-listing tone") is technically met.
+`api/checkout.js` currently calls `stripe.checkout.sessions.create({ ... })` with no `customer` or `customer_email` at all — Stripe creates a fresh Customer object implicitly when the buyer pays. The draft plan's Task 5 adds `customer_email: session.email`. Stripe does **not** deduplicate customers by email on Checkout Session creation — passing `customer_email` (without an explicit `customer` id) still causes Stripe to mint a brand-new Customer every time, even when a Customer with that exact email already exists from a pre-login purchase made before this milestone. The result: a member who bought under the old cookie-only flow, then later signs in with Google using the same email, gets a second, disconnected Stripe Customer and (if they check out again) a second subscription — their old subscription and payment history stay invisible to the new account.
 
 **Why it happens:**
-Conversion copywriting patterns are optimized for mass-market urgency and scarcity, which is the opposite instinct from luxury copywriting (implicit scarcity, understatement, letting product/imagery do persuasion). Writers pattern-match "conversion" to "hard sell" by default.
+It reads like "obviously Stripe will match the email" — `customer_email` looks declarative, but it is only a prefill hint for Stripe's hosted page, not a lookup key. This exact trap is confirmed as a known, unresolved gap in Stripe's own API surface (see `stripe-node` issue tracker), not a one-off bug.
 
 **How to avoid:**
-Keep urgency implicit, not shouted. Use editorial imperative voice ("Discover the Collection," "Step Inside") rather than retail-urgency voice ("SHOP NOW — SALE ENDS SOON"). Luxury brands that convert well (e.g. The Ordinary's "Discover Now") use quiet, single-word or short-phrase CTAs and trust that persuasion has already happened via imagery/copy above the fold — the CTA is a confirmation, not a pitch. Read every new copy block aloud next to the existing house-listing copy it replaces; if the tone shift is jarring, it's too far.
+Before creating a Checkout Session for a signed-in user, look up whether that user already has a `stripe_customer_id` on file (in the new `users` row). If not, search Stripe for an existing Customer by the verified Google email (`stripe.customers.list({ email })` or the Search API) and, if exactly one match is found, pass its id as `customer` (not `customer_email`) and persist it to `users.stripe_customer_id`. If none is found, let Stripe create one and capture `session.customer` from the resulting session/webhook to persist. Never pass both `customer` and `customer_email` together — Stripe will reject or ignore one.
 
 **Warning signs:**
-Exclamation points, ALL CAPS discount call-outs, countdown/urgency language, generic "Shop Now!!" buttons that could belong to any retailer, copy that names a price/percentage discount outside the hidden-perks feature.
+Multiple Stripe Customer records sharing the same email in the Dashboard; a pre-login subscriber who signs in and sees "no active subscription" despite having paid; `metadata.user_id` present on some Checkout Sessions but the Customer object it points at has no subscription history.
 
 **Phase to address:**
-Copy & CTA rewrite phase (Home/Stores/Magazine copy pass).
+The phase that implements Stripe-customer linking (after the OAuth+DB foundation phase, before or alongside the account/billing page). This must land before any production user is allowed to check out through the new gated flow.
 
 ---
 
-### Pitfall 2: New CTAs Visually Clash With the Existing Restrained Palette
+### Pitfall 2: Auto-linking a Stripe customer by email without checking `email_verified` enables billing/account takeover
 
 **What goes wrong:**
-New "Shop Now / Browse Categories" buttons are styled with high-contrast, retail-style treatment (bright fills, heavy shadows, badge-like urgency styling) that looks bolted onto the noir/gold editorial palette already defined in `styles.css` (`--fg`, `--bg`, `--gold`, `--noir`). The page visually splits into "editorial" and "sale banner" zones.
+If the linking logic searches Stripe for a Customer matching the Google account's email and attaches it automatically, an attacker who controls (or once controlled) an email address — but not the Google account tied to it — could get an existing member's subscription, saved payment method, and invoice history attached to an account the attacker signs into. Google's `email_verified` claim is usually `true` for consumer Gmail, but is not guaranteed for every account type reachable through Google Sign-In (Workspace accounts with unverified custom domains, or accounts federated through Google via a third-party IdP), and the draft plan's callback already treats this as a real risk by requiring `email_verified === true` before creating any session at all — but that check protects *login*, not the separate *linking* decision that a later phase adds.
 
 **Why it happens:**
-"Make the CTA prominent" gets solved with contrast tricks borrowed from generic CRO advice, without checking that the existing `.btn`, `.btn.solid`, `.btn.ghost` classes (already tuned to the palette, with existing hover treatments at lines 188–192 of `styles.css`) are reused instead of new one-off button styles.
+Email feels like a stable, unique identifier, so "match by email" reads as the obviously correct join key. The two decisions — "is this login legitimate" and "should this login be allowed to attach itself to an existing paying customer's billing record" — get collapsed into one check when they need different, and stricter, scrutiny for the second.
 
 **How to avoid:**
-Reuse the existing `.btn` / `.btn.solid` / `.btn.ghost` classes for all new CTAs rather than inventing new button treatments. Where more emphasis is genuinely needed, increase size/spacing/position (more whitespace around it, higher on the page) rather than reaching for color contrast outside the existing gold/noir system.
+Require `email_verified === true` (already true in the draft plan's callback, but re-verify at the linking step specifically, not just at login) as a floor, not a sufficient condition. For linking to a *pre-existing* Stripe customer specifically (as opposed to creating a new one for a brand-new signup), treat it as a sensitive action: either (a) defer any pre-login-customer linking to the explicitly out-of-scope future migration flow (PROJECT.md already defers this — do not quietly pull it forward inside "just wire up the metadata"), or (b) if linking existing customers is in scope for this milestone, require an extra confirmation step (e.g., an emailed magic link or a re-auth) rather than silent auto-attach on first sign-in.
 
 **Warning signs:**
-A new CTA button doesn't visually belong to the same design system as five-month-old buttons on the same page; a designer/reviewer says "that looks like a different site."
+Any code path that does `stripe.customers.list({ email: googleEmail })` and attaches the first result without a corroborating check; a support ticket where a user reports "someone else's card" or "someone else's order history" on their account.
 
 **Phase to address:**
-Copy & CTA rewrite phase.
+Stripe-customer-linking phase — this is the single highest-severity decision in that phase and should be explicitly designed, not incidental to "add a `customer` field to checkout."
 
 ---
 
-### Pitfall 3: Hover-Only Hidden Perk Is Invisible on Touch Devices (Accessibility + Mobile)
+### Pitfall 3: Two concurrent checkouts (or a checkout racing a webhook) create duplicate Stripe customers for the same signed-in user
 
 **What goes wrong:**
-The hidden perk is implemented as a hover-reveal (opacity/transform on `:hover`, following the exact pattern already used throughout this codebase — `.store-row:hover`, `.lift:hover`, `.nav a:hover::before`). On mobile — this site's stated core value is "feel like luxury magazine on any device" — there is no hover state at all, so the perk is not just hard to find, it is structurally unreachable for the majority of visitors, and unreachable via keyboard/assistive tech too.
+A user with two tabs open, or a retried request after a slow network, triggers two `POST /api/checkout` calls before either has persisted a `stripe_customer_id` back to the `users` row. Both requests find "no customer on file," both let Stripe create a new Customer, and both write back — the second write wins, silently orphaning the first Customer (and, if both completed payment, a member paying twice under two identities).
 
 **Why it happens:**
-The codebase already leans heavily on hover for its editorial "reveal" feel (arrow slide-ins, lift-on-hover cards), so a hidden perk naturally gets implemented the same way by pattern-matching existing code — without separately validating a touch/keyboard path. WCAG 2.1.1 requires all functionality be operable via keyboard; SC 1.4.13 requires hover/focus-triggered content to also be dismissible, hoverable, and persistent — but the more basic failure here is simpler: hover has no touch equivalent at all, so it must ship with a genuine tap/focus trigger, not just a CSS media-query fallback.
+The natural-sounding pattern — "check if the user has a Stripe customer, if not create one" — has a check-then-act gap with no atomicity, and Vercel serverless functions give no in-process lock to close it (each invocation can be a cold instance).
 
 **How to avoid:**
-Design the perk trigger as a real interactive element (button/link with `tabindex`, visible focus style, `aria-*` where appropriate) that responds to click/tap AND keyboard `Enter`/`Space`, with `:hover` as a bonus desktop affordance layered on top — not the only affordance. Test the discovery path on an actual touch device or touch-emulated devtools, and by tabbing through the page with a keyboard, before considering the feature done.
+Add a `UNIQUE` constraint on `users.stripe_customer_id` (nullable-unique is fine in Postgres) so a second concurrent write attempting to set a different customer id on the same user fails loudly at the database rather than silently overwriting. On conflict, re-read the row and reuse whichever customer id won the race rather than proceeding with the loser. This is the same "DB-level UNIQUE constraint as the source of truth for concurrency" pattern the codebase should also apply to webhook idempotency (Pitfall 4).
 
 **Warning signs:**
-The perk trigger's only CSS state is `:hover`; no `:focus` or `:focus-visible` rule exists for it; testing only happened by moving a mouse in a desktop browser; grep of the new CSS for the trigger shows `:hover` but no `:focus`.
+`users.stripe_customer_id` changing value across two reads without an explicit account action; two Stripe subscriptions both referencing the same `metadata.user_id`.
 
 **Phase to address:**
-Hidden Perks feature phase — should be a stated acceptance check, not an afterthought.
+Stripe-customer-linking phase, at the schema-design step — the `UNIQUE` constraint must exist in the migration that adds the column, not be bolted on after a duplicate is discovered in production.
 
 ---
 
-### Pitfall 4: The Discoverability Paradox — Too Subtle to Ever Be Found
+### Pitfall 4: `api/webhook.js` stays log-only, so nothing there can be trusted to *dedupe* the account-linking write
 
 **What goes wrong:**
-In the effort to satisfy "genuinely easy to miss" and "must not add visible clutter," the perk is made so subtle that its real-world find rate is effectively zero. The feature ships, works correctly, and is never triggered by real users — the discount code / subscribe prompt it's meant to surface never gets used, and the milestone's actual business goal (drive perceived value / conversion) is not met even though every literal acceptance criterion passes.
+Today `api/webhook.js` is explicitly an audit trail (`STATE.md`/`PROJECT.md` call this out as a known gap: "the webhook logs but does not act"). Once account-linking is added, there will be a strong temptation to make the webhook's `checkout.session.completed` handler the place that writes `stripe_customer_id` onto the `users` row (since it carries `metadata.user_id`). Stripe redelivers events at-least-once and out of order, so a naive "on this event, set stripe_customer_id" write, run twice (redelivery) or run out of order relative to a synchronous write done in `api/checkout.js`'s own return path, can flip the column back to an older or empty value, or double-run any side effect added alongside it.
 
 **Why it happens:**
-"Subtle" and "findable" pull in opposite directions, and it's easy to over-index on the "must not distract" half of the requirement while under-testing the "discoverable" half — especially because the person building it already knows exactly where the perk is, so it never feels hidden to them the way it will to a first-time visitor.
+The webhook is the only place that reliably learns "this Checkout Session became a real, paid Customer," so it's the obvious place to write the link — but "obvious place to write" and "safe to write from twice, out of order" are different properties, and the codebase's webhook was deliberately never built to guarantee the second one.
 
 **How to avoid:**
-Design for "findable through curiosity, not chance" — a slightly unusual visual detail (a subtly different weight/glow/motion on one ornament, a slightly non-standard interaction on an otherwise decorative element) that rewards attentive browsing rather than requiring pixel-hunting or a specific unlikely gesture. Validate with a cold read: have someone unfamiliar with the change browse the live page for 60–90 seconds without being told a perk exists, and see if they find it. If nobody in an informal test finds it within a normal browsing session, it's too hidden; if everyone notices it immediately on page load, it's not hidden enough.
+If the webhook is upgraded from log-only to acting on account-linking, add a `processed_webhook_events (event_id text primary key)` table and insert `event.id` inside the same transaction as any write, before any other side effect — a duplicate delivery then fails the insert and exits early rather than reapplying. Make the write itself idempotent regardless (`on conflict (id) do update set stripe_customer_id = excluded.stripe_customer_id` keyed by `user_id`, not a blind `UPDATE`), so an out-of-order redelivery converges to the same end state rather than depending on delivery order.
 
 **Warning signs:**
-No one outside the person who built it has ever found it without being told where to look; the trigger requires an action no real user would organically perform (e.g., hovering a specific corner pixel for 3+ seconds, or right-clicking).
+`stripe_customer_id` reverting to null or to a stale value after a Stripe outage triggers event redelivery; two identical log lines for the same `event.id` in Vercel's function logs.
 
 **Phase to address:**
-Hidden Perks feature phase.
+Stripe-customer-linking phase — decide explicitly there whether the webhook becomes an actor (needs the dedupe table) or stays an audit trail while `api/checkout.js`'s synchronous response is the only writer (simpler, but then the webhook cannot be used to backfill a customer id if the synchronous write ever fails after Stripe already has the money).
 
 ---
 
-### Pitfall 5: Discount Code Is Trivially Exposed by "View Source" (No Backend)
+### Pitfall 5: Direct (non-pooled) Neon connection string exhausts under Vercel's concurrent invocations
 
 **What goes wrong:**
-Because this is explicitly a static/client-side site with no backend or API (out of scope by design), any discount code embedded in the JSX/JS to be revealed by the perk is present in the shipped bundle from page load — visible via "View Source," browser devtools, or a simple text search of the deployed JS, regardless of how well the UI hides the trigger. The "hidden" perk's payload is never actually secret.
+Neon issues two distinct connection strings: a direct one and a pooled one (hostname contains `-pooler`, routes through PgBouncer in transaction mode, supports far higher concurrent client counts). Vercel serverless functions open a connection per invocation rather than sharing a long-lived pool the way a traditional server would. Pointed at the *direct* endpoint, a traffic spike — even a modest one, e.g. several people completing checkout around the same time, or a burst from the `ensureSchema()` memo resetting after a cold-start blip and every warm instance re-running DDL — exhausts the direct endpoint's `max_connections` (small on small Neon compute sizes) and produces `FATAL: sorry, too many clients already`.
 
 **Why it happens:**
-The team is solving a UI/UX hiding problem ("don't show it in the DOM/visually") while the actual constraint is architectural (no backend means no server-side secret). These are different problems and a UI-only solution doesn't address the second one.
+The direct connection string is the one that appears first / most prominently in Neon's dashboard and "just works" in local testing at low concurrency, so it is easy to copy into `DATABASE_URL` without knowing the pooled variant exists.
 
 **How to avoid:**
-Treat this as a known, accepted limitation, not a bug to fix within this milestone's constraints (no backend is explicitly out of scope). Choose a discount code/value that's fine to be "soft-secret" — a marketing nicety rather than a fraud-sensitive asset (modest, non-stacking, no strict expiry enforcement needed). Do not promise "limited to first N finders" or "single use" copy that the static architecture cannot actually enforce, since that would be a false claim to the user given no backend exists to enforce it.
+Use the pooled connection string in `DATABASE_URL` for anything hit by request traffic. The draft plan already sidesteps the TCP-pool question entirely by using `@neondatabase/serverless`, which connects over HTTP/WebSockets rather than a persistent TCP connection — confirm during Task 2's provisioning step that whichever connection string ends up in `DATABASE_URL`/`POSTGRES_URL` is compatible with `neon()`'s HTTP mode (Neon's own docs specify which string format that driver expects), not accidentally the direct TCP string meant for `pg` or an ORM.
 
 **Warning signs:**
-Copy or product language implies exclusivity/scarcity/single-use ("only a few codes left," "one per visitor") that the static architecture has no way to enforce; the code string appears in plaintext in a `.jsx` file with no obfuscation and the surrounding copy makes claims beyond what that architecture can back up.
+Intermittent `FATAL: sorry, too many clients already` or `Error: Connection terminated unexpectedly` in Vercel function logs that correlate with traffic bursts rather than a specific code path; the issue disappearing at low traffic and reappearing under load, which makes it easy to dismiss as a fluke during local testing.
 
 **Phase to address:**
-Hidden Perks feature phase — resolve as a scoping/copy decision early, not a late surprise.
+OAuth+DB foundation phase (this is a provisioning-step correctness issue, not a later add-on) — verify the connection string in Task 2's checklist explicitly names the pooled/HTTP-compatible endpoint, and add a load-test or at least a "hit `/api/auth/me` N times concurrently" smoke check before calling the phase done.
 
 ---
 
-### Pitfall 6: Hidden Perk Reveal Collides With the Existing Subscribe Flow
+### Pitfall 6: `ensureSchema()` or `upsertUser()` throwing at module scope takes the whole function down with no log detail
 
 **What goes wrong:**
-The site already has a subscribe flow with a `localStorage`-backed `ladidier_subscribed` flag (`app.jsx` line 50, set in `pages.jsx` lines 481 and 766) and its own modal/overlay UI. A new hidden-perk feature that also surfaces a "subscribe" prompt, without checking this existing flag, can (a) ask already-subscribed users to subscribe again, which reads as broken/repetitive, or (b) stack two overlays/modals on screen at once if both flows can trigger in the same session, or (c) invent a second, parallel "has this user engaged" flag that drifts out of sync with the original.
+This codebase has already hit this exact class of bug once — the comment in `lib/stripe.js` explains that a module-scope throw (e.g., `new Stripe(missingKey)` at the top of a file) surfaces on Vercel as a bare `FUNCTION_INVOCATION_FAILED` with nothing useful in the logs, because the module fails to load before any handler runs. `lib/db.js`'s `neon(connectionString)` construction has the identical failure shape if it is ever called at module scope instead of lazily.
 
 **Why it happens:**
-The perk feature is built as an isolated new component without first reading how the existing subscribe state and modal are implemented, since they live in different files (`pages.jsx` vs wherever the new perk component is added).
+It is very easy to write `const sql = neon(process.env.DATABASE_URL)` at the top of `lib/db.js` because that is the pattern in almost every Neon quickstart — the lazy-getter pattern the draft plan specifies is a deliberate, non-default deviation from the library's own docs.
 
 **How to avoid:**
-Before building, read the existing `ladidier_subscribed` check and subscribe modal implementation in `pages.jsx`/`app.jsx`. Branch perk behavior on that existing flag: already-subscribed visitors who find the perk should see the discount-code path, not a duplicate subscribe prompt. Ensure only one overlay/modal can be visible at a time (the perk reveal should check/close any other open overlay, or use a shared overlay-management pattern if one exists).
+Keep the lazy-getter pattern from the draft plan (`getSql()` memoized in a module-level variable, constructed only on first call inside a handler) for every env-var-reading module added this milestone, including any new Stripe-linking helper. Grep for `neon(` and `new Stripe(` outside of a function body as a pre-merge check.
 
 **Warning signs:**
-A newly subscribed test user still sees "subscribe to reveal your perk" copy; two modals appear stacked in a manual test where both are plausible in the same session; a new `localStorage` key is added for the perk that duplicates information already tracked by `ladidier_subscribed`.
+A Vercel function log entry that is just `FUNCTION_INVOCATION_FAILED` with no stack trace or error message; a route that works locally with `vercel dev` (where `.env.local` is always present) but 500s on a fresh deploy before env vars are confirmed set in all three Vercel environments.
 
 **Phase to address:**
-Hidden Perks feature phase.
+OAuth+DB foundation phase — this is already the pattern the draft plan specifies for `lib/db.js`; the pitfall is regressing it in a later phase that adds new modules (e.g., a `lib/customers.js` for Stripe-linking) without carrying the same discipline forward.
 
 ---
 
-### Pitfall 7: Hidden Perk Re-Triggers Every Visit, Becoming a Distraction (Violates "No Distraction" Requirement)
+### Pitfall 7: The new session system silently changes behavior on the *existing* entitlement path by sharing a name, a route, or a helper
 
 **What goes wrong:**
-Without a persisted "already found / already dismissed" state, the perk element re-appears or re-animates on every page load or every session, becoming a recurring, noticeable interruption rather than a one-time delightful discovery — directly violating the constraint that perks "do not distract from or block the shopping flow." The opposite failure also occurs: if state is persisted too aggressively (e.g., permanently hidden site-wide after first view on any device), returning users or users on a second device never get a chance to discover it, and QA/testing becomes confusing because the perk "disappears" after first encounter with no visible way to reset it during testing.
+The single most important existing invariant is: `ladidier_member_session` (set by `verify-session.js`, read by `entitlement.js` and `lib/membership.js`) must keep working byte-for-byte for people who already paid. The new session system introduces a same-shaped concept — an httpOnly cookie read on every relevant request — which creates several ways to accidentally couple the two: naming the new cookie something that collides or is confused with the old one, having `api/checkout.js`'s new session-gate check reject a request that the old flow would have allowed (e.g., a returning member with only the old cookie, no new `ladidier_session`, trying to start a *second* subscription), or a shared `Headers`/cookie-parsing helper being "improved" in a way that changes `readCookie`'s behavior for both consumers.
 
 **Why it happens:**
-Persistence design (what counts as "found," per-device vs. account-level, whether repeat visits should occasionally re-surface something new) is an easy detail to skip when the main effort goes into the visual hiding mechanic.
+Once both systems exist side by side, every future change (a shared cookie utility, a shared "am I allowed here" check, a refactor that merges "is a member" and "is signed in" into one boolean) reads like natural cleanup — but the milestone's explicit constraint is that these stay two independent systems this cycle.
 
 **How to avoid:**
-Persist a "found" flag in `localStorage` (consistent with the existing `ladidier_subscribed` pattern) the first time the perk is actually triggered/opened, and suppress the reveal animation/prompt on subsequent visits from that flag — while leaving the underlying static ornament/trigger element in place so it doesn't look like the feature vanished. Document a manual reset path (clear the specific `localStorage` key) for QA and for reviewing the feature later.
+Treat `api/verify-session.js`, `api/entitlement.js`, `api/webhook.js`, `lib/membership.js`, and `lib/stripe.js` as frozen for the duration of this milestone (the draft plan already states this constraint) and enforce it mechanically: a CI/verification step doing `git diff` against those five paths and failing the phase if any of them changed, exactly as the draft plan's own `<verification>` block already does for its scope. Extend that same check to every later phase in this milestone, not just the OAuth+DB one.
 
 **Warning signs:**
-Refreshing the page repeatedly re-triggers the same reveal animation or prompt; there's no way to distinguish "never found" from "found and dismissed" in the stored state; QA can't tell if the feature disappeared because it broke or because it was already found.
+A code review that touches any of the five frozen files "just to add one field"; a regression where an existing paying member (identifiable by having `ladidier_member_session` but no `ladidier_session`) loses access to the digital edition after a deploy.
 
 **Phase to address:**
-Hidden Perks feature phase.
+Every phase in this milestone — this is a standing constraint, not a one-time check. Each phase's own verification step should re-run the "these five files are untouched" diff check.
 
 ---
 
-### Pitfall 8: New Styles Break the Existing Mobile Layout via the Fragile `!important` Cascade
+### Pitfall 8: Building and testing account-linking now, while Production is on Stripe test-mode keys, produces `stripe_customer_id` values that will not exist once keys are reverted to live
 
 **What goes wrong:**
-Recent commits show the mobile responsive layer already relies on `!important` overrides to beat existing inline/desktop grid styles (see commit `a386bcd` "override all inline grid styles on mobile layout using important styles"). New CTA buttons or a hidden-perk trigger element added without care can either get silently overridden by these existing mobile `!important` rules (so the new element looks fine on desktop but is broken/invisible/misplaced on mobile), or can require yet another `!important` override, deepening an already-fragile cascade the project explicitly wants preserved ("existing routing and the responsive layouts from v1.0 must be preserved exactly").
+`PROJECT.md` records that Production is currently running Stripe **test-mode** keys (swapped in 2026-09-01 for unrelated QA on ÉCLAT Vol. 2 gating) and must be reverted before real purchases can resume. Any account-linking logic exercised against Production right now — a real Google sign-in creating a real `users` row, then linking against Stripe's *test-mode* customer/subscription objects — will write `stripe_customer_id` values shaped like `cus_test...` (or otherwise scoped to the test-mode account) into the new database. Test-mode and live-mode Stripe objects are entirely separate namespaces; a live-mode API key cannot retrieve a test-mode customer id and vice versa. Once keys are reverted to live, every `users` row created or linked during this window holds a `stripe_customer_id` that silently 404s (or, worse, if id spaces ever overlapped, could resolve to an unrelated object) against the live-mode API — leaving real early sign-ups looking like they have no subscription.
 
 **Why it happens:**
-Adding markup/CSS for new copy or CTAs is done by eye on desktop first, and the mobile pass is treated as a final check rather than validated against the specific selectors already fighting for specificity in `styles.css`.
+The database is brand-new this milestone, so there is no existing "known good" data to compare against — a test-mode customer id looks exactly as valid as a live one to the application and to a developer glancing at the table. The temptation to "just test the full flow on Production since that's where the real users are" is strong precisely because Production is reachable and the test keys make it safe to pay with a test card.
 
 **How to avoid:**
-Before adding new elements to Home/Stores/Magazine, grep `styles.css` for the mobile media-query block and any existing `!important` rules touching the container/section being changed, so new CSS is added in a way that doesn't need to fight them. Test every new CTA and the perk trigger at mobile breakpoints (not just resize-the-desktop-window — use the same manual on-device/touch-emulated check used in v1.0 Phase 2) as part of the phase's done-criteria, not a separate follow-up.
+Do all account-linking development and testing against a **Preview** deployment (or local `vercel dev`) with its own explicit Stripe *test*-mode keys, never against Production while Production is mid-swap. Before reverting Production's keys to live, either (a) truncate/flag any `users` rows and `stripe_customer_id` values written during the test-mode window as test data and require affected users to re-link on next login, or (b) if any real person signed in for real during this window, do not silently discard their account — re-run the Stripe lookup/creation logic for them once live keys are back, since their Google identity is real even though the linked Stripe object was not. Add a boolean or timestamp column (e.g., `stripe_mode` or reuse `created_at` against a known revert date) so this population is identifiable later without guessing.
 
 **Warning signs:**
-A new element looks correct on desktop but is misaligned, overflowing, or missing at ≤480px; a new CSS rule needed its own `!important` to take effect.
+A `stripe_customer_id` value in the `users` table that returns a "No such customer" error from the live-mode API after the revert; support reports of "I signed in and it says I have no subscription" clustered right after the key revert date.
 
 **Phase to address:**
-Both the Copy & CTA rewrite phase and the Hidden Perks feature phase — each should include an explicit mobile-regression check against the v1.0 layouts before being marked done.
+This is a cross-cutting sequencing concern, not a single phase's code fix — flag it explicitly in the roadmap as a dependency: **the Stripe test-mode keys must be reverted to live before the Stripe-customer-linking phase is considered done and verified in Production**, and any linking work done beforehand must be treated as throwaway/local-only until that revert happens.
+
+---
+
+## Moderate Pitfalls
+
+### Pitfall 9: Google Cloud OAuth consent screen left in "Testing" publishing status blocks real customers
+
+**What goes wrong:**
+The draft plan's Task 2 sets up the OAuth consent screen as "External" with the developer's own account added under "Test users" — this is required to test sign-in at all while the app is unpublished. If the consent screen is never moved to "In production" publishing status before this ships, only pre-approved test users (capped at 100) can complete sign-in; every other real visitor sees Google's "app hasn't completed verification" / "access blocked" screen instead of the account they were promised.
+
+**Prevention:**
+Add "Publish the OAuth consent screen (move out of Testing)" as an explicit, checked step before this milestone's final release checkpoint — not just before the first local test. Since the requested scopes (`openid`, `email`, `profile`) are non-sensitive, publishing does not require Google's manual verification review, but the publish action itself is a manual dashboard step that is easy to forget because sign-in "already works" for the developer's own test account.
+
+---
+
+### Pitfall 10: OAuth redirect URI works on Production and localhost but breaks on every Vercel Preview deployment
+
+**What goes wrong:**
+`api/auth/google.js` derives the redirect URI from request headers the same way `api/checkout.js` derives its origin — but Google matches Authorised Redirect URIs by exact string against a fixed allow-list, and Vercel Preview deployments get a fresh hostname per deploy. The draft plan already documents this as an accepted limitation, but it can resurface as a false alarm during later phases if someone tries to demo Google sign-in on a Preview URL and assumes it is broken code rather than an unregistered hostname.
+
+**Prevention:**
+Register a stable Preview-testing convention if the team needs to test OAuth on Preview deploys regularly (e.g., a fixed `vercel.app` alias domain reused across Previews, added once to Google's Authorised Redirect URIs), or explicitly scope OAuth testing to Production + `localhost` only and document that constraint so it is not rediscovered as a bug per Preview deploy.
+
+---
+
+### Pitfall 11: Test-mode and live-mode Stripe webhook signing secrets are different — reverting keys without reverting the webhook secret breaks the audit trail silently
+
+**What goes wrong:**
+`STRIPE_WEBHOOK_SECRET` is mode-specific: a webhook endpoint configured for test-mode events has a different signing secret than the live-mode endpoint. Reverting `STRIPE_SECRET_KEY` (and the publishable key) back to live without also confirming `STRIPE_WEBHOOK_SECRET` points at the live-mode endpoint's secret causes `stripe.webhooks.constructEventAsync` in `api/webhook.js` to fail signature verification on every real event, returning 400 to Stripe. Stripe retries 5xx for up to three days but does **not** retry on a 400 the same way — a persistent 400 can eventually be treated as a broken endpoint.
+
+**Prevention:**
+Treat the Stripe key revert (`PROJECT.md`'s pending action) as a three-variable change, not one: `STRIPE_SECRET_KEY`, the publishable key used client-side, and `STRIPE_WEBHOOK_SECRET` together, verified by watching one real webhook delivery succeed (200) in the Stripe Dashboard's webhook logs immediately after revert.
+
+---
+
+### Pitfall 12: `ensureSchema()` DDL race on the first concurrent cold starts after deploy
+
+**What goes wrong:**
+Every cold Vercel instance independently runs `ensureSchema()`'s `create table if not exists` statements on first use per the draft plan's memoization design. `IF NOT EXISTS` makes this safe in the common case, but under Postgres, two truly concurrent `CREATE TABLE IF NOT EXISTS` statements can still race and one can fail with a duplicate-relation error in rare timing windows, especially right after a fresh deploy when many cold starts fire close together.
+
+**Prevention:**
+This is already flagged and accepted in the draft plan's own threat model (T-Q8UG-12) as low severity with the memo reset on failure. Keep it accepted rather than "fixing" it with a Postgres advisory lock unless it is actually observed in logs — the fix (an advisory lock around the DDL) is more complexity than the failure mode currently warrants, but note it here so a future report of a one-time deploy-time 500 is not mistaken for a new bug.
+
+---
+
+## Minor Pitfalls
+
+### Pitfall 13: Signed-in state check races the resume-pending-plan effect, causing a double checkout attempt
+
+**What goes wrong:**
+The draft plan's Task 5 resume effect fires `startCheckout` as soon as `authReady && user` are both true after a Google redirect. If a slow network causes `/api/auth/me` to resolve twice (e.g., a fast-refresh or a duplicate effect fire during development), or if the user manually reloads mid-flow, `startCheckout` could fire twice before the first Stripe redirect completes.
+
+**Prevention:**
+The draft plan already removes the pending-plan key from `sessionStorage` before acting, which prevents a *second visit* from repeating the checkout, but does not fully prevent a same-tick double-fire within one page load. Add a simple in-flight guard (a ref or state flag) around `startCheckout` so a second call while one is already pending is a no-op.
+
+---
+
+### Pitfall 14: Local Node version mismatch breaks `--env-file` loading silently
+
+**What goes wrong:**
+`scripts/db-setup.mjs` relies on Node 20's built-in `--env-file` flag rather than a `dotenv` dependency. A contributor on an older Node version gets a flag-not-recognized error, or worse, a version that silently ignores the unknown flag and runs with no env vars loaded, producing a confusing "DATABASE_URL is not set" error that looks like a provisioning failure rather than a local tooling mismatch.
+
+**Prevention:**
+Pin/document the required Node version (20+) in `package.json`'s `engines` field so the mismatch surfaces as an install-time warning rather than a runtime mystery.
 
 ---
 
@@ -162,90 +228,95 @@ Both the Copy & CTA rewrite phase and the Hidden Perks feature phase — each sh
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|-----------------|------------------|
-| Hardcode the discount code as a plaintext string in JSX | Fast to ship, no infra needed | Anyone can find it via View Source, defeating "hidden"; no expiry/reuse control | Acceptable given the no-backend constraint — just don't make marketing promises (scarcity/single-use) the architecture can't back |
-| Reuse the existing subscribe modal/overlay DOM for the perk reveal instead of a separate component | Less new code, consistent visual language | Couples two features' state/CSS; a change to one risks breaking the other | Acceptable if the reuse is a deliberate shared component, not copy-pasted markup with diverging state |
-| Add new `!important` CSS to force a new element's mobile layout | Fast fix when the existing cascade fights you | Deepens an already-fragile override chain the project wants to keep stable | Acceptable only as a narrowly scoped, well-commented override — never as a first resort |
-| Global find/replace of button/CTA copy across `components.jsx` shared components | Fast, one edit updates every page | Bleeds tone/CTA changes into out-of-scope pages (About, Article) that share the same components | Never acceptable without first checking which pages consume the shared component being edited |
+| Hand-rolled OAuth (fetch + Web Crypto, no library) | No new dependency beyond `@neondatabase/serverless`; matches house style (`api/webhook.js` already uses raw `crypto.subtle`) | Every future OAuth edge case (token refresh, offline access, other providers) has to be hand-implemented and hand-audited; no upstream security patches | Acceptable here because scope is intentionally narrow (Google only, `openid email profile`, no refresh tokens, `access_type=online`) — revisit if a second provider or offline access is ever added |
+| Skipping ID-token signature verification | Avoids fetching/caching Google's JWKS and doing RS256 verification in Web Crypto | Only safe as long as the token is read from the server-to-server token-exchange response; becomes unsafe the moment any code path accepts an `id_token` from a client-supplied value (e.g., a future "Sign in with Google" JS SDK button that posts a token to the backend) | Acceptable only for the current server-driven redirect flow; never acceptable if a client-side credential/One Tap flow is added later without adding signature verification back |
+| Webhook stays log-only through this milestone | No dedupe/idempotency infrastructure needed yet | Any future phase that makes the webhook an actor (e.g., using it to backfill `stripe_customer_id`) inherits an untested code path with no existing dedupe table | Acceptable while entitlement remains Stripe-checked-live and no side effect depends on the webhook; must be revisited the moment the webhook is asked to *write* anything |
+| Deferring pre-login-subscriber migration | Keeps this milestone scoped to new sign-ins only | Two populations (pre-login cookie-only members, new account-based members) coexist indefinitely with different capabilities (no cross-device access for the first group) until a claim-by-email flow ships | Acceptable per the explicit Key Decision in `PROJECT.md`; becomes a real cost if the claim flow is deferred indefinitely rather than scheduled |
 
 ## Integration Gotchas
 
-Since this is a static, backend-free site, "integration" here means integrating the new feature with the site's own existing systems, not third-party services.
-
 | Integration | Common Mistake | Correct Approach |
 |-------------|-----------------|-------------------|
-| Existing `ladidier_subscribed` localStorage flag | Building the perk's subscribe-prompt path without checking this flag first, re-prompting already-subscribed users | Branch perk behavior on the existing flag; already-subscribed visitors get the discount-code path, not a duplicate subscribe ask |
-| Hash router (`app.jsx`) | Implementing the hidden perk as a new hash route (e.g. `#/secret`) — discoverable via URL bar autocomplete/history, and arguably a "new nav destination" the constraint disallows | Implement the perk as an in-page interactive element/component, not a route |
-| Tweaks panel (`tweaks-panel.jsx`) | New perk trigger accidentally becomes visible/toggleable through the existing dev tweaks panel in production | Verify the tweaks panel doesn't expose or interact with the perk trigger; keep them independent |
-| Shared components (`components.jsx`) | Editing a shared CTA/button component for tone reasons without checking which out-of-scope pages (About, Article) also render it | Grep for all usages of a shared component before changing its copy or default styling |
+| Google OAuth | Trusting `email_verified` at login but re-trusting the same email for a separate, more sensitive linking decision without re-checking it there | Check `email_verified === true` at both the login boundary and independently at any point where an email is used to attach an existing Stripe customer or existing account record |
+| Stripe Checkout | Passing `customer_email` expecting it to dedupe against an existing Customer | Look up an existing `stripe_customer_id` on the user record (or search Stripe explicitly) and pass `customer`, not `customer_email`, when one exists |
+| Stripe webhooks | Assuming `checkout.session.completed` arrives before, or exactly once relative to, a synchronous write done in `api/checkout.js`'s own response | Design any webhook-driven write to converge regardless of order/duplication: idempotent upserts keyed by a stable id, plus an `event.id` dedupe table if the webhook does more than log |
+| Neon / Vercel Postgres | Using the direct (non-pooled) connection string because it is the first one shown in the dashboard | Confirm which connection string `@neondatabase/serverless`'s `neon()` expects (HTTP-mode string) during provisioning, and never point a TCP-based driver at the direct endpoint under production traffic |
+| Vercel Preview deployments | Assuming OAuth "just works" on every deploy URL the way the rest of the app does | Register a fixed Preview alias if Preview-based OAuth testing is needed, or explicitly restrict OAuth testing to Production + localhost |
 
 ## Performance Traps
 
 | Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|-----------|------------------|
-| Animated "sparkle/glow" hover treatment applied broadly for the perk's decorative styling | Janky scroll/hover on low-end mobile devices | Scope animation to the single trigger element only; use `transform`/`opacity` (already the pattern in this codebase) not layout-affecting properties | Noticeable once more than one or two animated elements are on screen at once on a mid-range phone |
-| Scroll/mouse-move listener used to detect "near the hidden element" for a proximity-reveal effect | Scroll jank, battery drain on mobile | Prefer CSS-only hover/focus triggers over JS scroll/mousemove listeners; if JS is required, throttle/debounce it | Breaks as soon as the listener isn't debounced, even at this site's small scale |
+|------|----------|------------|-----------------|
+| `ensureSchema()` DDL round trip on every cold instance | Slightly higher p99 latency on the first request to a cold `/api/auth/*` or `/api/address` instance | Accept as-is (already the draft plan's documented tradeoff) unless cold-start volume grows enough to matter | Noticeable only at very high deploy/cold-start frequency; not a concern at current traffic |
+| Google token-exchange + userinfo round trip inside `api/auth/callback.js` | The callback route is slower than a typical API route because it makes an outbound HTTPS call to `oauth2.googleapis.com` before responding | Nothing to change now — this is inherent to the redirect-flow OAuth pattern; just be aware it is the slowest route in the new set | Would only matter if Vercel's function timeout were tight enough to clip a slow Google response, which is unlikely at current timeout defaults |
+| In-memory `Map` caches (`entitlementCache` in `lib/membership.js`, `priceCache` in `api/checkout.js`) don't share across concurrent/parallel invocations | Cache "misses" more than expected under bursty concurrent traffic because each warm instance has its own Map | Already an accepted, documented tradeoff for the existing code; if a similar cache is added for the new session/user lookups, document the same limitation rather than assuming it behaves like a shared cache | Becomes a real correctness issue only if a future cache is used for something more sensitive than reducing a Stripe API call count (e.g., anything security-relevant) |
 
 ## Security Mistakes
 
 | Mistake | Risk | Prevention |
-|---------|------|-----------|
-| Treating the client-embedded discount code as if it were secret/fraud-controlled | Code gets scraped/shared publicly and used far beyond intended "genuine finders," undermining the discount's economics | Choose a code/value the business is fine with being informally public; don't message it as strictly limited or single-use |
-| Storing "found the perk" or discount state in a way that's trivially editable via devtools (expected for localStorage) and then trusting it for anything beyond UI state | None severe at this site's scope, but avoid building future logic (e.g., "don't show the discount reveal twice") that assumes this client-side flag is tamper-proof | Only use the localStorage flag to control UI presentation, never anything that must not be user-alterable |
+|---------|------|------------|
+| Auto-linking a Stripe customer to a Google account by email match alone | Account/billing takeover — an attacker's Google account gets attached to someone else's subscription and payment history | Require `email_verified === true` at the linking step specifically, and treat linking an *existing* customer as a sensitive action separate from creating a new one |
+| No `UNIQUE` constraint on `users.stripe_customer_id` | Two accounts can end up pointing at the same Stripe customer, or one account's link can be silently overwritten by a race | Add the constraint in the same migration that adds the column; let the database, not application logic, be the source of truth for uniqueness |
+| Treating the OAuth `state` parameter as CSRF-proof on its own, without binding it to the specific browser/session that started the flow | Login-CSRF: an attacker starts their own OAuth flow, obtains a valid `code`, and tricks a victim's browser into completing the callback with the attacker's code, linking the attacker's identity into the victim's session | The draft plan already binds `state` to an httpOnly cookie set on the same response that starts the flow (not just a bare random value compared against nothing) — preserve this; do not "simplify" state validation to a stateless signed value with no cookie tie in a later refactor |
+| Writing `stripe_customer_id` values sourced from Stripe test-mode while Production is mid key-swap | Live-mode lookups against test-mode ids fail after the revert, and in the worst case a developer "fixes" this by loosening validation instead of re-linking, widening the account-linking attack surface | Do all linking development against a non-Production environment with its own test keys; treat any Production data written during the test-mode window as suspect and explicitly reconciled after revert |
 
 ## UX Pitfalls
 
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-------------------|
-| Perk reveal implemented as a popup/interstitial (modal-on-load, exit-intent) | Directly breaks the "must not distract from or block shopping flow" requirement; reads as a generic retail dark pattern, clashing with luxury tone | Make the perk something the user opts into by interacting with an ambient element, never something that appears unprompted over the content |
-| Hidden perk trigger visually indistinguishable from the existing decorative ornaments (`ornaments.jsx`) | Users either never register it as interactive, or start clicking every ornament in confusion, adding friction rather than delight | Give the trigger one small, consistent, intentional tell (a subtly different motion, weight, or reveal on interaction) so attentive users can learn to recognize it, without it looking like every other ornament |
-| New CTA copy uses generic urgency language ("SALE!" "LIMITED TIME!") on a luxury audience that expects restraint | Erodes trust/brand perception for the exact shoppers most likely to convert on a luxury site | Use quiet, brand-voiced imperative CTAs ("Discover the Collection") and let implicit scarcity/quality carry the persuasion |
+| A pre-login member signs in with Google (for the first time, under this milestone) and the new account shows no subscription, because linking wasn't in scope or failed | Feels broken — "I paid, why does my account say I have nothing?" — even though the old cookie flow still grants them access separately | Communicate honestly in the UI: if the account system can't yet see a pre-login purchase, say so explicitly ("Your existing membership isn't linked yet — you're still covered on this browser") rather than presenting an empty billing panel as if nothing was ever purchased |
+| Losing the originally-selected plan/interval across the Google redirect | User picks "Hard Copy, yearly," is sent to sign in, and returns to a default/blank selection | Already solved in the draft plan via `sessionStorage`-held pending-plan intent and a resume effect — preserve this pattern in later phases that add more steps (e.g., inserting the address form) rather than reverting to an unconditional redirect to Stripe |
+| Double-uncertainty during the Stripe test-mode window: a user who somehow completes a "purchase" right now gets no real product and no clear signal it wasn't real | Confusion/support burden if any real visitor reaches Checkout while Production is on test keys | Treat reverting to live keys as a released blocker before broadly announcing or driving traffic to any new sign-up flow tied to Stripe |
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **Hidden Perks feature:** Often missing a genuine touch/tap trigger — verify on an actual touch device or touch-emulated devtools, not just a resized desktop browser window.
-- [ ] **New CTA buttons:** Often missing visible `:focus`/`:focus-visible` states — verify by tabbing through Home/Stores/Magazine with a keyboard only, no mouse.
-- [ ] **Copy rewrite scope:** Often bleeds into out-of-scope pages via shared components — verify About and Article page copy/CTA styling is byte-for-byte unchanged.
-- [ ] **Discount code reveal:** Often missing "already subscribed" / "already found" handling — verify a returning, already-subscribed test user doesn't get re-asked to subscribe, and a user who already found the perk doesn't get the same intrusive reveal animation again.
-- [ ] **Hidden perk subtlety:** Often over- or under-tuned without real validation — verify with a cold read (someone unfamiliar with the change browsing for ~60–90 seconds) that it's neither impossible to find nor impossible to miss.
-- [ ] **Mobile regression:** Often verified only on desktop-resized-to-mobile-width — verify new CTAs and the perk trigger against the same on-device checks used for the v1.0 mobile responsive pass.
+- [ ] **Google sign-in "works":** Often only tested with a single developer test-user account — verify a second, previously-unseen Google account can sign in cleanly, and that the consent screen's publishing status (not just "Testing") is checked before relying on this for real traffic.
+- [ ] **Stripe customer linking "works":** Often only tested for a brand-new signup with no prior purchase — verify explicitly against an email that already has a pre-login Stripe customer/subscription from before this milestone, and confirm no duplicate customer is created.
+- [ ] **Session system "added":** Often verified only by testing the new flow in isolation — verify the old `ladidier_member_session` cookie path still unlocks the digital edition end-to-end, unmodified, on the same deploy.
+- [ ] **Database "connected":** Often verified only by `db:setup` succeeding once at low concurrency — verify with several concurrent requests (even a simple `for i in 1..20 & curl /api/auth/me` loop) that no connection-exhaustion error appears.
+- [ ] **"Ready for Production":** Often verified only while Stripe is in test-mode keys — verify the full account-linking path again after the live-key revert, since test-mode and live-mode Stripe objects do not carry over.
+- [ ] **Webhook signature verification "works":** Often verified only against whichever mode's webhook secret happens to be configured at test time — verify the live-mode secret specifically is in place before or immediately after the key revert.
 
 ## Recovery Strategies
 
 | Pitfall | Recovery Cost | Recovery Steps |
-|---------|----------------|-----------------|
-| Brand voice drifted too commercial after ship | LOW | Copy lives as isolated text strings in `pages.jsx`; revise flagged blocks page by page without structural changes |
-| Hover-only perk found inaccessible on mobile/keyboard | MEDIUM | Add a real click/tap handler and `:focus`/`:focus-visible` CSS alongside the existing `:hover` rule; retest on-device |
-| Discount code scraped/overused | LOW–MEDIUM | Rotate the code string in source and redeploy; treat as expected maintenance given the static-site constraint, not an emergency |
-| New CTA/perk element broke mobile layout | MEDIUM | Audit the mobile media-query block and existing `!important` rules for the affected container in `styles.css`; scope a narrow, targeted override rather than adding more global `!important`s |
-| Perk re-triggers annoyingly on every visit | LOW | Add/fix the `localStorage` "found" flag check consistent with the existing `ladidier_subscribed` pattern |
+|---------|----------------|------------------|
+| Duplicate Stripe customers created for one person | MEDIUM | Identify the canonical customer (the one with the real subscription/payment history), update `users.stripe_customer_id` to point at it, and either delete or clearly mark the orphaned duplicate customer in Stripe's Dashboard; add the missing `UNIQUE` constraint so it cannot recur |
+| Connection-pool exhaustion incident | LOW | Swap `DATABASE_URL` to the pooled/HTTP-compatible connection string, redeploy — no data loss, just a config fix |
+| `stripe_customer_id` values written against test-mode data before the live-key revert | MEDIUM | Flag affected `users` rows (by creation timestamp before the revert date), clear their `stripe_customer_id`, and re-run the linking/creation logic once live keys are active; notify any real person who signed in during the window rather than silently discarding their account |
+| Webhook signature verification breaks after key revert (wrong `STRIPE_WEBHOOK_SECRET`) | LOW | Update the env var to the live-mode endpoint's signing secret in the Stripe Dashboard, redeploy — Stripe retries recent failed deliveries |
+| Old entitlement flow regressed by a shared-file change | HIGH | Revert the offending change to `api/verify-session.js` / `api/entitlement.js` / `api/webhook.js` / `lib/membership.js` / `lib/stripe.js` specifically (these are meant to be frozen this milestone); re-verify existing members regain access before re-attempting the change in a way that does not touch those files |
 
 ## Pitfall-to-Phase Mapping
 
-The roadmap for this milestone does not exist yet; based on the two feature groups in PROJECT.md ("copy/CTA/conversion cleanup" and "hidden perks"), pitfalls map as follows:
-
 | Pitfall | Prevention Phase | Verification |
-|---------|-------------------|---------------|
-| Brand voice drifts commercial (Pitfall 1) | Copy & CTA rewrite phase | Read new copy aloud against replaced copy; check for urgency/all-caps language |
-| CTA styling clashes with palette (Pitfall 2) | Copy & CTA rewrite phase | Confirm all new CTAs use existing `.btn` classes, not new one-off styles |
-| Hover-only perk unreachable on touch/keyboard (Pitfall 3) | Hidden Perks feature phase | Manual test on touch device + full keyboard-only tab-through |
-| Discoverability paradox — too hidden or too obvious (Pitfall 4) | Hidden Perks feature phase | Cold-read test with someone unfamiliar with the change |
-| Discount code exposed via View Source (Pitfall 5) | Hidden Perks feature phase (scoping decision) | Confirm no copy makes scarcity/single-use claims the static architecture can't enforce |
-| Perk collides with existing subscribe flow (Pitfall 6) | Hidden Perks feature phase | Test perk behavior as both a subscribed and non-subscribed user; confirm no duplicate/stacked modals |
-| Perk re-triggers every visit (Pitfall 7) | Hidden Perks feature phase | Refresh/revisit test confirms reveal only fires once per found-state |
-| New elements break mobile layout (Pitfall 8) | Both phases | On-device mobile check against v1.0 layouts as an explicit done-criterion |
+|---------|--------------------|----------------|
+| Pitfall 1 — duplicate customer via `customer_email` | Stripe-customer-linking phase | Sign in with a Google email that already has a pre-login Stripe customer; confirm exactly one Customer object exists in Stripe afterward |
+| Pitfall 2 — email-based auto-link takeover risk | Stripe-customer-linking phase | Design review confirms linking to an *existing* customer requires `email_verified` plus an explicit, documented decision (deferred migration vs. confirmed claim step) — not silent auto-attach |
+| Pitfall 3 — concurrent-checkout duplicate customers | Stripe-customer-linking phase (schema step) | `users.stripe_customer_id` has a `UNIQUE` constraint from the migration that introduces it; a scripted double-fire of checkout for one user produces one customer |
+| Pitfall 4 — webhook dedupe if it becomes an actor | Stripe-customer-linking phase | If the webhook is upgraded from log-only, a `processed_webhook_events` table with a `UNIQUE`/primary key on `event.id` exists and is checked before any write |
+| Pitfall 5 — connection exhaustion | OAuth+DB foundation phase | A concurrent-request smoke test against `/api/auth/me` or `/api/address` produces no connection errors before the phase is marked done |
+| Pitfall 6 — module-scope throw pattern | OAuth+DB foundation phase | Grep check for `neon(`/`new Stripe(` outside function bodies across `lib/` and `api/` |
+| Pitfall 7 — frozen-files regression | Every phase this milestone | `git diff` against the five frozen files is empty at the end of every phase's verification step |
+| Pitfall 8 — test-mode-key contamination of linking data | Cross-cutting; gate the Stripe-customer-linking phase's "done" state on the live-key revert | Before marking that phase complete in Production, confirm `STRIPE_SECRET_KEY` is live-mode and no `users` row holds a customer id created during the test-mode window without being reconciled |
+| Pitfall 9 — OAuth consent screen stuck in Testing | Final release checkpoint of the OAuth+DB foundation phase (or a dedicated pre-launch phase) | Consent screen publishing status is "In production" before the milestone is announced to real users |
+| Pitfall 11 — mismatched webhook secret after key revert | Cross-cutting, tied to the key-revert action itself | One real webhook delivery shows 200 in Stripe's Dashboard logs immediately after revert |
 
 ## Sources
 
-- [Luxury eCommerce UX: The 5 Signals High-Converting Product Pages Share — ConvertCart](https://www.convertcart.com/blog/luxury-product-page-ecommerce) — MEDIUM confidence, single-source CRO commentary
-- [Conversion Rate Optimization for Luxury Ecommerce: Tips & Strategies — Intuitia](https://www.intuitia.tech/blog/conversion-rate-optimization-for-luxury-ecommerce) — MEDIUM confidence
-- [6 Mistakes to Avoid When Designing Your CTAs — AccuRanker](https://www.accuranker.com/blog/mistakes-to-avoid-when-designing-your-ctas/) — MEDIUM confidence, generic CRO advice cross-checked against luxury-specific sources
-- [The power of Easter Eggs in tech — UX Collective](https://uxdesign.cc/the-power-of-easter-eggs-in-tech-4491bb87bcdf) — MEDIUM confidence, informs the discoverability-paradox framing
-- [The Importance of Discoverability in UX Design — Dovetail](https://dovetail.com/ux/discoverability/) — MEDIUM confidence
-- [Hover Actions and Accessibility: Addressing a Common WCAG Violation — BOIA](https://www.boia.org/blog/hover-actions-and-accessibility-addressing-a-common-wcag-violation) — HIGH confidence, direct WCAG SC 2.1.1 / 1.4.13 grounding
-- [WCAG Content on Hover or Focus Explained — GetStark](https://www.getstark.co/wcag-explained/perceivable/distinguishable/content-on-hover-or-focus/) — HIGH confidence, official WCAG success-criterion explanation
-- [Coupon Code UX: Hidden vs Visible Field — CustomFit.ai](https://www.customfit.ai/blog/checkout-pricing/coupon-code-ux-hidden-vs-visible) — MEDIUM confidence, informs discount-scarcity-claims pitfall
-- Direct repo inspection: `/Users/aech/Documents/Ladidier/styles.css` (hover selectors, mobile `!important` overrides), `/Users/aech/Documents/Ladidier/app.jsx` and `pages.jsx` (existing `ladidier_subscribed` localStorage flow), `/Users/aech/Documents/Ladidier/.planning/PROJECT.md` (milestone scope/constraints) — HIGH confidence, primary source
+- [Verify the Google ID token on your server side — Google for Developers](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token) — confidence: MEDIUM (websearch, cross-checked against Google's own backend-auth docs)
+- [Authenticate with a backend server — Google for Developers](https://developers.google.com/identity/sign-in/web/backend-auth)
+- [Verifying the User Info — OAuth 2.0 Simplified (oauth.com)](https://www.oauth.com/oauth2-servers/signing-in-with-google/verifying-the-user-info/)
+- [Prevent customer creation race conditions · Issue #476 · stripe/stripe-node (GitHub)](https://github.com/stripe/stripe-node/issues/476) — confidence: MEDIUM (confirms the duplicate-customer race is an acknowledged, unresolved API gap)
+- [Three Idempotency Patterns for Stripe Webhooks to Prevent Double Billing](https://zenn.dev/kg_filled/articles/9cc7c0c1d85bf1?locale=en)
+- [Stripe Webhooks: Solving Race Conditions and Building a Reliable Handler](https://www.pedroalonso.net/blog/stripe-webhooks-solving-race-conditions/)
+- [Connecting to Neon from Vercel — Neon Docs](https://neon.com/docs/guides/vercel-connection-methods) — confidence: MEDIUM (websearch of official Neon docs, cross-checked against the Neon serverless driver docs)
+- [Neon serverless driver — Neon Docs](https://neon.com/docs/serverless/serverless-driver)
+- [Neon on Vercel: The Connection Pooling Maze — EdgeCases](https://www.edge-cases.com/nextjs/neon-vercel-connection-pooling)
+- [1 Click, Zero Permission: How a Small OAuth Mistake Leads to Total Account Takeover part 2 — Snyk Labs](https://labs.snyk.io/resources/OAuth-mistake-takeover-part-two/) — confidence: MEDIUM (real-world state-parameter CSRF case study)
+- [OAuth 2.0 authentication vulnerabilities — PortSwigger Web Security Academy](https://portswigger.net/web-security/oauth)
+- Codebase evidence (HIGH confidence, read directly): `C:/Users/Aliyan Khan/Documents/Ladidier/.planning/PROJECT.md`, `.planning/quick/260831-8ug-user-should-login-before-subscription-al/260831-8ug-PLAN.md`, `api/entitlement.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js`, `api/checkout.js`
 
 ---
-*Pitfalls research for: Conversion copy/CTA + hidden perks discovery mechanic on an existing luxury editorial React portal*
-*Researched: 2026-08-20*
+*Pitfalls research for: adding Google OAuth + Postgres + Stripe-customer linking to an existing live-payments site*
+*Researched: 2026-09-01*

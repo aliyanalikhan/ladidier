@@ -1,162 +1,180 @@
 # Feature Research
 
-**Domain:** Luxury multi-brand editorial/ecommerce portal — conversion copy/CTA rework + subtle "hidden perks" discovery mechanic
-**Researched:** 2026-08-20
-**Confidence:** MEDIUM (WebSearch-verified across multiple sources; cross-checked against current codebase conventions in `pages.jsx`, `components.jsx`, `ornaments.jsx`)
+**Domain:** Accounts, cross-device membership, and billing/profile for a small luxury editorial membership site (existing Stripe-hosted Checkout, adding Google OAuth + Postgres)
+**Researched:** 2026-09-01
+**Confidence:** MEDIUM (Stripe-specific behavior verified against official docs surfaced in search; UX conventions and OAuth-to-Stripe linking patterns are synthesized general practice, not a single authoritative source — flagged LOW where applicable)
+
+## Context Recap (from PROJECT.md and the 260831-8ug plan)
+
+This milestone builds on top of an already-drafted (unexecuted or partially-executed) plan that:
+- Adds `@neondatabase/serverless` (Postgres) with a `users` table keyed on `google_sub`, and an `addresses` table keyed on `user_id` (one row per user, `unique` constraint).
+- Hand-rolls Google OAuth over `api/auth/google.js` / `api/auth/callback.js` / `api/auth/me.js` / `api/auth/logout.js`, with an HMAC-signed httpOnly `ladidier_session` cookie, independent of the existing `ladidier_member_session` entitlement cookie.
+- Gates the two paid plans behind sign-in at `api/checkout.js`, passing `customer_email` and `metadata: { user_id }` into `stripe.checkout.sessions.create`.
+- Explicitly forbids touching `api/verify-session.js`, `api/entitlement.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js` — the existing per-browser entitlement path must keep working byte-for-byte.
+- Already builds an in-app address form + `addresses` table + `api/address.js`, but scoped narrowly to Hard Copy checkout (collecting the delivery address before Stripe instead of via Stripe's own shipping collection).
+
+This FEATURES.md covers the account/billing/profile surface **on top of** that foundation: what's still missing to call the milestone (Google login + cross-device membership + billing/profile page) actually done.
 
 ## Feature Landscape
 
 ### Table Stakes (Users Expect These)
 
-Features/copy conventions users assume exist on a premium multi-brand shopping destination. Missing these makes the site read as a portfolio/editorial piece rather than a place to buy.
-
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| One clear primary CTA per landing page, above the fold | Every luxury multi-brand site (Net-a-Porter, Mytheresa, mall directories like Mall of America) leads with a single unambiguous next action — "Shop," "Discover the Collection," "Browse Stores" | LOW | Home already has `Read the issue` / `Enter the stores` — needs the *shopping* verb promoted to primary weight, magazine kept secondary. Reuse existing `.btn solid` / `.btn ghost` hierarchy. |
-| Per-store CTA on directory/store cards ("Visit the Boutique →", "Shop [Store] →") | Mall directories and multi-brand retailers always pair a brand tile with an explicit action, not just a name + tagline | LOW | `STORES` array in `components.jsx` already has a real external `url` per store (e.g. `https://thescntshop.com/`) and a poetic `tagline` — the data model already supports this, only the visible CTA label/affordance is missing. |
-| Above-the-fold clarity: what this is + what to do next | Mall directory convention ("500+ stores, browse now") — visitors need to grasp "this is a shoppable house of stores" within one screen, not after reading editorial copy | LOW | Home hero already states "Fourteen stores. One magazine." — good bones, needs a shopping-forward CTA sitting next to it. |
-| Consistent CTA visual hierarchy (1 primary solid + 1 secondary ghost/link, never 2+ solid buttons competing) | Standard ecommerce/luxury UX pattern; conflicting CTAs measurably hurt conversion | LOW | Codebase already has `.btn solid`, `.btn ghost` classes — just needs disciplined application per page, not new component work. |
-| Newsletter/subscribe CTA present but subordinate to the shopping CTA | Expected on any editorial-commerce hybrid; but should never outrank "go shop" as the primary action on Home/Stores | LOW | `SubscribeBanner` already exists at the bottom of pages — leave it as the secondary/closing CTA, don't promote it above the shopping CTA. |
-| Friction removal: no dead-end pages, no orphaned "read more" that never resolves to an action | Any page that only *describes* and never *invites* a next step reads as real-estate/editorial listing, not shopping-mall | LOW | Applies mainly to Stores and Magazine landing sections — audit for any block ending in prose with no button/link. |
+| Google sign-in / sign-out | Locked scope decision; users need *some* way to prove identity to unlock cross-device membership | LOW (already drafted in the 260831-8ug plan — hand-rolled OAuth, no new dependency) | Already scoped: `api/auth/google.js`, `callback.js`, `me.js`, `logout.js` |
+| Session persists across reload/navigation | Baseline expectation for any "logged in" state | LOW (already drafted — HMAC-signed httpOnly cookie) | `lib/session.js` in the 260831-8ug plan |
+| Account page shows name + avatar | Explicit target feature; also the cheapest possible "this worked" confirmation for the user after OAuth | LOW | Google's `id_token` already carries `name` and `picture`; no extra API call needed |
+| **Persist Stripe customer id on the user record** | This is *the* mechanism that makes membership cross-device — without it, "linked to their Stripe customer" is not actually true | MEDIUM | **New work, not yet in any drafted plan.** Requires capturing the `customer` id Stripe creates during Checkout and writing it to `users.stripe_customer_id`. Cleanest point to do this: `checkout.session.completed` in `api/webhook.js` (which today only logs) or synchronously in `api/verify-session.js` on return. Either choice touches a file the 260831-8ug plan explicitly protects — this milestone must consciously decide to extend one of them, not silently leave `metadata.user_id` as a write-only breadcrumb (flagged as accepted risk T-Q8UG-11 in that plan). |
+| Account page shows current subscription status | Explicit target feature; without it "billing management" has nothing to manage | LOW-MEDIUM | Re-derive from the existing entitlement check (`lib/membership.js` / `api/entitlement.js`) rather than inventing a second status source — two sources of truth for "am I subscribed" is exactly the bug this milestone is fixing |
+| Manage / cancel billing | Explicit target feature | LOW if routed through Stripe Customer Portal, HIGH if self-rolled — **see recommendation below** | Depends on `stripe_customer_id` existing on the user row |
+| Saved delivery address, viewable/editable from the account page | Explicit target feature, additive to Stripe's own checkout-time address collection | LOW | **Reuses, does not duplicate**, the `addresses` table + `api/address.js` already drafted in 260831-8ug for Hard Copy checkout. The new work is surfacing/editing that same row from the account page, not a second address system. |
+| Cookie-flag replacement/coexistence handled cleanly | Explicit target: session management "replacing/supplementing" `ladidier_subscribed`/`ladidier_member` | MEDIUM | The 260831-8ug plan deliberately keeps `ladidier_session` and `ladidier_member_session` as two independent cookies. This milestone's account page needs to read *both* (who is signed in, and are they entitled) without collapsing them into one concept prematurely — full unification is a larger, later refactor. |
 
-### Differentiators (Competitive Advantage)
-
-Features/copy patterns that set LaDidiér apart from generic ecommerce while still converting. Should reinforce Core Value: "every page must feel like opening a luxury magazine."
+### Differentiators (Not Required, But Valuable)
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Shoppable-editorial voice — magazine diction that resolves in an action ("Shop the House of Houses," "Enter the Boutiques," not "Buy Now") | Luxury copywriting research consistently shows high-end brands avoid blunt transactional verbs ("Buy," "Snag Yours") in favor of "Discover," "Explore the Collection," "Shop the Edit" — direct enough to convert, elevated enough to stay on-brand | LOW | Directly resolves the PROJECT.md tension: "Shop Now" as literal button copy is fine as a *concept* (be unambiguous, be an action), but the actual wording should stay inside the house's established vocabulary (est. dates, Roman numerals, "House of Houses," per-store taglines) rather than generic dot-com phrasing. |
-| Heritage/house-code framing per category (jewelry house, perfumery, atelier, roastery) instead of generic ecommerce category labels | Multi-brand luxury retailers signal value through heritage messaging (founding year, house codes) — this is literally already modeled in the `STORES` data (`est: "MMXXI"`, `cat: "Jewelry"`) | LOW | Copy work only — surface the existing `est` and `cat` fields more prominently in CTA-adjacent microcopy on the Stores page (e.g. "Jewelry House · Est. MMXXI · Shop the Collection →"). |
-| Hidden Perks discovery mechanic — one subtle, premium-styled discoverable element tied to a discount code or subscribe prompt | This milestone's headline differentiator. Real-world precedent: brands hide a "secret" discount page or link discoverable only by curious/loyal visitors (not advertised in nav), rewarding attentiveness rather than interrupting browsing — this is the "insider access" feeling luxury brands cultivate | MEDIUM | See Hidden Perks Mechanics section below for pattern options, complexity, and dependency notes. |
-| Scarcity/exclusivity microcopy without discount-banner tone (e.g., quarterly "issue" framing already doubles as a soft urgency device) | Avoids the countdown-timer/urgency-banner tone that reads as mass-market and undermines luxury trust | LOW | Already partially present via `Vol. / N°/season` issue framing — extend the same device to the Hidden Perk reveal copy (e.g. frame the perk as tied to "this issue" rather than a generic sitewide sale). |
+| "Manage billing" opens the Stripe-hosted Customer Portal instead of a custom cancel button | Zero new UI to build/maintain for plan switches, payment-method updates, invoice history, proration, and tax — Stripe already solved all of it | LOW (one new serverless route calling `stripe.billingPortal.sessions.create`, same hosted-redirect pattern the site already uses for Checkout) | See Q1 analysis below — this is the recommended default, not a stretch feature |
+| Purchase/receipt history on the account page (beyond current status) | Nice-to-have transparency; largely provided for free once the Customer Portal is wired up (it already lists invoices) | LOW if delegated to the Portal, MEDIUM+ if built as a custom list | Don't build a second invoice list — link to the Portal's own "Billing history" |
+| Editable address label / multiple saved addresses | Slightly more convenient for a household with more than one delivery address | MEDIUM | Current schema is one address per user (`unique` on `user_id`) by design; multi-address needs a schema change. Defer unless requested — see anti-features |
 
-### Anti-Features (Commonly Requested, Often Problematic)
+### Anti-Features (Explicitly Skip for This Scope)
 
-Patterns that look like good conversion tactics but break the luxury feel or exceed this milestone's explicit scope.
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|------------------|-------------|
-| Countdown timers / "Sale ends in 2:59:59" urgency banners | Common ecommerce conversion tactic, proven on mass-market sites | Reads as high-pressure/mass-market; breaks luxury trust; no real inventory/sale system exists in this static-site architecture to back it honestly | Use the existing quarterly "issue" cadence (Vol./N°/season) as the soft urgency device — "this issue only" instead of a ticking clock |
-| Gamified spin-to-win / discount wheel popups | Surface appeal: high engagement metrics on generic ecommerce | Explicitly out of scope per PROJECT.md ("no gamified hidden perks system"); also reads as discount-mall/impulse-retail, not luxury | Single, quiet, non-modal discovery element (see Hidden Perks Mechanics) |
-| Aggressive exit-intent modals demanding email before leaving | Common growth-hacking pattern for capturing emails | Interrupts the editorial reading flow the brand is built on; explicitly conflicts with the "unobtrusive by design" constraint in PROJECT.md | Keep the existing passive `SubscribeBanner` at the bottom of pages; let the Hidden Perk (if it surfaces a subscribe prompt) be opt-in and easy to dismiss |
-| Multiple/repeatable hidden perks, leaderboards, or a "collect them all" mechanic | Seems like it would drive more engagement/replay value | Explicitly out of scope per PROJECT.md; also requires state tracking, uniqueness logic, and a reward ladder — real backend/complexity creep for a static client-side site | Ship exactly one working discovery mechanic, styled premium, done well |
-| Live/validated discount codes requiring server-side redemption | Feels more "real" and trustworthy than a static code | Out of scope — PROJECT.md constraint: "no backend/API integration, portal is static/client-side" | Display a static promo code as the reveal payload (same pattern many boutique/DTC sites use for a "email us this code" or manually-honored code), or route the discovery straight into the existing subscribe flow instead of a redeemable code |
-| Literal generic "Shop Now" / "Buy Now" button text everywhere, verbatim | PROJECT.md names this as an example CTA | Taken too literally it reads like a discount outlet, not a house of luxury stores, undercutting the "premium mall not bargain mall" positioning research consistently found | Use the *concept* (unambiguous, single, transactional CTA) but phrase it in house vocabulary — "Shop the Houses," "Enter the Boutique," "Browse the Collections" — while keeping one plain "Shop Now"-equivalent for scan-ability on the Stores page grid where clarity beats cleverness |
-
-## Hidden Perks Mechanics — Researched Patterns
-
-Real-world precedent for subtle, non-gamified discovery mechanics, ranked by fit for this project's "premium, low-distraction" requirement and by implementation complexity against the existing zero-build React+CSS stack.
-
-| Pattern | How It Works | Precedent | Complexity | Fit |
-|---------|--------------|-----------|------------|-----|
-| Hover-reveal on an existing ornament | A decorative element already on the page (e.g. the `Monogram` watermark, `Crest`, or `Laurel` in `ornaments.jsx`) reveals a faint prompt/code on `:hover`, invisible otherwise | Established front-end easter-egg pattern — hover states are the most common place to hide UI because they only surface if the cursor happens to land there | LOW | Best fit — reuses existing ornament components, purely CSS-driven, genuinely easy to miss, no new state needed for the "found" moment itself |
-| "Whispered" footer/margin link (faint text, near-invisible until hover/focus) | A single small link styled at very low opacity or matching background, sitting in the footer or margin, that brightens on hover and reveals a perk | Real brand precedent: brands and newsletters (e.g. travel/lifestyle editorial brands) hide a "secret link" in each edition/page that rewards attentive readers | LOW | Strong fit — matches the "unobtrusive by design" constraint exactly; no interaction pattern beyond hover+click |
-| Click on a non-nav decorative element (e.g. click the Crest icon 1x, or click the issue Roman numeral) | A single click on an element that looks purely decorative (not a link) triggers a reveal panel/toast | Common in brand easter eggs (logo-click reveals, source-code hidden messages) | LOW–MEDIUM | Good fit if paired with a subtle visual cue (cursor changes to pointer) so it's discoverable but not signposted |
-| Scroll-depth trigger near page bottom | A small reveal (not a popup) fades in once a visitor scrolls near the very bottom of a long page (e.g. end of an Article or bottom of Stores) | Common "you made it this far" reward pattern on content sites | LOW | Decent fit but less "hidden" — scroll-triggered content is a known, semi-expected pattern, so it reads more like a designed feature than a true discovery. Best used as a secondary/backup surface, not the primary mechanic. |
-| Return-visit / dwell-time triggered reveal (localStorage-tracked) | Perk only becomes discoverable after N visits or after spending time on site, rewarding loyal/attentive visitors | Mirrors the existing `ladidier_subscribed` localStorage pattern already in the codebase | MEDIUM | Good thematic fit ("insider access for regulars") but adds state-tracking complexity beyond a single milestone's "one real mechanic" brief — only pursue if the simpler hover/click patterns feel too easy to find in testing |
-| Keyboard sequence (Konami-code style) | A specific keypress sequence unlocks a perk | Common on tech/gaming sites | MEDIUM | Weakest fit — reads as a "programmer/gamer" easter egg convention, not a luxury-fashion one; higher complexity (global key listener) for a tone mismatch. Avoid. |
-
-**Recommended approach:** Combine the hover-reveal-on-ornament pattern (or the whispered footer link) as the discovery trigger with a simple, non-modal reveal (an inline panel or toast styled with existing typography/ornament components, not a `alert()` or takeover modal) that surfaces either: (a) a static promo code string, or (b) a direct link into the existing `SubscribePage`/`SubscribeBanner` flow. This keeps the mechanic to CSS + one small React state flag, consistent with "fully built, not just prototyped" while staying inside the zero-build, no-backend constraint.
+| Feature | Why it seems appealing | Why it's wrong for this milestone | Alternative |
+|---------|------------------------|-----------------------------------|-------------|
+| Password reset / "forgot password" flow | Standard for most auth systems | There is no password — Google OAuth is the only login method (locked decision). Building this would be pure waste and a second identity system to maintain. | If Google sign-in fails, the fix is retrying Google's own account-recovery flow, not the site's |
+| Email/password or other social login providers | "More options is friendlier" | Explicitly out of scope (PROJECT.md, locked). Each added provider is a second account-linking edge case (see Q2) and a second consent screen to maintain. | Google only |
+| Auto-linking a Google login to a pre-login Stripe customer purely by matching email, silently | Feels seamless — "we recognized you" | Explicitly deferred this milestone (PROJECT.md: pre-login subscribers are NOT migrated). Doing it silently and partially now also risks attaching the wrong person's purchase/address history if the email match is coincidental or the Stripe customer's email was never verified. | New sign-ins get a fresh Stripe customer at first post-login checkout (already the drafted behavior via `customer_email`). Build an explicit, user-confirmed "claim your previous purchase" flow as its own later milestone — see Q2 below. |
+| Self-rolled cancel/plan-change/payment-method UI against the raw Billing API | Feels more "on-brand" than sending users to a Stripe-hosted page | Materially higher complexity (Elements/SetupIntent for card updates, proration math, dunning/retry states) for a two-product, two-interval catalog that doesn't need that flexibility; directly conflicts with this project's stated preference to avoid adding dependencies/surface area where avoidable | Stripe Customer Portal — same "hosted redirect" trust model the site already uses for Checkout |
+| Two-factor authentication / MFA setup on the account page | "More secure" reads as a good default | Google already owns the actual credential (password, 2FA, passkeys) — bolting a second MFA layer onto a session cookie that merely proves "Google vouched for this person" adds UI and support burden with no real security gain for a boutique membership site | Rely on Google's own account security; keep the session cookie short-lived and HMAC-signed as already drafted |
+| Self-service account deletion / data export in this milestone | Feels like a natural profile-page feature, and is generally good practice | Not in the locked target feature list; needs a decision on what happens to the Stripe customer and subscription on deletion, which is genuinely more design work than shipping value here | Defer to a dedicated privacy/compliance milestone; a "contact us to delete your account" line is sufficient for now |
+| Admin dashboard for viewing/managing all member accounts | Feels like an obvious companion to "now we have a user database" | Nobody asked for it and it's a large surface (auth-for-staff, audit logging, PII exposure) with no stated need this milestone | Query Postgres directly via the Vercel/Neon console when needed, as the 260831-8ug plan's own verification steps already do |
+| Migrating/backfilling pre-login Stripe subscribers into the new account system | "Might as well do it while we're in here" | Explicitly out of scope this milestone (PROJECT.md, twice-stated) | Deferred to its own milestone with a proper claim-by-email-verification flow |
 
 ## Feature Dependencies
 
 ```
-Hidden Perks reveal (discount code path)
-    └──requires──> Static, non-validated promo code string (no backend redemption)
-                       └──requires──> Out-of-Scope constraint: no backend/API integration
+Google OAuth login + session cookie (already drafted, 260831-8ug)
+    └──requires──> Postgres users table (already drafted)
 
-Hidden Perks reveal (subscribe path)
-    └──requires──> Existing SubscribePage / SubscribeBanner routing
-                       └──enhances──> Existing localStorage subscribe flow (`ladidier_subscribed`)
+Cross-device membership ("linked to their Stripe customer")
+    └──requires──> users.stripe_customer_id column (NEW — not in any drafted plan)
+                       └──requires──> a write path that captures the Stripe customer id
+                                       at/after checkout (extend api/webhook.js or
+                                       api/verify-session.js — currently audit-only/
+                                       protected files)
 
-Hidden Perks "found" state (optional, for one-time reveal polish)
-    └──requires──> New localStorage flag (e.g. `ladidier_perk_found`), same pattern as `ladidier_subscribed`
+Account page "billing status"
+    └──requires──> Cross-device membership (must read the SAME status source as
+                     the public entitlement check — no second source of truth)
 
-Per-store CTA ("Shop [Store] →")
-    └──requires──> Existing STORES[].url field (already present in components.jsx)
+Account page "manage/cancel billing" (Stripe Customer Portal)
+    └──requires──> users.stripe_customer_id (a portal session needs a customer id)
+    └──requires──> Stripe Dashboard: Customer Portal configuration (business profile,
+                     which actions are allowed — dashboard-only, no CLI, same category
+                     of one-time setup as the Google OAuth consent screen)
 
-Copy/CTA rework on Home, Stores, Magazine
-    └──requires──> No new components — content/microcopy edits within existing HeroManifest, HeroSplit, StoresPage, MagazinePage bodies
-    └──enhances──> Existing .btn solid / .btn ghost hierarchy (reuse, don't redesign)
+Account page "saved address"
+    └──reuses────> addresses table + api/address.js (already drafted for Hard Copy
+                     checkout in 260831-8ug) — NOT a new schema
 
-Hidden Perks discovery element ──conflicts──> Gamified/multi-perk system (explicitly out of scope)
-Hidden Perks discovery element ──conflicts──> Modal/popup-based reveal (violates "unobtrusive," "does not distract")
+Multiple saved addresses (differentiator, deferred)
+    └──conflicts──> current `addresses.user_id UNIQUE` constraint (one row per user
+                     by design) — would need a schema migration
 ```
 
 ### Dependency Notes
 
-- **Hidden Perks (discount path) requires a static, non-validated code:** the project has no backend, so the "discount" is a display-only string. This should be framed honestly in copy (e.g., a code to mention at checkout on the destination store's own external site, or a code for a future promotion) rather than implying live cart integration that doesn't exist.
-- **Hidden Perks (subscribe path) enhances existing infrastructure:** routing a discovered perk straight into `SubscribePage`/`SubscribeBanner` is the lowest-complexity option since that flow, its localStorage flag, and its UI already exist and are proven.
-- **Per-store CTA requires no new data modeling:** `STORES[].url` already holds each boutique's real external site — the milestone work is purely surfacing it as a visible CTA, not building new plumbing.
-- **Hidden Perks discovery conflicts with gamified/modal patterns:** both are explicitly out of scope per PROJECT.md and conflict with the "must not distract from or block the shopping flow" constraint — any implementation using `alert()`, a full-screen modal, or a multi-step scavenger hunt should be rejected at design time.
+- **The single biggest gap between "what's drafted" and "what this milestone promises" is `users.stripe_customer_id`.** The 260831-8ug plan links a user to Stripe only in one direction (`metadata.user_id` written onto the Checkout Session — write-only, and its own threat register calls this out as accepted-risk). Cross-device membership requires the reverse link too: given a signed-in user, find their Stripe customer, and that has to be written somewhere durable during or right after checkout.
+- **This touches the "protected files" boundary from the prior plan.** `api/webhook.js`, `api/verify-session.js`, `api/entitlement.js`, and `lib/membership.js` were explicitly off-limits in 260831-8ug so the old per-browser flow wouldn't regress. This milestone's core promise (cross-device membership) cannot be delivered without extending at least one of them — that's an explicit, conscious scope decision for the roadmap/planning phase, not an oversight.
+- **The address book is not a new feature — it's a new surface on an existing feature.** Treat "show/edit my saved address on the account page" as reusing `api/address.js` and the `addresses` table, with the account page becoming a second caller of the same endpoint (alongside the Hard Copy checkout flow). Avoid the temptation to model it as a separate "profile addresses" concept.
+- **Billing management depends on the customer-id link, not on the database in general.** Wiring up the Stripe Customer Portal doesn't need any new schema beyond `stripe_customer_id` — it's a thin serverless route (`api/billing-portal.js` or similar) mirroring the existing `api/checkout.js` pattern.
 
 ## MVP Definition
 
-### Launch With (v1.1 — this milestone)
+### Launch With (v1 — this milestone)
 
-- [ ] Home hero promotes a shopping-forward CTA (e.g. "Shop the Houses") to primary visual weight, alongside the existing "Read the issue" as secondary — essential to satisfy PROJECT.md's core requirement
-- [ ] Stores page: each store card carries an explicit CTA label (not just tagline + image) pointing at its existing `url` — essential, closes the loop between "browse" and "buy"
-- [ ] Magazine landing copy reframed to invite shopping (not just reading) where relevant, without disturbing the paywall/subscribe mechanics already built — essential per PROJECT.md scope
-- [ ] One hidden perk element, hover- or click-triggered, styled with existing ornament/typography components, revealing either a static promo code or a direct subscribe-flow prompt — essential, this is the headline new feature
-- [ ] Hidden perk is verifiably easy to miss in normal browsing (no visual signposting, no nav entry, no onboarding tooltip) — essential per explicit constraint
+- [ ] Google OAuth login/logout, session cookie — *already drafted, execute as-is*
+- [ ] `users.stripe_customer_id` captured at/after checkout — *new work, required for everything below*
+- [ ] Account page: name + avatar from Google, sign-out
+- [ ] Account page: current membership status, sourced from the same check the public entitlement path uses
+- [ ] Account page: "Manage billing" button → `stripe.billingPortal.sessions.create` → Stripe-hosted portal (handles plan change, payment method, cancel, invoice history)
+- [ ] Account page: saved delivery address, view/edit — reusing the existing `addresses` table/API
+- [ ] Session cookie and entitlement cookie coexist without the account page contradicting either
 
 ### Add After Validation (v1.x)
 
-- [ ] Return-visit/dwell-time gated variant of the hidden perk, if user testing shows the simple hover/click version is found too quickly or too rarely — trigger: real usage feedback after this milestone ships
-- [ ] Extend copy/CTA rework to About and Article pages — trigger: PROJECT.md currently defers these explicitly; revisit once Home/Stores/Magazine prove out
+- [ ] Explicit "claim your previous purchase" flow for pre-login Stripe subscribers (deferred migration, needs a verification step — see Q2)
+- [ ] Multiple saved addresses / labeled address book (needs schema change to drop the one-per-user constraint)
+- [ ] Surfacing a lightweight receipt/purchase list on the account page (only if the Customer Portal's own history proves insufficient in practice)
 
 ### Future Consideration (v2+)
 
-- [ ] Real, validated discount codes tied to a backend/commerce layer — defer until/unless the project moves off the static-site architecture (explicitly out of scope constraint today) — *note 2026-08-31: a backend now exists (`api/`, for Stripe membership), so this is no longer blocked by architecture, only unprioritised*
-- [ ] Multiple hidden perks or a light collection mechanic — defer per explicit PROJECT.md exclusion; only reconsider if the single-perk mechanic proves popular and the team wants to invest in real backend/state support
+- [ ] Self-service account deletion / data export
+- [ ] Admin visibility into member accounts (internal tool, not user-facing)
+- [ ] Additional OAuth providers (would break the current "Google only" decision — only revisit if that decision itself is revisited)
 
 ## Feature Prioritization Matrix
 
 | Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| Shopping-forward primary CTA on Home | HIGH | LOW | P1 |
-| Per-store CTA on Stores page cards | HIGH | LOW | P1 |
-| Magazine landing copy reframed toward shopping | MEDIUM | LOW | P1 |
-| Hidden Perk (hover/click reveal, static code or subscribe route) | HIGH | MEDIUM | P1 |
-| House-code/heritage microcopy pass (est. dates, categories surfaced) | MEDIUM | LOW | P2 |
-| Return-visit-gated perk variant | LOW-MEDIUM | MEDIUM | P3 |
-| Copy/CTA rework on About/Article | LOW (out of scope this milestone) | LOW | P3 |
-| Live/validated discount redemption | MEDIUM | HIGH (needs backend) | P3 (blocked by constraint) |
+|---------|------------|----------------------|----------|
+| Google sign-in/out + session | HIGH | LOW (already drafted) | P1 |
+| `stripe_customer_id` linkage | HIGH (unlocks cross-device membership, the milestone's core goal) | MEDIUM | P1 |
+| Account page profile (name/avatar) | MEDIUM | LOW | P1 |
+| Billing status + Customer Portal link | HIGH | LOW (portal) / HIGH (self-rolled — avoid) | P1 |
+| Saved address view/edit on account page | MEDIUM | LOW (reuses existing table/API) | P1 |
+| Claim-existing-purchase flow | MEDIUM (only affects pre-login subscribers) | MEDIUM-HIGH (needs a verification mechanism) | P3 (deferred by decision, not by priority) |
+| Multiple addresses | LOW | MEDIUM | P3 |
+| Account deletion/export | LOW (no current demand signal) | MEDIUM | P3 |
 
-**Priority key:**
-- P1: Must have for this milestone
-- P2: Should have, add when possible within this milestone
-- P3: Nice to have / explicitly deferred
+**Priority key:** P1 must have for this milestone · P2 should have, add when possible · P3 explicitly deferred/future
 
-## Competitor Feature Analysis
+## Answers to the Research Questions
 
-| Feature | Net-a-Porter / Mytheresa (luxury multi-brand ecommerce) | Mall of America / Simon malls (physical mall directory sites) | Our Approach |
-|---------|-----------------------------------------------------------|------------------------------------------------------------------|--------------|
-| Primary CTA verb | "Discover," "Shop the Edit," rarely bare "Buy Now" | "Browse Stores," "Explore," "Take Me There" (wayfinding-flavored) | Blend both registers: house-vocabulary verbs ("Shop the Houses," "Enter the Boutiques") for hero copy, plainer "Shop Now"-equivalent on the Stores grid where scanability matters |
-| Per-brand/store entry | Product grid, brand logo, "Shop [Brand]" | Store tile, category tag, "Visit Store" / directory link | Store card with tagline (existing) + explicit CTA to the store's real external `url` (existing field, currently under-surfaced) |
-| Directory framing | Editorial "Shop the Story," curated collections | Literal count + "browse the directory" | Reuse existing "Fourteen stores. One magazine." framing, paired with an explicit CTA |
-| Discount/loyalty discovery | Rarely gamified; usually a private-sale/insider-access email program | Not typically present (physical malls) | Hidden Perk mechanic as the analog to an "insider access" program, expressed as a quiet on-site discovery rather than an email program (no backend to support real membership tiers) |
-| Urgency tactics | Minimal — "New In," seasonal framing, not countdowns | Minimal — informational, wayfinding-first | Reuse existing quarterly "issue" cadence (Vol./N°/season) as the only urgency device; avoid countdowns/banners |
+### Q1 — Self-rolled billing management vs. Stripe Customer Portal
+
+**Recommendation: route "manage/cancel" through `stripe.billingPortal.sessions.create`, not a self-rolled UI.**
+
+The site's stated preference to avoid adding dependencies where avoidable actually argues *for* the Portal, not against it: it needs no new npm package (same `stripe` SDK already used for Checkout, same lazy-env-var pattern as `lib/stripe.js`), and it's the same "hosted redirect" trust model the site already uses successfully for Checkout — a small serverless route that creates a session and 302s the browser to a Stripe-owned URL, then returns via `return_url`. A self-rolled equivalent would instead need to be built and maintained against the raw Billing API (list subscriptions, `SetupIntent`/Elements for card updates, manual proration and cancellation-timing logic, dunning/past-due states) — real, ongoing surface area for a two-product catalog that gets nothing extra from being custom.
+
+The one non-negotiable prerequisite is a `customer` id on hand (portal sessions are created *for* a customer), which loops back to the `stripe_customer_id` gap above. There's also a one-time Dashboard configuration step (Settings → Billing → Customer portal — business profile, which self-service actions are allowed, e.g. immediate vs. end-of-period cancellation) that is dashboard-only, no CLI path, in the same category as the Google OAuth consent-screen setup already required by the prior plan.
+
+### Q2 — First-login flow when the Google email already has a pre-login Stripe customer
+
+**For this milestone: do not auto-link.** PROJECT.md already locks this decision — pre-login subscribers are explicitly not migrated. The practical effect: a first Google sign-in creates a `users` row with no `stripe_customer_id`; if that person then buys a plan, `api/checkout.js` creates a *new* Stripe customer via `customer_email` (already the drafted behavior), and that new customer id is what gets linked. Their earlier, pre-login purchase remains unlinked and untouched, exactly as scoped.
+
+**When the claim flow is built later** (v1.x/deferred), the general pattern synthesized from Google's account-linking guidance and common Stripe/Auth0 integrations is: look up Stripe customers by email server-side, and if exactly one match exists, treat it as a *candidate* link rather than an automatic one — require an explicit user confirmation step before attaching it, because email match alone isn't proof of ownership (Stripe customer emails aren't necessarily verified, and can be stale or shared). Google's own `email_verified: true` claim (already checked in the drafted OAuth callback) meaningfully de-risks this compared to email/password systems, but "de-risks" isn't "proves" — a confirmation step (e.g., "We found a ÉcLAT membership under this email — is this yours?") is the safer default once this work is scoped. This finding is LOW confidence — it's synthesized general practice, not a single documented Stripe-endorsed procedure.
+
+**Separately, regardless of the claim flow:** the existing `api/checkout.js` should look up an existing Stripe customer by email before creating a new one on *every* checkout (not just first-login-with-history cases), to avoid duplicate Stripe Customer objects for the same signed-in user across repeat purchases. This is a well-documented Stripe pattern (search/list by email, pass the existing `customer` id if found, fall back to `customer_email` only when no match exists) and is orthogonal to the account-claiming question — it's about not fragmenting *this* user's own Stripe records once they're signed in and already linked.
+
+### Q3 — Saved-address "address book" feature shape
+
+Keep it deliberately small: **one saved address per account**, surfaced and editable from the account page, reusing the exact `addresses` table and `api/address.js` endpoint already drafted for the Hard Copy checkout flow in 260831-8ug (full name, line1/line2, city, region, postal code, country, phone — all already modeled). The account page becomes a second UI surface (alongside the Hard Copy checkout modal) that reads/writes the same row via the same session-scoped endpoint. Do not build a second "profile addresses" table or a multi-address model unless a real need for it appears — the current schema's `unique` constraint on `addresses.user_id` is a deliberate one-address-per-member design, not an oversight.
+
+This stays additive to, not a replacement for, Stripe Checkout's own address collection at time of purchase — per the locked scope, both coexist. The account-page address book is about *convenience and record-keeping tied to the person* (so it survives across devices and purchases), while Stripe's checkout-time collection remains the actual shipping address used for that specific order unless the flow is later changed to prefill Stripe's collection from the saved address (an optimization, not required this milestone).
+
+### Q4 — Table stakes vs. differentiator vs. anti-feature for the account/profile page
+
+See the tables above for full detail; the short version:
+
+- **Table stakes:** identity (name/avatar from Google), sign-out, current membership status, a working manage/cancel path, and the saved address — all six are explicit target features and none is safely skippable without the milestone feeling incomplete.
+- **Differentiator:** delegating billing entirely to the Stripe Customer Portal is *technically* the "easy" choice but is also the right one — it's listed as a differentiator only in the sense that a site this size choosing not to over-build custom billing UI is itself a good, disciplined choice, not a corner cut.
+- **Anti-features to explicitly skip this milestone:** password reset (no password exists — Google OAuth only), any non-Google login method, silent auto-linking of pre-login purchases by email match, a self-rolled billing UI, MFA/2FA on top of the session cookie, self-service account deletion/export, an admin member-management dashboard, and any work toward migrating pre-login subscribers. All of these are either explicitly locked out of scope by PROJECT.md or add real complexity for no feature this milestone actually promises.
 
 ## Sources
 
-- [The Fundamentals of Effective eCommerce Copywriting in 2025 | Lounge Lizard](https://www.loungelizard.com/blog/the-fundamentals-of-effective-ecommerce-copywriting/)
-- [Best 4 Copywriting Services for Luxury Brands (2025) | Awisee](https://awisee.com/blog/copywriting-services-for-luxury-brands/)
-- [A Copywriting Guide for Fashion Brands with Examples | Insidea](https://insidea.com/blog/marketing/fashion-brands/a-copywriting-guide)
-- [7 Luxury Copywriting Examples and Strategies | Carmine Mastropierro](https://carminemastropierro.com/luxury-copywriting/)
-- [Best Multi-Brand Websites | Great Examples of Strategy | We Are Fine](https://www.wearefine.com/news/best-multi-brand-websites/)
-- [How to create a seamless luxury website with 7 examples | Webflow Blog](https://webflow.com/blog/luxury-brand-websites)
-- [20 Best Luxury Brand Websites in 2026 | Nakada Design](https://nakadadesign.com/stories/20-best-luxury-brand-websites-2026)
-- [Cheat sheet: How Farfetch and Net-a-Porter stack up | Glossy](https://www.glossy.co/fashion/cheat-sheet-how-farfetch-and-net-a-porter-stack-up/)
-- [Mall of America Directory – Browse 500+ Stores & Map](https://www.mallofamerica.com/directory)
-- [Mall Directory: what it is, how it works, and why your mall needs one | Zapt Tech](https://zapt.tech/en/blog/Mall-directory:-what-it-is--how-it-works--and-why-your-mall-needs-one./)
-- [How Interactive Mall Directories Cater to Individual Preferences | Rise Vision](https://www.risevision.com/blog/interactive-mall-directories)
-- [Several Ways to Hide Easter Eggs on your Website | Bryan Braun](https://www.bryanbraun.com/2018/04/01/several-ways-to-hide-easter-eggs-on-your-website/)
-- ['Secret' Discount Page Hack to Boost Sales! | Medium](https://medium.com/@growthbranch/try-this-secret-discount-page-hack-to-boost-your-sales-instantly-3d27720c0a72)
-- [Superfan Codeword Discounts (Shopify App)](https://apps.shopify.com/codeword-secret-discounts)
-- [The Art of Brand Easter Eggs | Phable](https://www.phable.io/phable-labs/the-art-of-brand-easter-eggs)
-- Codebase inspection: `/Users/aech/Documents/Ladidier/pages.jsx`, `/Users/aech/Documents/Ladidier/components.jsx`, `/Users/aech/Documents/Ladidier/ornaments.jsx`, `/Users/aech/Documents/Ladidier/app.jsx` (existing CTA hierarchy, STORES data model, subscribe flow, ornament components)
+- [Integrate the customer portal with the API — Stripe Documentation](https://docs.stripe.com/customer-management/integrate-customer-portal) (MEDIUM confidence — Stripe official docs, surfaced via web search)
+- [Customer Self-serve Subscription and Billing Portals — Stripe](https://stripe.com/resources/more/self-serve-subscription-management-and-billing-portals) (MEDIUM)
+- [Create a portal session — Stripe API Reference](https://docs.stripe.com/api/customer_portal/sessions/create?lang=node) (MEDIUM)
+- [Streamlined Linking with OAuth and Sign in with Google — Google for Developers](https://developers.google.com/identity/account-linking/oauth-with-sign-in-linking) (LOW-MEDIUM — general account-linking pattern, not Stripe-specific)
+- [Sync Stripe Customers and Auth0 Users — Auth0 Labs](https://developer.auth0.com/resources/labs/actions/sync-stripe-customers-and-auth0-users) (LOW — third-party integration example, not a Stripe-endorsed procedure)
+- [Guest customers — Stripe Documentation](https://docs.stripe.com/docs/payments/checkout/guest-customers) (MEDIUM — duplicate-customer-by-email behavior)
+- [Things you should avoid while integrating Stripe subscriptions — Medium](https://medium.com/@harisbakhabarpk/things-you-should-avoid-while-integrating-stripe-subscriptions-28c9d1974308) (LOW — practitioner blog, cross-checked against Stripe's own guest-customer docs)
+- [Designing profile, account, and setting pages for better UX — Medium/Bootcamp](https://medium.com/design-bootcamp/designing-profile-account-and-setting-pages-for-better-ux-345ef4ca1490) (LOW — general UX opinion piece)
+- [Account settings Page Design Examples — Nicelydone](https://nicelydone.club/pages/account-settings) (LOW — pattern catalog, not a primary source)
+- Internal: `.planning/PROJECT.md` (locked scope decisions for this milestone)
+- Internal: `.planning/quick/260831-8ug-user-should-login-before-subscription-al/260831-8ug-PLAN.md` (drafted foundation this milestone builds on)
 
 ---
-*Feature research for: Luxury multi-brand editorial/ecommerce portal — v1.1 Shopping Mall Conversion Pass*
-*Researched: 2026-08-20*
+*Feature research for: Google-OAuth accounts + cross-device membership + billing/profile page (LaDidiér Portal v1.2)*
+*Researched: 2026-09-01*
