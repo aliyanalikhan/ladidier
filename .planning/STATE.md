@@ -2,16 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shopping Mall Conversion Pass
+current_phase: 06
+current_phase_name: mall-treasure-hunt
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-08-22T10:34:27.402Z"
-last_activity: 2026-08-22 -- Plan 03 (mall treasure hunt site wiring) complete
+stopped_at: Completed quick task 260831-ndu (Home page real ÉCLAT Vol. 2 content)
+last_updated: "2026-08-31T11:56:36.379Z"
+last_activity: 2026-08-22
+last_activity_desc: Plan 03 (mall treasure hunt site wiring) complete
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 12
-  completed_plans: 10
-  percent: 83
+  completed_plans: 11
+  percent: 67
 ---
 
 # Project State
@@ -84,6 +87,7 @@ Progress: [████████░░] 83%
 - [Phase 05]: HiddenPerk mounted as sibling of Crest inside Footer's wordmark row (not repurposed Crest) per D-01, requiring zero prop plumbing beyond the setRoute Footer already received
 - [Phase 06-03]: Kept every TreasureIcon insertion to a single bare line (no surrounding blank lines) so the content diff for each mount site is exactly one added line, matching the plan's insertions-only acceptance gates
 - [Quick 260831-mis]: Rebranded tagline/manifesto to "LaDidiér, the World Curated," fixed stale 11->14 store count, and rebuilt MagazinePage with the real ÉCLAT Vol. 2 cover + six real highlight cards, retiring the Heyzine flipbook/paywall in favor of a plain-text "interactive platform launching soon" note. Executor left a stale "A house of houses" Footer tagline in src/components.jsx untouched (file was off-limits per plan); orchestrator reviewed the gap post-execution and updated it directly to match the new brand language.
+- [Quick 260831-ndu]: Extended the 260831-mis ÉCLAT Vol. 2 rebuild from MagazinePage onto Home — HeroSplit now shows the real cover photo and FeaturedStories now sources ISSUE_HIGHLIGHTS, retiring the last two fictional-magazine surfaces on Home.
 
 ### Roadmap Evolution
 
@@ -104,9 +108,10 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260519-rat | use Mag cover.png from assets folder on magazine cover | 2026-05-19 | f54c505 | [260519-rat-use-mag-cover-png-from-assets-folder-on-](.planning/quick/260519-rat-use-mag-cover-png-from-assets-folder-on-/) |
 | 260831-mis | update homepage marketing copy to new LaDidiér brand language, rebuild Magazine page with real cover + highlights | 2026-08-31 | ba6f20f | [260831-mis-update-homepage-marketing-copy-to-new-la](.planning/quick/260831-mis-update-homepage-marketing-copy-to-new-la/) |
+| 260831-ndu | swap Home page's fictional magazine cover + featured stories for real ÉCLAT Vol. 2 content | 2026-08-31 | 5a714c1 | [260831-ndu-swap-the-home-page-s-fictional-magazine-](.planning/quick/260831-ndu-swap-the-home-page-s-fictional-magazine-/) |
 
 ## Session Continuity
 
-Last session: 2026-08-22T10:34:27.384Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-08-31T11:56:36.358Z
+Stopped at: Completed quick task 260831-ndu (Home page real ÉCLAT Vol. 2 content)
 Resume file: None
