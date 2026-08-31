@@ -6,5 +6,10 @@
       "destination": "/print.html",
       "permanent": true
     }
-  ]
+  ],
+  "functions": {
+    "api/issue/*.js": {
+      "includeFiles": "content/**"
+    }
+  }
 }

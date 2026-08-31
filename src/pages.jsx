@@ -2,6 +2,7 @@
    LADIDIÉR — Page components
    ───────────────────────────────────────────────────────────── */
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   IMG,
   STORES,
@@ -435,7 +436,88 @@ const ISSUE_HIGHLIGHTS = [
   },
 ];
 
-function MagazinePage({ setRoute }) {
+/* Total pages behind /api/issue/page — must match content/eclat-vol2-pages/ */
+const ISSUE_PAGE_COUNT = 62;
+
+/* Full-issue reader, member-gated. Fetches one page image at a time from
+   /api/issue/page (cookie-authenticated) rather than shipping all 62 pages
+   up front. */
+function IssueReader({ onClose }) {
+  const [pageNum, setPageNum] = useState(1);
+  const [imgUrl, setImgUrl] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl = null;
+    setLoading(true);
+    setError(null);
+    fetch(`/api/issue/page?n=${pageNum}`, { credentials: "same-origin" })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(res.status === 403 ? "Your session has expired — please sign back in." : "Could not load this page.");
+        const blob = await res.blob();
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setImgUrl(objectUrl);
+      })
+      .catch((err) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [pageNum]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") setPageNum((p) => Math.min(ISSUE_PAGE_COUNT, p + 1));
+      if (e.key === "ArrowLeft") setPageNum((p) => Math.max(1, p - 1));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // Portaled straight to document.body: MagazinePage's root carries the
+  // site-wide .page-fade entry animation, which animates `transform` and so
+  // establishes a containing block for any `position: fixed` descendant —
+  // without the portal this backdrop renders pinned to that ancestor's box
+  // instead of the viewport (it visually lands mid-document instead of
+  // centered on screen). Mounting outside that subtree sidesteps it, the same
+  // reason `.mobile-overlay` is mounted at the app root rather than inside a page.
+  return createPortal(
+    <div
+      className="reader-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="ÉCLAT Vol. 2 reader"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="reader-modal">
+        <div className="reader-modal-header">
+          <span className="mono" style={{ fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--mute)" }}>
+            ÉCLAT Vol. 2 · Page {pageNum} / {ISSUE_PAGE_COUNT}
+          </span>
+          <button className="reader-close" onClick={onClose} aria-label="Close reader">×</button>
+        </div>
+        <div className="reader-page">
+          {loading && <div className="mono muted">Loading…</div>}
+          {!loading && error && <div className="mono muted">{error}</div>}
+          {!loading && !error && imgUrl && <img src={imgUrl} alt={`ÉCLAT Vol. 2, page ${pageNum}`} />}
+        </div>
+        <div className="reader-nav">
+          <button className="btn ghost" onClick={() => setPageNum((p) => Math.max(1, p - 1))} disabled={pageNum === 1}>← Prev</button>
+          <button className="btn ghost" onClick={() => setPageNum((p) => Math.min(ISSUE_PAGE_COUNT, p + 1))} disabled={pageNum === ISSUE_PAGE_COUNT}>Next →</button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function MagazinePage({ setRoute, isMember }) {
+  const [readerOpen, setReaderOpen] = useState(false);
   return (
     <div className="page-fade">
       <header className="page-head">
@@ -481,14 +563,30 @@ function MagazinePage({ setRoute }) {
             A look inside Volume 2 — six of the stories, people, and moments that shaped this
             issue, from the cover feature to the culture pages below.
           </p>
-          <p className="mono muted" style={{ marginTop: 20, fontSize: 12, letterSpacing: ".02em" }}>
-            Want to turn every page? Our interactive reading platform is launching soon.
-          </p>
-          <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
-            <button className="btn solid" onClick={() => setRoute("subscribe")}>Order this issue →</button>
-          </div>
+          {isMember ? (
+            <>
+              <p className="mono muted" style={{ marginTop: 20, fontSize: 12, letterSpacing: ".02em" }}>
+                You're a member — the full issue is yours to read here, or take home as a PDF.
+              </p>
+              <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
+                <button className="btn solid" onClick={() => setReaderOpen(true)}>Read the full issue →</button>
+                <a className="btn ghost" href="/api/issue/pdf" download="ECLAT-Vol2.pdf">Download PDF</a>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="mono muted" style={{ marginTop: 20, fontSize: 12, letterSpacing: ".02em" }}>
+                Want to turn every page? Our interactive reading platform is launching soon.
+              </p>
+              <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
+                <button className="btn solid" onClick={() => setRoute("subscribe")}>Order this issue →</button>
+              </div>
+            </>
+          )}
         </div>
       </section>
+
+      {readerOpen && <IssueReader onClose={() => setReaderOpen(false)} />}
 
       {/* Highlights grid */}
       <section className="section container">
