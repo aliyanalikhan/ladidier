@@ -115,7 +115,7 @@ function HeroSplit({ setRoute }) {
       </div>
 
       <div style={{ position: "relative" }} className="float-slow">
-        <div className="ph photo" style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }} data-tag="Vol. 2 · Sep 2026" data-label="THE COVER"></div>
+        <div className="ph photo cover framed tilt" style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }} data-tag="Vol. 2 · Sep 2026" data-label="THE COVER"></div>
         <div className="mono" style={{ position: "absolute", right: 0, top: -28, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--mute)" }}>
           ↘ Current issue
         </div>
