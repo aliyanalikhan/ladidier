@@ -5,6 +5,30 @@ import { getStripe } from '../lib/stripe.js';
 // repeat checkout does not pay for the extra round trip.
 const priceCache = new Map();
 
+// Hard Copy posts a printed magazine, so Checkout collects a shipping address
+// and phone number and stores them on the Stripe Customer. Online is digital
+// only and is asked for neither — no point making a reader type an address to
+// receive a PDF.
+const SHIPS_PHYSICALLY = /^hardcopy_/;
+
+// Stripe requires an explicit country list; there is no "anywhere" option.
+// Override with a comma-separated SHIPPING_COUNTRIES env var when fulfilment
+// reach changes, so it doesn't need a code change.
+const DEFAULT_SHIPPING_COUNTRIES = [
+  'US', 'CA', 'GB', 'IE', 'FR', 'DE', 'ES', 'IT', 'NL', 'BE', 'SE', 'DK',
+  'NO', 'FI', 'AT', 'CH', 'PT', 'PL', 'AU', 'NZ', 'NG', 'ZA', 'AE', 'SG', 'JP',
+];
+
+function shippingCountries() {
+  const raw = process.env.SHIPPING_COUNTRIES;
+  if (!raw) return DEFAULT_SHIPPING_COUNTRIES;
+
+  const list = raw.split(',').map((c) => c.trim().toUpperCase()).filter(Boolean);
+  // An empty or malformed override would make Stripe reject the session, so fall
+  // back rather than ship a broken checkout.
+  return list.length ? list : DEFAULT_SHIPPING_COUNTRIES;
+}
+
 // The env vars accept either a Price id (price_…) or a Product id (prod_…).
 // A Product is only a name; the amount and interval live on its Price, so a
 // prod_ id has to be resolved before it can go in line_items.
@@ -90,6 +114,13 @@ export async function POST(request) {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       line_items: [{ price, quantity: 1 }],
+      // Only ask for a delivery address when something physical is being posted.
+      ...(SHIPS_PHYSICALLY.test(planType)
+        ? {
+            shipping_address_collection: { allowed_countries: shippingCountries() },
+            phone_number_collection: { enabled: true },
+          }
+        : {}),
       // payment_method_types is deliberately omitted so Stripe picks the most
       // relevant methods per customer (dynamic payment methods). Manage which
       // ones are eligible from the Dashboard, not from here.

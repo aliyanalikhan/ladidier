@@ -952,29 +952,6 @@ body::before {
   display: inline-block;
   animation: floaty 5s ease-in-out infinite alternate;
 }
-.paywall-input-container {
-  display: flex;
-  gap: 12px;
-  max-width: 460px;
-  margin: 36px auto 0;
-  width: 100%;
-}
-.paywall-input {
-  flex: 1;
-  background: var(--ivory);
-  border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  padding: 14px 20px;
-  font-family: var(--sans);
-  font-size: 15px;
-  color: var(--noir);
-  outline: none;
-  transition: border-color .3s ease, box-shadow .3s ease;
-}
-.paywall-input:focus {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 15%, transparent);
-}
 .magazine-frame {
   box-shadow: 0 40px 100px -30px rgba(0,0,0,0.18);
   border: 1px solid var(--line-strong);
@@ -994,11 +971,6 @@ body::before {
   }
   .paywall-gate {
     padding: 24px 16px !important;
-  }
-  .paywall-input-container {
-    flex-direction: column !important;
-    gap: 10px !important;
-    margin-top: 24px !important;
   }
   .preview-indicator {
     padding: 6px 14px !important;
