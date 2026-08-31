@@ -463,12 +463,14 @@ function MagazinePage({ setRoute }) {
 
       {/* Issue feature panel — real cover + preview copy */}
       <section className="section container magazine-cover-split" style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 64, alignItems: "center", position: "relative" }}>
-        <div
-          className="ph photo float-slow"
-          style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }}
-          data-tag="Vol. 2 · Sep 2026"
-          data-label="THE COVER"
-        ></div>
+        <div style={{ position: "relative" }} className="float-slow">
+          <div
+            className="ph photo cover framed tilt"
+            style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }}
+            data-tag="Vol. 2 · Sep 2026"
+            data-label="THE COVER"
+          ></div>
+        </div>
         <div>
           <div className="eyebrow">This Issue's Cover</div>
           <h2 className="display" style={{ fontSize: "clamp(28px, 3.4vw, 48px)", margin: "16px 0 24px", letterSpacing: "-.02em", fontWeight: 300 }}>
