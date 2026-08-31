@@ -175,12 +175,30 @@ Deferred to future milestones. Tracked but not in current roadmap.
 | TREAS-04 | Phase 6 | Complete |
 | TREAS-05 | Phase 6 | Complete |
 | TREAS-06 | Phase 6 | Complete |
+| AUTH-01 | Phase 7 | Pending |
+| AUTH-02 | Phase 7 | Pending |
+| AUTH-03 | Phase 7 | Pending |
+| AUTH-04 | Phase 7 | Pending |
+| ACCT-01 | Phase 7 | Pending |
+| ACCT-02 | Phase 7 | Pending |
+| LINK-01 | Phase 8 | Pending |
+| LINK-02 | Phase 8 | Pending |
+| LINK-03 | Phase 8 | Pending |
+| LINK-04 | Phase 8 | Pending |
+| PROF-01 | Phase 9 | Pending |
+| PROF-02 | Phase 9 | Pending |
+| PROF-03 | Phase 9 | Pending |
+| PROF-04 | Phase 9 | Pending |
+| PROF-05 | Phase 9 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 19 total
 - Mapped to phases: 19 (Phase 4: CTA-01..07, Phase 5: PERK-01..06, Phase 6: TREAS-01..06)
 - Unmapped: 0 ✓
+- v1.2 requirements: 15 total
+- Mapped to phases: 15 (Phase 7: AUTH-01..04 + ACCT-01..02, Phase 8: LINK-01..04, Phase 9: PROF-01..05)
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-05-19*
-*Last updated: 2026-09-01 — v1.1 confirmed shipped; v1.2 (Accounts & Cross-Device Membership) requirements defined, pending roadmap phase mapping*
+*Last updated: 2026-09-01 — v1.2 (Accounts & Cross-Device Membership) requirements mapped to Phases 7-9 in ROADMAP.md; 100% coverage confirmed*

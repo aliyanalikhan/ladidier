@@ -4,6 +4,7 @@
 
 - ✅ **v1.0 Mobile Responsiveness & Vercel Deploy** - Phases 1-3 (shipped 2026-08-20, confirmed live)
 - 🚧 **v1.1 Shopping Mall Conversion Pass** - Phases 4-6 (in progress)
+- 🚧 **v1.2 Accounts & Cross-Device Membership** - Phases 7-9 (planned)
 
 ## Phases
 
@@ -113,10 +114,59 @@ Plans:
 - [ ] 06-04-PLAN.md — Phase gate: 12-gate static sweep + human verification of TREAS-01..06 at desktop and 375px + Phase 5 regression
 **UI hint**: yes
 
+### 🚧 v1.2 Accounts & Cross-Device Membership (Planned)
+
+**Milestone Goal:** Replace per-browser entitlement with real user accounts (Google login) that tie subscription/membership to the person, not the browser — with a billing/profile area, built on a real database.
+
+**Summary:**
+- [ ] **Phase 7: OAuth + Database Foundation** - Google sign-in, persistent session cookies, and a real users database
+- [ ] **Phase 8: Stripe-Customer Linking** - Cross-device membership via an idempotently linked Stripe customer
+- [ ] **Phase 9: Account & Billing Page** - Profile, subscription status, Stripe Customer Portal, and saved address
+
+#### Phase 7: OAuth + Database Foundation
+**Goal**: Users can sign in with Google, their session persists, and their identity is stored in a real, persistent database rather than only a per-browser cookie
+**Depends on**: Nothing new — continues phase numbering after Phase 6; no functional dependency on v1.1 work
+**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, ACCT-01, ACCT-02
+**Success Criteria** (what must be TRUE):
+  1. A visitor can click "Sign in with Google" and, after completing Google's consent screen, lands back on the site signed in
+  2. A signed-in visitor's session survives a full page reload and a hash-route navigation, via a signed httpOnly session cookie
+  3. A signed-in visitor can sign out, and the next request treats them as signed-out
+  4. Selecting a paid plan (ÉcLAT Online or Hard Copy) while signed out routes through Google sign-in before reaching Stripe Checkout; the free Reader tier remains a one-click unlock with no sign-in and no network call
+  5. Signing in with the same Google account more than once never creates a second user record — exactly one persistent row per Google account, keyed on the Google account id
+**Plans**: TBD — an existing, unexecuted draft plan already contains a detailed, validated technical approach for most of this phase: `.planning/quick/260831-8ug-user-should-login-before-subscription-al/260831-8ug-PLAN.md` (hand-rolled Google OAuth via `fetch`, `lib/db.js` + `lib/session.js`, four `api/auth/*` routes, `@neondatabase/serverless` schema for `users`/`addresses`, a sign-in gate in `api/checkout.js`, and an in-app Hard Copy address form). `/gsd-plan-phase 7` should read and reuse this draft rather than re-deriving the approach from scratch — do not delete or move that file. Note: that draft's `api/checkout.js` change passes `customer_email` into Stripe Checkout session creation; Phase 8 must replace that with a stored `customer:` id — `customer_email` is the exact anti-pattern that creates duplicate Stripe customers (see Phase 8).
+**Regression check**: `git diff` against `api/entitlement.js`, `api/verify-session.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js` must be empty
+
+#### Phase 8: Stripe-Customer Linking
+**Goal**: A signed-in user's membership/subscription status follows their account across devices and browsers, via a Stripe customer durably and idempotently linked to their user record — this is the mechanism that makes membership actually cross-device
+**Depends on**: Phase 7 (needs the `users` table and a signed-in identity to link a Stripe customer to)
+**Requirements**: LINK-01, LINK-02, LINK-03, LINK-04
+**Success Criteria** (what must be TRUE):
+  1. Starting checkout for a paid plan while signed in creates, or reuses, exactly one Stripe customer for that account — never a duplicate — via a UNIQUE `stripe_customer_id` column on `users`, created idempotently at checkout time
+  2. A signed-in user's membership/subscription status is read from their linked Stripe customer, not from a per-browser cookie
+  3. A member who signs in with the same Google account on a new device or browser sees their active membership immediately, without repurchasing
+  4. `api/entitlement.js`, `api/verify-session.js`, `api/webhook.js`, `lib/membership.js`, and `lib/stripe.js` remain byte-for-byte unmodified — `git diff` against these five files is empty
+**Plans**: TBD
+**Highest-risk phase** (per research/SUMMARY.md): concentrates the duplicate-Stripe-customer, race-condition, and account/billing-takeover-by-email risks. Design must use a UNIQUE constraint on `stripe_customer_id`, link via a `lib/account.js`-style `ensureStripeCustomer` seam at checkout-creation time, use `customer:` (never `customer_email`) once a customer exists, and must NOT auto-link an existing Stripe customer by email match this milestone (unverified-email linking enables takeover). The webhook (`api/webhook.js`) stays log-only per LINK-04 — it must not become a linking actor without its own explicit, separately-reviewed design.
+**Production gate**: this phase is not "done" in Production until verified against LIVE (not test-mode) Stripe keys — Production is currently running Stripe test-mode keys (see STATE.md, Out-of-band work, as of 2026-09-01). Confirm the live-key revert (secret key, publishable key, webhook secret together) with one successful live webhook delivery before marking this phase complete in Production.
+
+#### Phase 9: Account & Billing Page
+**Goal**: Signed-in users have a self-service account page showing their profile, membership status, billing management, and a saved delivery address
+**Depends on**: Phase 8 (billing status and the Customer Portal both need the linked Stripe customer)
+**Requirements**: PROF-01, PROF-02, PROF-03, PROF-04, PROF-05
+**Success Criteria** (what must be TRUE):
+  1. A signed-in user's account page shows their name and avatar as returned by Google
+  2. The account page shows the user's current membership/subscription status, sourced from the Phase 8 Stripe-customer link
+  3. The account page has a "Manage billing" action that opens Stripe's hosted Customer Portal, where the user can view invoices and upgrade, downgrade, or cancel
+  4. A signed-in user can view and edit one saved delivery address on the account page, persisted in the database
+  5. The account-page address is stored and edited independently of the address Stripe Checkout collects at purchase time — editing one never overwrites or is overwritten by the other
+**Plans**: TBD
+**Regression check**: `git diff` against `api/entitlement.js`, `api/verify-session.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js` must be empty
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -126,6 +176,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 4. Copy & CTA Conversion Pass | v1.1 | 5/5 | Complete   | 2026-08-20 |
 | 5. Hidden Perks Discovery Feature | v1.1 | 1/3 | In Progress|  |
 | 6. Mall Treasure Hunt | v1.1 | 0/4 | Planned | - |
+| 7. OAuth + Database Foundation | v1.2 | 0/TBD | Planned | - |
+| 8. Stripe-Customer Linking | v1.2 | 0/TBD | Planned | - |
+| 9. Account & Billing Page | v1.2 | 0/TBD | Planned | - |
 
 ---
 *Roadmap created: 2026-05-19 — v1.0 Mobile Responsiveness & Vercel Deploy*
@@ -136,3 +189,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 *Phase 5 planned: 2026-08-21 — 3 plans, 3 waves (sequential: build → wire → verify; Plan 02 would break the site if it landed before Plan 01)*
 *Phase 6 added: 2026-08-22 — Mall Treasure Hunt (multi-page hidden-icon hunt with subscribe/WhatsApp capture reward), runs alongside Phase 5's single hidden perk*
 *Phase 6 planned: 2026-08-22 — 4 plans, 4 waves (sequential: build core → popup+CSS → wire in → gate; every plan after 01 depends on the file the previous one created)*
+*v1.2 roadmap added: 2026-09-01 — Phase 7 (OAuth + Database Foundation), Phase 8 (Stripe-Customer Linking), Phase 9 (Account & Billing Page), continuing phase numbering from Phase 6; derived from research/SUMMARY.md's validated three-phase dependency chain (identity → linking → UI). Phase 7 has an existing unexecuted draft plan to reuse (260831-8ug); Phase 8 is flagged highest-risk and gated on the pending Stripe live-key revert; all three phases carry a standing regression check against the five frozen legacy entitlement files.*

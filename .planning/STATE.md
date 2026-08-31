@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Accounts & Cross-Device Membership
 status: planning
-last_updated: "2026-08-31T22:00:26.286Z"
+last_updated: "2026-09-01T00:00:00.000Z"
 last_activity: 2026-09-01
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,25 +17,25 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-31)
+See: .planning/PROJECT.md (updated 2026-09-01)
 
 **Core value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
-**Current focus:** Phase 06 — mall-treasure-hunt
+**Current focus:** Phase 7 — OAuth + Database Foundation (roadmap just defined; not yet planned)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 7 (OAuth + Database Foundation) — not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-09-01 — Milestone v1.2 started
+Status: Roadmap defined for v1.2 (Phases 7-9) — ready for `/gsd-plan-phase 7`
+Last activity: 2026-09-01 — v1.2 ROADMAP.md written (Phase 7: OAuth + Database Foundation, Phase 8: Stripe-Customer Linking, Phase 9: Account & Billing Page)
 
 ## Out-of-band work
 
-**⚠ PRODUCTION IS CURRENTLY RUNNING STRIPE TEST MODE (as of 2026-09-01).** At the user's request, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and all four `STRIPE_PRICE_*` env vars on Vercel Production were swapped from live to Stripe test-mode values so the ÉCLAT Vol. 2 gating feature (260901-1lc) could be tested end-to-end on ladidier.com with a real Stripe Checkout flow. **No real customer can complete a real purchase until this is reverted.** A full test subscription (Online, test card 4242...) was created and verified to correctly unlock the in-site reader and PDF download. Reverting requires the LIVE `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` values again — Vercel stores these as write-only "Secret" type vars, so neither Claude nor the account owner can read the old values back via CLI/dashboard; the user must re-reveal them from the Stripe Dashboard (Developers → API keys) and hand them over (or swap back directly in Vercel's dashboard). The four price env vars can be safely reverted to their original live `price_`/`prod_` values once known. **Any future session picking up this project should check `vercel env ls` / ask the user before assuming Production is on live keys.**
+**⚠ PRODUCTION IS CURRENTLY RUNNING STRIPE TEST MODE (as of 2026-09-01).** At the user's request, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and all four `STRIPE_PRICE_*` env vars on Vercel Production were swapped from live to Stripe test-mode values so the ÉCLAT Vol. 2 gating feature (260901-1lc) could be tested end-to-end on ladidier.com with a real Stripe Checkout flow. **No real customer can complete a real purchase until this is reverted.** A full test subscription (Online, test card 4242...) was created and verified to correctly unlock the in-site reader and PDF download. Reverting requires the LIVE `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` values again — Vercel stores these as write-only "Secret" type vars, so neither Claude nor the account owner can read the old values back via CLI/dashboard; the user must re-reveal them from the Stripe Dashboard (Developers → API keys) and hand them over (or swap back directly in Vercel's dashboard). The four price env vars can be safely reverted to their original live `price_`/`prod_` values once known. **Any future session picking up this project should check `vercel env ls` / ask the user before assuming Production is on live keys.** This directly gates Phase 8 (Stripe-Customer Linking) — see ROADMAP.md's Phase 8 "Production gate" note.
 
-Paid Stripe membership was built and shipped to production on 2026-08-31 **outside the phase structure** — it belongs to no numbered phase and the progress counters above deliberately exclude it. It reversed the "no backend/API" scope decision; see PROJECT.md Key Decisions and Known Gaps. Phase 06 Plan 04 remains the next tracked item.
+Paid Stripe membership was built and shipped to production on 2026-08-31 **outside the phase structure** — it belongs to no numbered phase and the progress counters above (scoped to v1.2) deliberately exclude it. It reversed the "no backend/API" scope decision; see PROJECT.md Key Decisions and Known Gaps.
 
-Progress: [████████░░] 83%
+Progress: [░░░░░░░░░░] 0% (v1.2 — 0/3 phases; v1.1's prior 83% figure no longer applies now that the milestone has advanced)
 
 ## Performance Metrics
 
@@ -89,10 +89,13 @@ Progress: [████████░░] 83%
 - [Quick 260831-o04]: 260831-ndu's cover swap dropped the cover/framed/tilt CSS classes the retired MagazineCover mockup had, silently losing the resting 3D tilt, hover straighten-and-lift, and gold luxe frame on Home's hero cover. Restored by adding those existing classes back onto the real photo div — no new CSS needed.
 - [Quick 260831-o4v]: Audited every real-cover-photo instance for the tilt/frame interaction after 260831-o04's Home fix. Found MagazinePage's own cover (built in 260831-mis) never had it at all — restructured it into the same float-slow-wrapper + cover/framed/tilt-inner pattern Home's hero uses, so both instances now behave identically on hover.
 - [Quick 260901-1lc]: Fixed a gap surfaced in conversation — subscribing to ÉcLAT Online charged a real Stripe subscription but delivered no visible benefit since MagazinePage dropped its isMember prop when the old paywall was retired. Added member-gated api/issue/pdf.js + api/issue/page.js (serving compressed content/eclat-vol2-issue.pdf and content/eclat-vol2-pages/*.jpg, kept outside public/ so the gate is a real server check) backed by a new checkActiveMembership() helper in lib/membership.js reusing api/entitlement.js's existing Stripe logic. MagazinePage now shows members a "Read the full issue" reader modal + "Download PDF"; free visitors see the unchanged teaser. Found and fixed a real bug during build: the reader modal's position:fixed backdrop was broken by .page-fade's transform animation creating a containing block — fixed via createPortal to document.body. Known gaps (not in scope): no one-time non-subscription purchase path; Subscribe page still doesn't recognize an existing member (risk of accidental double-subscribe); Hard Copy and Online get identical digital access by design (matches Hard Copy's own "Everything in Online" copy).
+- [v1.2 roadmap]: Phase numbering continues from Phase 6 (Phases 7-9) rather than resetting, per this milestone's phase_id_convention (sequential, no milestone prefix in config.json).
+- [v1.2 roadmap]: Stripe-customer linking (LINK-01..04) isolated into its own phase (8) rather than folded into Phase 7 or 9, because it concentrates the highest-severity new risks (duplicate customers, race conditions, account-takeover-by-email) — per research/SUMMARY.md's explicit phase-ordering rationale.
 
 ### Roadmap Evolution
 
 - Phase 6 added: Mall Treasure Hunt — multi-page hidden-icon hunt (3-4 icons across Home/Stores/Magazine) with a "You found the treasure!" reveal, discount code, and subscribe/WhatsApp capture prompt. Runs alongside Phase 5's single hidden perk (user chose "keep both, side by side" over replacing it). Depends on Phase 5.
+- v1.2 roadmap added 2026-09-01: Phase 7 (OAuth + Database Foundation: AUTH-01..04, ACCT-01..02), Phase 8 (Stripe-Customer Linking: LINK-01..04), Phase 9 (Account & Billing Page: PROF-01..05) — derived from research/SUMMARY.md's validated three-phase dependency chain (identity must exist before anything links to it; linking is isolated as the highest-risk phase; the account/billing UI is a pure consumer of the prior two). Phase 7 has an existing, unexecuted draft plan (`260831-8ug`) covering most of its technical approach — flagged for reuse rather than re-derivation. All 15 v1.2 requirements mapped, no orphans.
 
 ### Pending Todos
 
@@ -102,6 +105,8 @@ None yet.
 
 - Phase 5: Discoverability paradox — hidden perk must stay genuinely hard to find while still being found in practice; validate with a cold-read test during/after Phase 5 execution.
 - Phase 5: `perks.jsx` script tag must be added to both `Ladidier Portal.html` and `Ladidier Portal-print.html` — `PrintApp` also renders `Footer`, so missing either causes a `ReferenceError`.
+- Phase 8: cannot be marked done in Production until the Stripe test-mode-to-live-key revert (see Out-of-band work above) is completed and verified with one successful live webhook delivery.
+- Phase 8: the webhook log-only-vs-actor decision (whether `api/webhook.js`-adjacent logic ever becomes a linking writer) needs an explicit recorded choice during `/gsd-plan-phase 8` — flagged by research/SUMMARY.md as needing deeper design review before task planning.
 
 ### Quick Tasks Completed
 
@@ -116,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-31T11:56:36.358Z
-Stopped at: Completed quick task 260831-ndu (Home page real ÉCLAT Vol. 2 content)
+Last session: 2026-09-01T00:00:00.000Z
+Stopped at: v1.2 ROADMAP.md written (Phases 7-9); REQUIREMENTS.md traceability updated
 Resume file: None
