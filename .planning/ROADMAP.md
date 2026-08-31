@@ -133,7 +133,14 @@ Plans:
   3. A signed-in visitor can sign out, and the next request treats them as signed-out
   4. Selecting a paid plan (ÉcLAT Online or Hard Copy) while signed out routes through Google sign-in before reaching Stripe Checkout; the free Reader tier remains a one-click unlock with no sign-in and no network call
   5. Signing in with the same Google account more than once never creates a second user record — exactly one persistent row per Google account, keyed on the Google account id
-**Plans**: TBD — an existing, unexecuted draft plan already contains a detailed, validated technical approach for most of this phase: `.planning/quick/260831-8ug-user-should-login-before-subscription-al/260831-8ug-PLAN.md` (hand-rolled Google OAuth via `fetch`, `lib/db.js` + `lib/session.js`, four `api/auth/*` routes, `@neondatabase/serverless` schema for `users`/`addresses`, a sign-in gate in `api/checkout.js`, and an in-app Hard Copy address form). `/gsd-plan-phase 7` should read and reuse this draft rather than re-deriving the approach from scratch — do not delete or move that file. Note: that draft's `api/checkout.js` change passes `customer_email` into Stripe Checkout session creation; Phase 8 must replace that with a stored `customer:` id — `customer_email` is the exact anti-pattern that creates duplicate Stripe customers (see Phase 8).
+**Plans**: 3 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Tracer: package legitimacy gate, Vercel Postgres + Google OAuth provisioning, `users` schema + `lib/db.js` + `lib/session.js` + the four `api/auth/*` routes
+- [ ] 07-02-PLAN.md — Client auth state in `App`, Nav sign-in indicator (+ `.nav-signin` CSS), Subscribe page sign-in/sign-out row
+- [ ] 07-03-PLAN.md — 401 session gate on `POST /api/checkout`, sign-in-then-resume flow on Subscribe, and the phase click-through gate on production
+
+**Planning note (kept for Phase 8/9 reference)**: these plans reuse Tasks 1-5 of the unexecuted draft `.planning/quick/260831-8ug-user-should-login-before-subscription-al/260831-8ug-PLAN.md` rather than re-deriving the approach — do not delete or move that file. Two deliberate deviations from it: the session lifetime is 7 days (not 30), and its Task 6 (addresses table, `lib/shipping.js`, `api/address.js`, in-app address form) is deferred to Phase 9 and must be replanned there rather than copied. That draft's `api/checkout.js` change also passes `customer_email` into Stripe Checkout session creation; Phase 7 deliberately omits it and Phase 8 must use a stored `customer:` id instead — `customer_email` is the exact anti-pattern that creates duplicate Stripe customers (see Phase 8).
 **Regression check**: `git diff` against `api/entitlement.js`, `api/verify-session.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js` must be empty
 
 #### Phase 8: Stripe-Customer Linking
@@ -176,7 +183,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Copy & CTA Conversion Pass | v1.1 | 5/5 | Complete   | 2026-08-20 |
 | 5. Hidden Perks Discovery Feature | v1.1 | 1/3 | In Progress|  |
 | 6. Mall Treasure Hunt | v1.1 | 0/4 | Planned | - |
-| 7. OAuth + Database Foundation | v1.2 | 0/TBD | Planned | - |
+| 7. OAuth + Database Foundation | v1.2 | 0/3 | Planned | - |
 | 8. Stripe-Customer Linking | v1.2 | 0/TBD | Planned | - |
 | 9. Account & Billing Page | v1.2 | 0/TBD | Planned | - |
 
@@ -189,4 +196,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 *Phase 5 planned: 2026-08-21 — 3 plans, 3 waves (sequential: build → wire → verify; Plan 02 would break the site if it landed before Plan 01)*
 *Phase 6 added: 2026-08-22 — Mall Treasure Hunt (multi-page hidden-icon hunt with subscribe/WhatsApp capture reward), runs alongside Phase 5's single hidden perk*
 *Phase 6 planned: 2026-08-22 — 4 plans, 4 waves (sequential: build core → popup+CSS → wire in → gate; every plan after 01 depends on the file the previous one created)*
+*Phase 7 planned: 2026-09-01 — 3 plans, 3 waves (sequential: tracer proves sign-in end-to-end → client surfaces consume it → checkout gate and phase click-through; Plans 02 and 03 both edit src/pages.jsx so they cannot share a wave)*
 *v1.2 roadmap added: 2026-09-01 — Phase 7 (OAuth + Database Foundation), Phase 8 (Stripe-Customer Linking), Phase 9 (Account & Billing Page), continuing phase numbering from Phase 6; derived from research/SUMMARY.md's validated three-phase dependency chain (identity → linking → UI). Phase 7 has an existing unexecuted draft plan to reuse (260831-8ug); Phase 8 is flagged highest-risk and gated on the pending Stripe live-key revert; all three phases carry a standing regression check against the five frozen legacy entitlement files.*
