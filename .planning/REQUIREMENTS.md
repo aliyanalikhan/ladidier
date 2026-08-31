@@ -1,6 +1,6 @@
 # Requirements: LaDidiér Portal
 
-**Defined:** 2026-05-19 (v1.0) · updated 2026-08-20 (v1.1)
+**Defined:** 2026-05-19 (v1.0) · updated 2026-08-20 (v1.1) · updated 2026-09-01 (v1.2)
 **Core Value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
 
 ## Shipped — v1.0 Mobile Responsiveness & Vercel Deploy
@@ -33,9 +33,9 @@
 - [x] **VERL-02**: Updated code is pushed to the connected repository and triggers a Vercel redeploy
 - [x] **VERL-03**: Live Vercel URL renders the site correctly on mobile, tablet, and desktop
 
-## v1.1 Requirements
+## Shipped — v1.1 Shopping Mall Conversion Pass
 
-Requirements for the "Shopping Mall Conversion Pass" milestone. Each maps to roadmap phases.
+<!-- Confirmed shipped 2026-09-01 — all v1.1 requirements complete, see MILESTONES.md. -->
 
 ### Copy & CTA Conversion
 
@@ -65,6 +65,37 @@ Requirements for the "Shopping Mall Conversion Pass" milestone. Each maps to roa
 - [x] **TREAS-05**: Once a visitor completes the hunt once, the icons never reappear for them on any future visit or session (persistent one-time-only completion)
 - [x] **TREAS-06**: A subtle dot/glyph progress indicator in the nav bar shows found-count once at least 1 icon is found this session; invisible before that
 
+## v1.2 Requirements
+
+Requirements for the "Accounts & Cross-Device Membership" milestone. Each maps to roadmap phases.
+
+### Authentication
+
+- [ ] **AUTH-01**: User can sign in with Google (OAuth 2.0/OIDC) — the only login method
+- [ ] **AUTH-02**: Signed-in session persists across page reloads via a signed httpOnly cookie
+- [ ] **AUTH-03**: User can sign out, clearing their session
+- [ ] **AUTH-04**: Paid plans (ÉcLAT Online, Hard Copy) require sign-in before Stripe Checkout; the free Reader tier stays sign-in-free
+
+### Accounts Database
+
+- [ ] **ACCT-01**: Signing in with Google creates or updates a persistent user record, keyed on the Google account id
+- [ ] **ACCT-02**: Signing in twice with the same Google account never creates a duplicate user record
+
+### Cross-Device Membership (Stripe-Customer Linking)
+
+- [ ] **LINK-01**: A signed-in user's account is linked to a Stripe customer, created idempotently (never duplicated) at checkout time
+- [ ] **LINK-02**: A signed-in user's membership/subscription status is read from their linked Stripe customer, not a per-browser cookie
+- [ ] **LINK-03**: A member who signs in on a new device or browser sees their active membership immediately, without repurchasing
+- [ ] **LINK-04**: The existing per-browser cookie entitlement flow (`api/entitlement.js`, `api/verify-session.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js`) stays byte-for-byte unmodified so current paying members never regress
+
+### Account & Billing Page
+
+- [ ] **PROF-01**: Signed-in user has an account page showing their name and avatar from Google
+- [ ] **PROF-02**: Account page shows current membership/subscription status
+- [ ] **PROF-03**: Account page has a "Manage billing" action opening Stripe's Customer Portal (view invoices, upgrade/downgrade, cancel)
+- [ ] **PROF-04**: Signed-in user can view and edit one saved delivery address on their account page, stored in the database
+- [ ] **PROF-05**: The saved account-page address is separate from — not a replacement for — Stripe Checkout's own address collection at purchase time
+
 ## v2 Requirements
 
 Deferred to future milestones. Tracked but not in current roadmap.
@@ -85,15 +116,24 @@ Deferred to future milestones. Tracked but not in current roadmap.
 - **PERK-07**: Copy-code clipboard button (`navigator.clipboard.writeText()`) on the perk reveal
 - **PERK-08**: Return-visit / dwell-time-gated perk variant, if the simple click/tap version proves too easy or too hard to find
 
+### Accounts & Membership (from v1.2)
+
+- **MIG-01**: Claim/reconciliation flow letting a pre-login Stripe subscriber link their existing subscription to a new Google account
+- **ADDR-02**: Support for multiple saved addresses per account (v1.2 ships exactly one)
+- **AUTH-05**: Additional OAuth providers or email/password login
+
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
 | Native mobile app | Web-first priority; app is a separate product decision |
-| Backend/API integration | Portal is a static/client-side site |
 | Real, validated/redeemable discount codes | No backend exists to validate against — a fake-validation code would be misleading |
-| Leaderboards or competitive/social mechanics | Not requested; milestone scope is now two discovery mechanics (Phase 5 perk + Phase 6 treasure hunt), not a competitive game |
-| Copy/CTA rework on About or Article pages | Not primary landing pages this milestone |
+| Leaderboards or competitive/social mechanics | Not requested; v1.1 shipped two discovery mechanics (Phase 5 perk + Phase 6 treasure hunt), not a competitive game |
+| Copy/CTA rework on About or Article pages | Not primary landing pages in v1.1 |
+| Migrating pre-login Stripe subscribers into accounts (v1.2) | Deferred — v1.2 only needs to work for new sign-ins going forward |
+| Email/password or non-Google login methods (v1.2) | Google OAuth is the only method this milestone ships |
+| Self-rolled billing management UI (v1.2) | Delegated to Stripe's hosted Customer Portal per research — avoids reimplementing proration/dunning/invoice history |
+| Account deletion/export, multiple saved addresses, admin dashboard (v1.2) | Not required by any target feature this milestone |
 
 ## Traceability
 
@@ -143,4 +183,4 @@ Deferred to future milestones. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-05-19*
-*Last updated: 2026-08-22 — v1.1 requirements mapped to Phase 4 (Copy & CTA Conversion Pass), Phase 5 (Hidden Perks Discovery Feature), and Phase 6 (Mall Treasure Hunt, added mid-milestone)*
+*Last updated: 2026-09-01 — v1.1 confirmed shipped; v1.2 (Accounts & Cross-Device Membership) requirements defined, pending roadmap phase mapping*
