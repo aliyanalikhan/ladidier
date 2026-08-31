@@ -126,7 +126,7 @@ export default function App() {
 
   let page;
   switch (route) {
-    case "magazine":  page = <MagazinePage  setRoute={go} isMember={isMember} />; break;
+    case "magazine":  page = <MagazinePage  setRoute={go} />; break;
     case "article":   page = <ArticlePage   setRoute={go} />; break;
     case "stores":    page = <StoresPage    setRoute={go} />; break;
     case "subscribe": page = <SubscribePage setRoute={go} isSubscribed={isSubscribed} setIsSubscribed={setIsSubscribed} />; break;

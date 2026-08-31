@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    LADIDIÉR — Page components
    ───────────────────────────────────────────────────────────── */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   IMG,
   STORES,
@@ -398,45 +398,46 @@ function SubscribeBanner({ setRoute }) {
    MAGAZINE — issue landing
    ═══════════════════════════════════════════════════════════ */
 
-function MagazinePage({ setRoute, isMember }) {
-  const [showPaywall, setShowPaywall] = useState(false);
-  const iframeRef = useRef(null);
+const ISSUE_HIGHLIGHTS = [
+  {
+    img: "/assets/eclat/spotlight-onuwanibe.jpg",
+    kicker: "Cover Story · Spotlight",
+    title: "The Power of Vision: Paul Onwuanibe",
+    dek: "On leadership, legacy, and rebuilding Africa's business landscape — three decades of building across a continent.",
+  },
+  {
+    img: "/assets/eclat/amvca-looks.jpg",
+    kicker: "Couture, Culture & Icons",
+    title: "The Looks That Owned the Night",
+    dek: "Inside the AMVCA red carpet, where sculptural gowns and reimagined tailoring turned Lagos into a living couture runway.",
+  },
+  {
+    img: "/assets/eclat/lagos-city.jpg",
+    kicker: "Urban Pulse",
+    title: "Lagos: The City That Never Sleeps",
+    dek: "A city of seekers, where a Rolls-Royce passes a danfo and the night never quite ends.",
+  },
+  {
+    img: "/assets/eclat/chef-efi.jpg",
+    kicker: "At the Chef's Table",
+    title: "Cracked Open: Inside Chef Efi's Culinary Revolution",
+    dek: "A Cantonese-style ginger-scallion lobster, and the philosophy of a chef who believes good cooking depends on timing.",
+  },
+  {
+    img: "/assets/eclat/world-cup.jpg",
+    kicker: "Global Sport",
+    title: "The World Cup That Had It All",
+    dek: "Dramatic comebacks, breakout stars, and Spain lifting the trophy — a retrospective on the tournament that stopped the world.",
+  },
+  {
+    img: "/assets/eclat/afrobeats.jpg",
+    kicker: "Culture · Music · Connection",
+    title: "One Beat, Many Nations, One World",
+    dek: "When the beat drops, borders disappear — how Afrobeats became the rhythm bringing the world together.",
+  },
+];
 
-  useEffect(() => {
-    if (isMember) return;
-    
-    // 1. Listen for page change messages from Heyzine flipbook
-    const handleMessage = (e) => {
-      if (e.origin && e.origin.includes("heyzine")) {
-        // Heyzine sends page changes or interaction messages
-        setShowPaywall(true);
-      }
-    };
-
-    // 2. Fallback timer: trigger paywall after 15 seconds of active cover page viewing
-    const timer = setTimeout(() => {
-      setShowPaywall(true);
-    }, 15000);
-
-    // 3. Focus blur listener: trigger paywall if user clicks flipbook controls
-    const handleBlur = () => {
-      setTimeout(() => {
-        if (document.activeElement && document.activeElement.tagName === "IFRAME") {
-          setShowPaywall(true);
-        }
-      }, 2000);
-    };
-
-    window.addEventListener("message", handleMessage);
-    window.addEventListener("blur", handleBlur);
-    
-    return () => {
-      window.removeEventListener("message", handleMessage);
-      window.removeEventListener("blur", handleBlur);
-      clearTimeout(timer);
-    };
-  }, [isMember]);
-
+function MagazinePage({ setRoute }) {
   return (
     <div className="page-fade">
       <header className="page-head">
@@ -446,7 +447,9 @@ function MagazinePage({ setRoute, isMember }) {
             <em style={{ fontStyle: "italic", color: "var(--gold)" }}>On Luxe</em> &amp; Larger Living.
           </h1>
           <p className="lede" style={{ marginTop: 28 }}>
-            The Spring · Summer issue. Thirty-two stories on the small obsessions that make a life — and the fourteen houses that made them. Open to all readers, always.
+            The Spring · Summer issue. Thirty-two stories on the small obsessions that make a life —
+            and the fourteen houses that made them. Preview the cover and this issue's highlights below,
+            then read the full issue in print or take it home as ÉcLAT Online.
           </p>
         </div>
         <div className="col gap-12">
@@ -459,137 +462,51 @@ function MagazinePage({ setRoute, isMember }) {
       </header>
 
       <TreasureIcon page="magazine" />
-      {/* Interactive Flipbook / Subscription Paywall Gate */}
-      <section className="section container" style={{ borderTop: "1px solid var(--line)", paddingTop: 60, paddingBottom: 60 }}>
+
+      {/* Issue feature panel — real cover + preview copy */}
+      <section className="section container magazine-cover-split" style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 64, alignItems: "center", position: "relative" }}>
+        <div
+          className="ph photo float-slow"
+          style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }}
+          data-tag="Vol. 2 · Sep 2026"
+          data-label="THE COVER"
+        ></div>
         <div>
-          <div className="eyebrow" style={{ marginBottom: 24, textAlign: "center" }}>Interactive Edition</div>
-          <div className="magazine-frame" style={{ width: "100%", maxWidth: 1000, margin: "0 auto", position: "relative" }}>
-            
-            {/* The interactive flipbook iframe */}
-            <iframe 
-              ref={iframeRef}
-              allowFullScreen="allowfullscreen" 
-              allow="clipboard-write" 
-              scrolling="no" 
-              className="fp-iframe" 
-              style={{ border: "none", width: "100%", height: "550px", display: "block" }} 
-              src="https://heyzine.com/flip-book/fb035e2aea.html"
-            ></iframe>
-
-            {/* The premium gold glassmorphic paywall overlay */}
-            {!isMember && showPaywall && (
-              <div style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                background: "rgba(10, 10, 10, 0.8)",
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 10,
-                padding: "24px",
-                animation: "pageFade .6s ease both"
-              }}>
-                <div className="paywall-gate" style={{ margin: 0, border: "1px solid var(--gold)", background: "var(--cream)", color: "var(--noir)", padding: "48px 32px" }}>
-                  <div className="lock-icon">✦</div>
-                  <h2 className="display" style={{ fontSize: "clamp(24px, 2.5vw, 36px)", fontWeight: 300, letterSpacing: "-.02em", color: "var(--noir)" }}>
-                    Subscribe to See All Pages
-                  </h2>
-                  <p className="lede" style={{ fontSize: 16, marginTop: 14, color: "var(--ink)", maxWidth: "50ch", margin: "14px auto 0" }}>
-                    The Maiden Digital Edition is reserved for members. Join LaDidiér to unlock all 32 stories, receive quarterly printed copies at your door, and shop the houses first.
-                  </p>
-
-                  <div style={{ marginTop: 28 }}>
-                    <button
-                      className="btn solid"
-                      onClick={() => setRoute("subscribe")}
-                      style={{ background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)", cursor: "pointer" }}
-                    >
-                      View membership plans →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Permanent preview indicator for non-subscribed users */}
-            {!isMember && !showPaywall && (
-              <div className="preview-indicator" style={{
-                position: "absolute",
-                bottom: "20px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                background: "rgba(255, 255, 255, 0.95)",
-                border: "1px solid var(--gold)",
-                borderRadius: "40px",
-                padding: "8px 24px",
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-                zIndex: 5,
-                animation: "floaty 4s ease-in-out infinite alternate",
-                maxWidth: "calc(100% - 32px)",
-                boxSizing: "border-box"
-              }}>
-                <span className="mono" style={{ fontSize: 11, color: "var(--noir)", fontWeight: 500, letterSpacing: ".04em" }}>
-                  ✦ READING PREVIEW
-                </span>
-                <span className="mono" style={{ fontSize: 11, color: "var(--mute)" }}>|</span>
-                <button 
-                  onClick={() => setShowPaywall(true)}
-                  className="mono" 
-                  style={{ 
-                    background: "none", 
-                    border: "none", 
-                    color: "var(--gold)", 
-                    fontWeight: 600, 
-                    cursor: "pointer", 
-                    padding: 0,
-                    textTransform: "uppercase",
-                    letterSpacing: ".04em"
-                  }}
-                >
-                  Subscribe to See All →
-                </button>
-              </div>
-            )}
-
+          <div className="eyebrow">This Issue's Cover</div>
+          <h2 className="display" style={{ fontSize: "clamp(28px, 3.4vw, 48px)", margin: "16px 0 24px", letterSpacing: "-.02em", fontWeight: 300 }}>
+            The Power of Vision: Paul Onwuanibe — On Leadership, Legacy, and Rebuilding Africa's
+            Business Landscape.
+          </h2>
+          <p className="lede">
+            A look inside Volume 2 — six of the stories, people, and moments that shaped this
+            issue, from the cover feature to the culture pages below.
+          </p>
+          <p className="mono muted" style={{ marginTop: 20, fontSize: 12, letterSpacing: ".02em" }}>
+            Want to turn every page? Our interactive reading platform is launching soon.
+          </p>
+          <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
+            <button className="btn solid" onClick={() => setRoute("subscribe")}>Order this issue →</button>
           </div>
         </div>
       </section>
 
-      {/* Issue feature panel */}
-      <section className="section container magazine-cover-split" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 64, alignItems: "center", position: "relative" }}>
-        <div className="float-slow">
-          <MagazineCover tint={ISSUE.cover} vol={ISSUE.vol} no={ISSUE.no} season={ISSUE.season} title={ISSUE.title} tilt />
-        </div>
-        <div>
-          <div className="eyebrow">Cover Story</div>
-          <h2 className="display" style={{ fontSize: "clamp(32px, 4vw, 56px)", margin: "16px 0 24px", letterSpacing: "-.02em", fontWeight: 300 }}>
-            On the <em style={{ fontStyle: "italic" }} className="gold-text">Quiet Audacity</em> of Wanting More.
-          </h2>
-          <p className="lede">
-            Editor Adeva D. on the rebellion of softness — why wanting beauty, slowness,
-            and an unreasonable amount of clean linen is itself a kind of politics.
-          </p>
-          <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
-            <button className="btn solid" onClick={() => setRoute("article")}>Read the letter</button>
-            <button className="btn" onClick={() => iframeRef.current && iframeRef.current.scrollIntoView({ behavior: "smooth", block: "center" })}>View full issue →</button>
-          </div>
-
-          <div style={{ marginTop: 56 }}>
-            <div className="eyebrow" style={{ marginBottom: 14 }}>Inside this issue</div>
-            <div className="flex gap-32" style={{ flexWrap: "wrap" }}>
-              {["Editorial", "Atelier", "Beauty", "Object Study", "House Guest", "Travel"].map(t => (
-                <span key={t} className="mono" style={{ fontSize: 12, letterSpacing: ".05em", color: "var(--ink)" }}>· {t}</span>
-              ))}
-            </div>
-          </div>
+      {/* Highlights grid */}
+      <section className="section container">
+        <div className="eyebrow" style={{ marginBottom: 14 }}>Inside Volume 2</div>
+        <h2 className="display h2" style={{ margin: "0 0 40px", maxWidth: "20ch" }}>
+          Highlights from this issue.
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 32 }}>
+          {ISSUE_HIGHLIGHTS.map((h) => (
+            <article key={h.title} className="art-card">
+              <div className="ph photo" style={{ aspectRatio: "4/5", "--bg-image": `url(${h.img})` }} data-tag={h.kicker} data-label="ÉCLAT VOL. 2"></div>
+              <div>
+                <div className="eyebrow" style={{ marginBottom: 8 }}>{h.kicker}</div>
+                <h3 className="art-title">{h.title}</h3>
+                <div className="art-meta" style={{ marginTop: 10 }}>{h.dek}</div>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
