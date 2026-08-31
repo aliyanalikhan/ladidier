@@ -315,7 +315,7 @@ function Footer({ setRoute }) {
           <HiddenPerk setRoute={setRoute} />
         </div>
         <p className="muted" style={{ maxWidth: 36, fontSize: 13, lineHeight: 1.55, maxInlineSize: "32ch", margin: 0 }}>
-          A house of houses. Fourteen stores, one magazine, and a quiet promise: live a little larger.
+          LaDidiér, the world curated. Fourteen stores, one magazine, and a quiet promise: live a little larger.
         </p>
         <div className="subs-inline" style={{ marginTop: 28 }}>
           <input placeholder="Your e-mail address" />
