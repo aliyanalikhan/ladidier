@@ -376,12 +376,12 @@ function SubscribeBanner({ setRoute }) {
    MAGAZINE — issue landing
    ═══════════════════════════════════════════════════════════ */
 
-function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
+function MagazinePage({ setRoute, isMember }) {
   const [showPaywall, setShowPaywall] = useState(false);
   const iframeRef = useRef(null);
 
   useEffect(() => {
-    if (isSubscribed) return;
+    if (isMember) return;
     
     // 1. Listen for page change messages from Heyzine flipbook
     const handleMessage = (e) => {
@@ -413,7 +413,7 @@ function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
       window.removeEventListener("blur", handleBlur);
       clearTimeout(timer);
     };
-  }, [isSubscribed]);
+  }, [isMember]);
 
   return (
     <div className="page-fade">
@@ -455,7 +455,7 @@ function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
             ></iframe>
 
             {/* The premium gold glassmorphic paywall overlay */}
-            {!isSubscribed && showPaywall && (
+            {!isMember && showPaywall && (
               <div style={{
                 position: "absolute",
                 top: 0,
@@ -480,34 +480,22 @@ function MagazinePage({ setRoute, isSubscribed, setIsSubscribed }) {
                   <p className="lede" style={{ fontSize: 16, marginTop: 14, color: "var(--ink)", maxWidth: "50ch", margin: "14px auto 0" }}>
                     The Maiden Digital Edition is reserved for members. Join LaDidiér to unlock all 32 stories, receive quarterly printed copies at your door, and shop the houses first.
                   </p>
-                  
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    const email = e.target.elements.email.value;
-                    if (email) {
-                      setIsSubscribed(true);
-                      localStorage.setItem("ladidier_subscribed", "true");
-                    }
-                  }}>
-                    <div className="paywall-input-container">
-                      <input type="email" name="email" className="paywall-input" placeholder="Enter your email to unlock..." required />
-                      <button type="submit" className="btn solid" style={{ background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)", cursor: "pointer" }}>
-                        Unlock Issue
-                      </button>
-                    </div>
-                  </form>
-                  
-                  <div style={{ marginTop: 24 }}>
-                    <span className="mono" style={{ fontSize: 11, color: "var(--mute)", cursor: "pointer", borderBottom: "1px dashed var(--mute)" }} onClick={() => setRoute("subscribe")}>
+
+                  <div style={{ marginTop: 28 }}>
+                    <button
+                      className="btn solid"
+                      onClick={() => setRoute("subscribe")}
+                      style={{ background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)", cursor: "pointer" }}
+                    >
                       View membership plans →
-                    </span>
+                    </button>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Permanent preview indicator for non-subscribed users */}
-            {!isSubscribed && !showPaywall && (
+            {!isMember && !showPaywall && (
               <div className="preview-indicator" style={{
                 position: "absolute",
                 bottom: "20px",

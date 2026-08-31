@@ -107,7 +107,7 @@ Hidden Perks discovery element ──conflicts──> Modal/popup-based reveal (
 
 ### Future Consideration (v2+)
 
-- [ ] Real, validated discount codes tied to a backend/commerce layer — defer until/unless the project moves off the static-site architecture (explicitly out of scope constraint today)
+- [ ] Real, validated discount codes tied to a backend/commerce layer — defer until/unless the project moves off the static-site architecture (explicitly out of scope constraint today) — *note 2026-08-31: a backend now exists (`api/`, for Stripe membership), so this is no longer blocked by architecture, only unprioritised*
 - [ ] Multiple hidden perks or a light collection mechanic — defer per explicit PROJECT.md exclusion; only reconsider if the single-perk mechanic proves popular and the team wants to invest in real backend/state support
 
 ## Feature Prioritization Matrix

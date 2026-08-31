@@ -18,7 +18,7 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-20)
+See: .planning/PROJECT.md (updated 2026-08-31)
 
 **Core value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
 **Current focus:** Phase 06 — mall-treasure-hunt
@@ -29,6 +29,10 @@ Phase: 06 (mall-treasure-hunt) — EXECUTING
 Plan: 4 of 4 (03 complete, 04 ready to execute)
 Status: Executing Phase 06
 Last activity: 2026-08-22 -- Plan 03 (mall treasure hunt site wiring) complete
+
+## Out-of-band work
+
+Paid Stripe membership was built and shipped to production on 2026-08-31 **outside the phase structure** — it belongs to no numbered phase and the progress counters above deliberately exclude it. It reversed the "no backend/API" scope decision; see PROJECT.md Key Decisions and Known Gaps. Phase 06 Plan 04 remains the next tracked item.
 
 Progress: [████████░░] 83%
 

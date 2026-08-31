@@ -47,9 +47,47 @@ function applyTheme(t) {
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [route, setRoute] = useState("home");
+  // Two distinct things, previously conflated into one flag:
+  //   isSubscribed — gave us an address; only decides whether we stop prompting
+  //   isMember     — has a live paid subscription; gates the digital edition
   const [isSubscribed, setIsSubscribed] = useState(() => localStorage.getItem("ladidier_subscribed") === "true");
+  const [isMember, setIsMember] = useState(() => localStorage.getItem("ladidier_member") === "true");
 
   useEffect(() => { applyTheme(t); }, [t.palette, t.dark, t.typeset, t.density]);
+
+  // Whether a membership is still paid for is Stripe's answer, not the browser's.
+  // Re-ask periodically so a cancellation or a failed renewal actually closes the
+  // edition again — localStorage on its own would grant access forever.
+  useEffect(() => {
+    const CHECKED_AT = "ladidier_member_checked";
+    const RECHECK_AFTER = 6 * 60 * 60 * 1000;
+    const checkedAt = Number(localStorage.getItem(CHECKED_AT) || 0);
+
+    // Members are re-checked on a schedule; everyone else is checked every load,
+    // which costs nothing (with no cookie the endpoint answers without calling
+    // Stripe) and lets a member who cleared local storage recover access.
+    if (isMember && Date.now() - checkedAt < RECHECK_AFTER) return;
+
+    let cancelled = false;
+    fetch("/api/entitlement", { credentials: "same-origin" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        localStorage.setItem(CHECKED_AT, String(Date.now()));
+        if (d.active) {
+          setIsMember(true);
+          localStorage.setItem("ladidier_member", "true");
+        } else {
+          setIsMember(false);
+          localStorage.removeItem("ladidier_member");
+        }
+      })
+      // On a network failure leave the current state alone rather than locking
+      // out a paying member because their connection dropped.
+      .catch((err) => console.error("Could not verify membership:", err));
+
+    return () => { cancelled = true; };
+  }, []);
 
   // simple hash routing
   useEffect(() => {
@@ -83,6 +121,12 @@ function App() {
         if (cancelled) return;
 
         if (data.paid) {
+          // verify-session also set the httpOnly cookie, so later visits can be
+          // re-checked against Stripe without another trip through Checkout.
+          setIsMember(true);
+          localStorage.setItem("ladidier_member", "true");
+          localStorage.setItem("ladidier_member_checked", String(Date.now()));
+          // A paying member shouldn't keep seeing subscribe prompts either.
           setIsSubscribed(true);
           localStorage.setItem("ladidier_subscribed", "true");
           setRoute("magazine");
@@ -111,12 +155,12 @@ function App() {
 
   let page;
   switch (route) {
-    case "magazine":  page = <MagazinePage  setRoute={go} isSubscribed={isSubscribed} setIsSubscribed={setIsSubscribed} />; break;
+    case "magazine":  page = <MagazinePage  setRoute={go} isMember={isMember} />; break;
     case "article":   page = <ArticlePage   setRoute={go} />; break;
     case "stores":    page = <StoresPage    setRoute={go} />; break;
     case "subscribe": page = <SubscribePage setRoute={go} isSubscribed={isSubscribed} setIsSubscribed={setIsSubscribed} />; break;
     case "about":     page = <AboutPage     setRoute={go} />; break;
-    default:          page = <HomePage      setRoute={go} heroVariant={t.hero} isSubscribed={isSubscribed} />;
+    default:          page = <HomePage      setRoute={go} heroVariant={t.hero} />;
   }
 
   return (

@@ -1,4 +1,5 @@
 import { getStripe } from '../lib/stripe.js';
+import { memberCookie } from '../lib/membership.js';
 
 // A session id in the URL proves only that someone reached the success page.
 // Ask Stripe whether that session was actually paid before granting access.
@@ -28,10 +29,18 @@ export async function POST(request) {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     const paid = session.status === 'complete' && session.payment_status === 'paid';
 
-    return Response.json({
-      paid,
-      email: paid ? session.customer_details?.email ?? null : null,
-    });
+    // On a confirmed payment, remember this session in an httpOnly cookie so
+    // /api/entitlement can re-ask Stripe later whether the subscription is still
+    // running. Without it, access would be granted once and never revisited.
+    const headers = paid ? { 'Set-Cookie': memberCookie(sessionId) } : undefined;
+
+    return Response.json(
+      {
+        paid,
+        email: paid ? session.customer_details?.email ?? null : null,
+      },
+      { headers }
+    );
   } catch (err) {
     // Unknown or malformed ids land here; treat them all as simply not paid.
     console.error(`[stripe] could not retrieve session: ${err.message}`);

@@ -189,6 +189,8 @@ Not applicable in the traditional sense — this is a static site with no backen
 
 1. **Not a concern this milestone.** The single biggest risk is scope creep toward a "real" coupon system — resist it; PROJECT.md's Out of Scope section already forbids backend/API work and gamified multi-perk systems.
 
+> **Note added 2026-08-31:** PROJECT.md no longer forbids backend/API work — paid membership shipped with serverless functions in `api/`. The conclusion above still holds for *discount codes*: `HOUSE10`/`HOUSE20` remain display-only, and redemption would still need integration with 14 independently-hosted stores. The reasoning stands; only the citation of the Out of Scope constraint is stale.
+
 ## Anti-Patterns
 
 ### Anti-Pattern 1: Building fake "validation" for the discount code
