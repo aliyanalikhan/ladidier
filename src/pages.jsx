@@ -38,7 +38,7 @@ function HeroManifest({ setRoute }) {
         <div className="eyebrow">Vol. {ISSUE.vol} · N° {ISSUE.no} · {ISSUE.season}</div>
         <div className="flex center gap-12">
           <Crest size={20} color="var(--gold)" />
-          <div className="eyebrow">A House of Houses · Est. <RomanReveal value="MMXXI" /></div>
+          <div className="eyebrow">LaDidiér, the World Curated · Est. <RomanReveal value="MMXXI" /></div>
         </div>
       </div>
 
@@ -301,16 +301,17 @@ function Manifesto() {
 
       <div className="manifesto-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 80, alignItems: "start" }}>
         <div className="col gap-24">
-          <div className="eyebrow">House Note · I</div>
+          <div className="eyebrow">Welcome · I</div>
           <Crest size={64} color="var(--gold)" />
           <Laurel width={200} color="var(--gold)" opacity={.7} />
         </div>
         <div>
           <p className="display" style={{ fontSize: "clamp(28px, 3.4vw, 56px)", fontWeight: 300, lineHeight: 1.12, margin: 0, letterSpacing: "-.02em" }}>
-            We believe in a softer maximalism. In <em style={{ fontStyle: "italic" }} className="gold-text">scent</em> as architecture,
-            in <em style={{ fontStyle: "italic" }} className="gold-text">jewelry</em> as memoir,
-            in coffee that asks for your full attention before it gives you the day.
-            One house, fourteen rooms, and an open invitation to wander.
+            Welcome to LaDidiér—a refined destination for considered finds, everyday essentials,
+            elevated lifestyle pieces, and unforgettable journeys. From the beautifully practical to the
+            wonderfully unexpected, LaDidiér brings <em style={{ fontStyle: "italic" }} className="gold-text">shopping and travel</em> together
+            in one inspiring world, designed to help you discover more, experience more, and live with intention.
+            Your taste. Your travels. <em style={{ fontStyle: "italic" }} className="gold-text">Your world.</em>
           </p>
         </div>
       </div>
@@ -910,7 +911,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
             <div className="price">{freeLabel}<span style={{ fontSize: 16, color: "var(--mute)", marginLeft: 6 }}>{perLabel}</span></div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12, fontSize: 14 }}>
               <li>· Unlimited story reading</li>
-              <li>· Access to all 11 stores</li>
+              <li>· Access to all 14 stores</li>
               <li>· Quarterly newsletter</li>
             </ul>
             <button className="btn" onClick={() => handleSelectPlan("reader")} style={{ marginTop: "auto" }}>Continue, no charge</button>
