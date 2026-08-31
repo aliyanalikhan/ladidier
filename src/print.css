@@ -1,0 +1,79 @@
+/* ─── Print stylesheet ───────────────────────────────────────────
+   Extracted from the inline <style> that used to live in
+   "Ladidier Portal-print.html", so it can be shared and maintained
+   like any other stylesheet. */
+
+@page {
+  size: A4 portrait;
+  margin: 14mm 12mm;
+}
+
+html, body {
+  background: #ffffff !important;
+}
+body::before { display: none !important; } /* hide grain overlay in print */
+
+/* Each top-level page section starts on a new printed page */
+.print-page { padding: 0; }
+.page-break { break-before: page; page-break-before: always; }
+
+/* Sticky nav: only show on the first page block, never sticky in print */
+.nav {
+  position: static !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: #fff !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+.print-page:not(:first-of-type) .nav { display: none; }
+
+/* Footer just once at the very end */
+.foot { break-before: page; page-break-before: always; }
+
+/* No membership gate in print. PrintApp passes isMember so the overlay never
+   arms, but belt and braces: an unstyled paywall covering a printed page is
+   an expensive mistake to discover on paper. */
+.paywall-gate, .preview-indicator { display: none !important; }
+
+/* Avoid awkward breaks */
+section, article, .store-row, .plan-card, .cover, .art-card, header.page-head {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Force background colors and images to print */
+* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+/* Kill hover-only motion, animations, parallax floats */
+*, *::before, *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.stg-i { opacity: 1 !important; transform: none !important; }
+.lr-draw path { stroke-dashoffset: 0 !important; }
+.reveal { opacity: 1 !important; transform: none !important; }
+.float, .float-slow, .cover.tilt { transform: none !important; }
+.marquee, .ticker, .vmarquee { display: none !important; }
+
+/* No treasure hunt UI in print */
+.treasure-layer, .treasure-icon, .treasure-progress, .treasure-reveal { display: none !important; }
+
+/* Tighten oversized hero on print */
+.hero-manifest, .hero-split, .hero-index {
+  min-height: 0 !important;
+  padding: 24mm 0 16mm !important;
+}
+.hero-manifest .h1, .hero-split .h1, .hero-index h1 { font-size: 56px !important; }
+.display.h2 { font-size: 40px !important; }
+.display.h1 { font-size: 56px !important; }
+.section { padding-top: 18mm !important; padding-bottom: 18mm !important; }
+
+/* Make placeholder photos clearly visible on paper */
+.ph.photo {
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.12) !important;
+}
+
+@media print {
+  /* Anything else strictly print-only */
+  body { font-size: 11.5pt; }
+}

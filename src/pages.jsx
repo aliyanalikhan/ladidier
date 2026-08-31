@@ -1,6 +1,27 @@
 /* ─────────────────────────────────────────────────────────────
    LADIDIÉR — Page components
    ───────────────────────────────────────────────────────────── */
+import { useState, useEffect, useRef } from 'react';
+import {
+  IMG,
+  STORES,
+  ISSUE,
+  STORIES,
+  Crest,
+  Reveal,
+  MagazineCover,
+  StoreMarquee,
+} from './components.jsx';
+import {
+  Laurel,
+  Flourish,
+  Monogram,
+  Stagger,
+  Spotlight,
+  CountUp,
+  RomanReveal,
+} from './ornaments.jsx';
+import { TreasureIcon } from './treasure.jsx';
 
 /* ═══════════════════════════════════════════════════════════
    HOME — three hero variants + shared body
@@ -1047,6 +1068,6 @@ function AboutPage({ setRoute }) {
   );
 }
 
-Object.assign(window, {
+export {
   HomePage, MagazinePage, ArticlePage, StoresPage, SubscribePage, AboutPage, SubscribeBanner,
-});
+};

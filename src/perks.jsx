@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    LADIDIÉR — Hidden perk discovery
    ───────────────────────────────────────────────────────────── */
-const { useState, useEffect, useRef } = React;
+import { useState, useEffect, useRef } from 'react';
 
 const PERK_FOUND_KEY = "ladidier_perk_found";
 const PERK_CODE = "HOUSE10"; // D-06, static, display-only
@@ -96,4 +96,4 @@ function HiddenPerk({ setRoute }) {
   );
 }
 
-Object.assign(window, { HiddenPerk });
+export { HiddenPerk };

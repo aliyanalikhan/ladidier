@@ -1,13 +1,17 @@
 /* ─────────────────────────────────────────────────────────────
    LADIDIÉR — Shared components
    ───────────────────────────────────────────────────────────── */
-const { useState, useEffect, useRef, useMemo } = React;
+import React, { useState, useEffect, useRef } from 'react';
+import { Laurel, DecoCorner } from './ornaments.jsx';
+import { HiddenPerk } from './perks.jsx';
+import { TreasureProgress } from './treasure.jsx';
 
 /* ── Brand / catalog data ─────────────────────────────────── */
 const U = "https://images.unsplash.com/";
 const IMG = {
-  // Magazine
-  cover:        "assets/Mag cover.png",
+  // Magazine. Local paths are absolute so they keep resolving from any route,
+  // and live in public/assets/ where the bundler copies them verbatim.
+  cover:        "/assets/mag-cover.png",
   articleHero:  U + "photo-1469334031218-e382a71b716b?w=1800&q=85&auto=format",
   // Stories
   letter:       U + "photo-1559563458-527698bf5295?w=900&q=85&auto=format",
@@ -19,20 +23,20 @@ const IMG = {
   suit:         U + "photo-1507003211169-0a1dd7228f2d?w=900&q=85&auto=format",
   coffee:       U + "photo-1495474472287-4d71bcdd2085?w=900&q=85&auto=format",
   // Stores
-  s_jewelry:    "assets/ladidier-jewelry.jpeg",
-  s_cosmetics:  "assets/ladidier-cosmetics.jpeg",
-  s_scent:      "assets/the-scnt-shop.jpeg",
-  s_adeva:      "assets/adeva-store.jpeg",
-  s_homme:      "assets/ladidier-homme.jpeg",
-  s_coffee:     "assets/piata-noir-roast.jpeg",
-  s_pets:       "assets/posh-paw-pet-supplies.jpeg",
-  s_maison:     "assets/ladidier-maison.jpeg",
-  s_travel:     "assets/justrippin.jpeg",
-  s_skincare:   "assets/ladidier-beauty-essence.jpeg",
-  s_wigs:       "assets/merry-wigs.jpeg",
-  s_transport:  "assets/luxury-transportation-plus.jpeg",
-  s_puriena:    "assets/puriena.jpeg",
-  s_elixoria:   "assets/elixoria.png",
+  s_jewelry:    "/assets/ladidier-jewelry.jpeg",
+  s_cosmetics:  "/assets/ladidier-cosmetics.jpeg",
+  s_scent:      "/assets/the-scnt-shop.jpeg",
+  s_adeva:      "/assets/adeva-store.jpeg",
+  s_homme:      "/assets/ladidier-homme.jpeg",
+  s_coffee:     "/assets/piata-noir-roast.jpeg",
+  s_pets:       "/assets/posh-paw-pet-supplies.jpeg",
+  s_maison:     "/assets/ladidier-maison.jpeg",
+  s_travel:     "/assets/justrippin.jpeg",
+  s_skincare:   "/assets/ladidier-beauty-essence.jpeg",
+  s_wigs:       "/assets/merry-wigs.jpeg",
+  s_transport:  "/assets/luxury-transportation-plus.jpeg",
+  s_puriena:    "/assets/puriena.jpeg",
+  s_elixoria:   "/assets/elixoria.png",
 };
 
 const STORES = [
@@ -91,7 +95,7 @@ function Logo({ height = 30 }) {
   // Theme-aware logo swap done in CSS via filter, but we just pick file
   const dark = document.documentElement.getAttribute("data-theme") === "dark";
   return (
-    <img src={dark ? "assets/logo-dark.jpg" : "assets/logo-light.jpg"}
+    <img src={dark ? "/assets/logo-dark.jpg" : "/assets/logo-light.jpg"}
          alt="LaDidiér" style={{ height, mixBlendMode: dark ? "screen" : "multiply" }} />
   );
 }
@@ -422,4 +426,4 @@ function MagazineCover({ tint = "blush", vol = "I", no = "03", season = "S/S 202
   );
 }
 
-Object.assign(window, { STORES, ISSUE, STORIES, IMG, Photo, Crest, Logo, Nav, MobileNav, Footer, StoreMarquee, Reveal, MagazineCover });
+export { STORES, ISSUE, STORIES, IMG, Crest, Logo, Nav, MobileNav, Footer, StoreMarquee, Reveal, MagazineCover };

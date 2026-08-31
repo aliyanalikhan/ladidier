@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    LADIDIÉR — Ornaments (heraldic illustration vocabulary)
    ───────────────────────────────────────────────────────────── */
-const { useState, useEffect, useRef } = React;
+import { useState, useEffect, useRef } from 'react';
 
 /* A pair of mirrored laurel sprigs — matches the crest's laurels.
    Drawn as a continuous gold line illustration. */
@@ -208,4 +208,4 @@ function RomanReveal({ value = "MMXXI" }) {
   return <span ref={ref}>{shown || "\u00A0"}</span>;
 }
 
-Object.assign(window, { Laurel, Flourish, DecoCorner, Monogram, VerticalRule, Stagger, Spotlight, CountUp, RomanReveal });
+export { Laurel, Flourish, DecoCorner, Monogram, Stagger, Spotlight, CountUp, RomanReveal };

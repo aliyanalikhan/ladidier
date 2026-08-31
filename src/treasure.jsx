@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    LADIDIÉR — Mall treasure hunt
    ───────────────────────────────────────────────────────────── */
-const { useState, useEffect, useRef } = React;
+import { useState, useEffect, useRef } from 'react';
 
 const TREASURE_PROGRESS_KEY = "ladidier_treasure_progress";
 const TREASURE_COMPLETED_KEY = "ladidier_treasure_completed";
@@ -102,13 +102,16 @@ const TREASURE_ICONS = [
 
 function TreasureIcon({ page }) {
   const entry = TREASURE_ICONS.find((i) => i.page === page);
-  if (!entry) return null;
 
+  // Hooks must run on every render, so they sit above the early return rather
+  // than after it. The zone initialiser tolerates a missing entry instead.
   const found = useTreasureProgress();
-  const completed = isHuntComplete();
-  const [zone] = useState(() => entry.zones[Math.floor(Math.random() * entry.zones.length)]);
+  const [zone] = useState(() =>
+    entry ? entry.zones[Math.floor(Math.random() * entry.zones.length)] : null
+  );
 
-  if (completed || found.includes(entry.id)) return null;
+  if (!entry) return null;
+  if (isHuntComplete() || found.includes(entry.id)) return null;
 
   const Glyph = entry.Glyph;
 
@@ -203,4 +206,4 @@ function TreasureHuntComplete({ setRoute }) {
   );
 }
 
-Object.assign(window, { TreasureIcon, TreasureProgress, TreasureHuntComplete });
+export { TreasureIcon, TreasureProgress, TreasureHuntComplete };
