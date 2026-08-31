@@ -89,6 +89,7 @@ Progress: [████████░░] 83%
 - [Quick 260831-mis]: Rebranded tagline/manifesto to "LaDidiér, the World Curated," fixed stale 11->14 store count, and rebuilt MagazinePage with the real ÉCLAT Vol. 2 cover + six real highlight cards, retiring the Heyzine flipbook/paywall in favor of a plain-text "interactive platform launching soon" note. Executor left a stale "A house of houses" Footer tagline in src/components.jsx untouched (file was off-limits per plan); orchestrator reviewed the gap post-execution and updated it directly to match the new brand language.
 - [Quick 260831-ndu]: Extended the 260831-mis ÉCLAT Vol. 2 rebuild from MagazinePage onto Home — HeroSplit now shows the real cover photo and FeaturedStories now sources ISSUE_HIGHLIGHTS, retiring the last two fictional-magazine surfaces on Home.
 - [Quick 260831-o04]: 260831-ndu's cover swap dropped the cover/framed/tilt CSS classes the retired MagazineCover mockup had, silently losing the resting 3D tilt, hover straighten-and-lift, and gold luxe frame on Home's hero cover. Restored by adding those existing classes back onto the real photo div — no new CSS needed.
+- [Quick 260831-o4v]: Audited every real-cover-photo instance for the tilt/frame interaction after 260831-o04's Home fix. Found MagazinePage's own cover (built in 260831-mis) never had it at all — restructured it into the same float-slow-wrapper + cover/framed/tilt-inner pattern Home's hero uses, so both instances now behave identically on hover.
 
 ### Roadmap Evolution
 
@@ -111,6 +112,7 @@ None yet.
 | 260831-mis | update homepage marketing copy to new LaDidiér brand language, rebuild Magazine page with real cover + highlights | 2026-08-31 | ba6f20f | [260831-mis-update-homepage-marketing-copy-to-new-la](.planning/quick/260831-mis-update-homepage-marketing-copy-to-new-la/) |
 | 260831-ndu | swap Home page's fictional magazine cover + featured stories for real ÉCLAT Vol. 2 content | 2026-08-31 | 5a714c1 | [260831-ndu-swap-the-home-page-s-fictional-magazine-](.planning/quick/260831-ndu-swap-the-home-page-s-fictional-magazine-/) |
 | 260831-o04 | restore hover-tilt animation + gold frame on Home hero's real cover photo | 2026-08-31 | fbbb986 | [260831-o04-restore-the-interactive-hover-tilt-anima](.planning/quick/260831-o04-restore-the-interactive-hover-tilt-anima/) |
+| 260831-o4v | extend hover-tilt/gold-frame cover interaction to the Magazine page's own cover | 2026-08-31 | 3bb660b | [260831-o4v-audit-and-fix-the-magazine-cover-s-mouse](.planning/quick/260831-o4v-audit-and-fix-the-magazine-cover-s-mouse/) |
 
 ## Session Continuity
 
