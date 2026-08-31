@@ -51,12 +51,13 @@ for in-scope surfaces:
 | Nav item gap | 28px | Existing `.nav-right` gap (unchanged) — the new sign-in element becomes one more flex child in this row |
 | Row gap | 12px | Gap between the muted label and the ghost button in the Subscribe page sign-in row |
 | Row bottom margin | 24px | Space between the sign-in row and the billing-interval toggle below it |
-| Button padding | 14px 22px (solid/default `.btn`), 0 (`.btn.ghost`, no horizontal padding) | Existing `.btn` rules, unchanged |
 
 Exceptions: none — this phase adds zero new spacing values; it only positions existing-styled
-elements. (The project's own base scale is not a strict 8-point system — e.g. `.nav` uses 18px
-vertical padding — but that is a pre-existing, out-of-scope convention, not something this
-phase introduces.)
+elements, reusing the `.btn`/`.btn.ghost` classes as-is rather than declaring new padding. (The
+project's own base scale is not a strict 8-point system — e.g. the existing `.btn` rule uses
+`14px 22px` padding, and `.nav` uses 18px vertical padding — but both are pre-existing, global,
+out-of-scope conventions this phase does not touch or introduce; they are not declared spacing
+values of this contract.)
 
 ---
 
@@ -199,6 +200,10 @@ toggle in the returned JSX:
   Copywriting/UI Considerations).
 - Uses only existing classes: `.flex`, `.muted`, `.btn`, `.btn.ghost` — no new CSS required for
   this element beyond the truncation inline style shown above.
+- Visual hierarchy: the `.btn.ghost` CTA ("Sign in with Google" / "Sign out") is the visual
+  focus of the row — it's the only interactive, bordered element. The `.muted` label ("Members
+  sign in with Google." / "Signed in as {email}") is secondary — lower-contrast, non-interactive
+  context text that explains the CTA rather than competing with it.
 - `handleSignOut` POSTs to `/api/auth/logout` with `credentials: "same-origin"`, then calls
   `setUser(null)` (draft plan Task 4 behavior, unchanged by this contract).
 
