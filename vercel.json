@@ -7,8 +7,13 @@
       "permanent": true
     }
   ],
+  "rewrites": [
+    { "source": "/api/auth/:action", "destination": "/api/auth-router" },
+    { "source": "/api/account/:action", "destination": "/api/account-router" },
+    { "source": "/api/issue/:action", "destination": "/api/issue-router" }
+  ],
   "functions": {
-    "api/issue/*.js": {
+    "api/issue-router.js": {
       "includeFiles": "content/**"
     }
   }

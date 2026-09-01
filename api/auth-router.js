@@ -1,14 +1,67 @@
-import { ensureSchema, upsertUser } from '../../lib/db.js';
-import { readCookie } from '../../lib/membership.js';
+import { ensureSchema, upsertUser } from '../lib/db.js';
+import { readCookie } from '../lib/membership.js';
 import {
   OAUTH_STATE_COOKIE,
   clearStateCookie,
+  clearSessionCookie,
   sessionCookie,
   signSession,
-} from '../../lib/session.js';
-import { safeReturnTo } from '../../lib/routes.js';
+  stateCookie,
+  readSession,
+} from '../lib/session.js';
+import { safeReturnTo } from '../lib/routes.js';
 
-export async function GET(request) {
+// Consolidated router for /api/auth/* (google, callback, logout, me) — kept as
+// one Vercel Function instead of four to stay under the Hobby plan's 12
+// Serverless Functions cap. vercel.json rewrites each public path here with
+// the matched segment appended as an `action` query param; the four handlers
+// below are otherwise byte-for-byte what used to live in api/auth/*.js.
+
+async function handleGoogle(request) {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    console.error('[auth] GOOGLE_CLIENT_ID is not set');
+    return new Response('Auth is not configured', { status: 500 });
+  }
+
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret) {
+    console.error('[auth] SESSION_SECRET is not set');
+    return new Response('Auth is not configured', { status: 500 });
+  }
+
+  const url = new URL(request.url);
+  const rawReturnTo = url.searchParams.get('returnTo');
+  const returnTo = safeReturnTo(rawReturnTo);
+
+  const nonce = crypto.randomUUID();
+  const statePayload = `${nonce}:${returnTo}`;
+
+  const proto = request.headers.get('x-forwarded-proto') ?? 'https';
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host');
+  const origin = `${proto}://${host}`;
+  const redirectUri = `${origin}/api/auth/callback`;
+
+  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  authUrl.searchParams.set('client_id', clientId);
+  authUrl.searchParams.set('redirect_uri', redirectUri);
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('scope', 'openid email profile');
+  authUrl.searchParams.set('state', nonce);
+  authUrl.searchParams.set('access_type', 'online');
+  authUrl.searchParams.set('prompt', 'select_account');
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: authUrl.toString(),
+      'Set-Cookie': stateCookie(statePayload),
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+    },
+  });
+}
+
+async function handleCallback(request) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
@@ -140,4 +193,61 @@ export async function GET(request) {
     status: 302,
     headers,
   });
+}
+
+async function handleMe(request) {
+  const session = await readSession(request.headers.get('cookie'));
+
+  const PRIVATE_HEADERS = { 'Cache-Control': 'private, no-store' };
+
+  if (!session) {
+    return Response.json({ user: null }, { headers: PRIVATE_HEADERS });
+  }
+
+  return Response.json(
+    {
+      user: {
+        id: session.uid,
+        email: session.email,
+        name: session.name,
+      },
+    },
+    { headers: PRIVATE_HEADERS }
+  );
+}
+
+async function handleLogout() {
+  return Response.json(
+    { ok: true },
+    {
+      headers: {
+        'Set-Cookie': clearSessionCookie(),
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
+    }
+  );
+}
+
+export async function GET(request) {
+  const action = new URL(request.url).searchParams.get('action');
+  switch (action) {
+    case 'google':
+      return handleGoogle(request);
+    case 'callback':
+      return handleCallback(request);
+    case 'me':
+      return handleMe(request);
+    default:
+      return new Response('Not found', { status: 404 });
+  }
+}
+
+export async function POST(request) {
+  const action = new URL(request.url).searchParams.get('action');
+  switch (action) {
+    case 'logout':
+      return handleLogout();
+    default:
+      return new Response('Not found', { status: 404 });
+  }
 }
