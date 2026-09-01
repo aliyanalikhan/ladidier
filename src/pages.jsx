@@ -664,23 +664,6 @@ function MagazinePage({ setRoute, isMember }) {
         </div>
       </section>
 
-      {/* Closing manifesto — an image in place of the site-wide SubscribeBanner
-          text used elsewhere, per request: this page's bottom section is the
-          one spot on the site that should read as a picture, not a pitch. */}
-      <section className="section container" style={{ textAlign: "center" }}>
-        <div
-          className="ph photo"
-          style={{
-            aspectRatio: "1122/1402",
-            maxWidth: 640,
-            margin: "0 auto",
-            "--bg-image": `url(/assets/eclat/manifesto-one-love.png)`,
-          }}
-        ></div>
-        <button className="btn solid" onClick={() => setRoute("subscribe")} style={{ marginTop: 40 }}>
-          Discover your membership →
-        </button>
-      </section>
     </div>
   );
 }
