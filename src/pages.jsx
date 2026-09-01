@@ -808,7 +808,7 @@ function StoresPage({ setRoute }) {
    SUBSCRIBE
    ═══════════════════════════════════════════════════════════ */
 
-function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser, authReady }) {
+function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser, authReady, isMember, activePlan }) {
   const [plan, setPlan] = useState("online");
   const [billing, setBilling] = useState("yearly");
   const [loading, setLoading] = useState(false);
@@ -831,6 +831,29 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
       window.location.href = "/#subscribe";
     }
   };
+
+  // Existing members change plans, update payment methods, or cancel through
+  // Stripe's own billing portal rather than a second trip through Checkout —
+  // that's what keeps an "upgrade" from silently creating a duplicate
+  // subscription. Same call AccountPage's "Manage billing" button makes.
+  const handleManageBilling = async () => {
+    try {
+      const res = await fetch("/api/account/portal", { credentials: "same-origin" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Could not open billing portal.");
+      }
+    } catch (err) {
+      alert("Error opening billing portal.");
+    }
+  };
+
+  // Only resolvable for the account-linked membership path (see app.jsx) — null
+  // for a signed-out visitor and for a legacy-cookie-only member, in which case
+  // both paid cards fall back to a plain "Manage plan" CTA below.
+  const currentProduct = activePlan?.product ?? null;
 
   // Stripe is the source of truth for what a plan costs, so the cards render
   // whatever it reports. Nothing here records an amount, which is what keeps the
@@ -1018,6 +1041,37 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
           </div>
         )}
 
+        {/* Already a member — show what's active instead of a sign-up pitch.
+            The cards below stay visible so an existing member can still see
+            what a different plan costs, but their CTAs are relabeled further
+            down (see currentProduct) so nothing here reads as "become a
+            member" again. */}
+        {isMember && user && (
+          <div
+            className="plan-card"
+            style={{ maxWidth: 640, margin: "0 auto 40px", textAlign: "center" }}
+          >
+            <div className="eyebrow" style={{ marginBottom: 8 }}>Your Membership</div>
+            <div className="display" style={{ fontSize: 24, fontWeight: 300, marginBottom: 4 }}>
+              {currentProduct
+                ? `${currentProduct === "hardcopy" ? "ÉcLAT Hard Copy" : "ÉcLAT Online"} — ${activePlan.interval === "monthly" ? "Monthly" : "Yearly"}`
+                : "Active membership"}
+            </div>
+            {activePlan?.cancelAtPeriodEnd && (
+              <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+                Set to end at the close of the current billing period.
+              </p>
+            )}
+            <button
+              className="btn solid"
+              onClick={handleManageBilling}
+              style={{ marginTop: 12, background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" }}
+            >
+              Manage billing →
+            </button>
+          </div>
+        )}
+
         {/* Billing interval. Switching it re-labels the cards and changes which
             price key handleSelectPlan sends, so no separate plan list is needed. */}
         <div className="flex" style={{ justifyContent: "center", gap: 0, marginBottom: 56 }}>
@@ -1059,7 +1113,11 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
               <li>· Access to all 14 stores</li>
               <li>· Quarterly newsletter</li>
             </ul>
-            <button className="btn" onClick={() => handleSelectPlan("reader")} style={{ marginTop: "auto" }}>Continue, no charge</button>
+            {isMember && user ? (
+              <button className="btn" disabled style={{ marginTop: "auto", opacity: .6 }}>Included in your membership</button>
+            ) : (
+              <button className="btn" onClick={() => handleSelectPlan("reader")} style={{ marginTop: "auto" }}>Continue, no charge</button>
+            )}
           </div>
 
           <div className="plan-card featured" onClick={() => setPlan("online")}
@@ -1085,9 +1143,21 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
               <li>· Members-only store events</li>
               <li>· 10% house credit on first order</li>
             </ul>
-            <button className="btn solid" disabled={loading} onClick={() => handleSelectPlan("online")} style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" }}>
-              {loading && plan === "online" ? "Redirecting..." : "Become a member"}
-            </button>
+            {isMember && user ? (
+              currentProduct === "online" ? (
+                <button className="btn solid" disabled style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)", opacity: .75 }}>
+                  Current plan ✓
+                </button>
+              ) : (
+                <button className="btn solid" onClick={handleManageBilling} style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" }}>
+                  Upgrade →
+                </button>
+              )
+            ) : (
+              <button className="btn solid" disabled={loading} onClick={() => handleSelectPlan("online")} style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" }}>
+                {loading && plan === "online" ? "Redirecting..." : "Become a member"}
+              </button>
+            )}
           </div>
 
           <div className="plan-card" onClick={() => setPlan("hardcopy")}
@@ -1113,9 +1183,17 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
               <li>· Direct line to the concierge</li>
               <li>· Name in the back of the magazine</li>
             </ul>
-            <button className="btn" disabled={loading} onClick={() => handleSelectPlan("hardcopy")}>
-              {loading && plan === "hardcopy" ? "Redirecting..." : "Take the print edition"}
-            </button>
+            {isMember && user ? (
+              currentProduct === "hardcopy" ? (
+                <button className="btn" disabled style={{ opacity: .6 }}>Current plan ✓</button>
+              ) : (
+                <button className="btn" onClick={handleManageBilling}>Upgrade →</button>
+              )
+            ) : (
+              <button className="btn" disabled={loading} onClick={() => handleSelectPlan("hardcopy")}>
+                {loading && plan === "hardcopy" ? "Redirecting..." : "Take the print edition"}
+              </button>
+            )}
           </div>
         </div>
 

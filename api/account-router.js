@@ -1,5 +1,5 @@
 import { readSession } from '../lib/session.js';
-import { checkUserActiveMembership } from '../lib/account.js';
+import { getUserMembershipPlan } from '../lib/account.js';
 import { getStripe } from '../lib/stripe.js';
 import { getUserById } from '../lib/db.js';
 
@@ -44,26 +44,26 @@ async function handleStatus(request) {
   const session = await readSession(request.headers.get('cookie'));
   if (!session) {
     return Response.json(
-      { active: false },
+      { active: false, plan: null },
       { headers: { 'Cache-Control': 'private, no-store' } }
     );
   }
 
   try {
     const stripe = getStripe();
-    const active = await checkUserActiveMembership({
+    const plan = await getUserMembershipPlan({
       userId: session.uid,
       stripe,
     });
 
     return Response.json(
-      { active },
+      { active: !!plan, plan },
       { headers: { 'Cache-Control': 'private, no-store' } }
     );
   } catch (err) {
     console.error('[account/status] Error:', err.message);
     return Response.json(
-      { active: false },
+      { active: false, plan: null },
       { headers: { 'Cache-Control': 'private, no-store' }, status: 500 }
     );
   }

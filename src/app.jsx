@@ -22,6 +22,11 @@ export default function App() {
   //   isMember     — has a live paid subscription; gates the digital edition
   const [isSubscribed, setIsSubscribed] = useState(() => localStorage.getItem("ladidier_subscribed") === "true");
   const [isMember, setIsMember] = useState(() => localStorage.getItem("ladidier_member") === "true");
+  // Which plan a member actually holds ({product, interval, cancelAtPeriodEnd})
+  // — only resolvable for the account-linked path, so this is null both for a
+  // signed-out visitor and for a legacy-cookie-only member. The Subscribe page
+  // falls back to a generic "active membership" display when it is null.
+  const [activePlan, setActivePlan] = useState(null);
   const [user, setUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
 
@@ -94,23 +99,32 @@ export default function App() {
     const askAccount = user
       ? fetch("/api/account/status", { credentials: "same-origin" })
           .then((r) => r.json())
-          .then((d) => (typeof d.active === "boolean" ? d.active : null))
+          .then((d) => ({
+            active: typeof d.active === "boolean" ? d.active : null,
+            plan: d.plan ?? null,
+          }))
           .catch((err) => {
             console.error("Could not verify account membership status:", err);
-            return null;
+            return { active: null, plan: null };
           })
-      : Promise.resolve(false);
+      : Promise.resolve({ active: false, plan: null });
 
-    Promise.all([askLegacy, askAccount]).then(([legacy, account]) => {
+    Promise.all([askLegacy, askAccount]).then(([legacy, accountResult]) => {
       if (cancelled) return;
+      const { active: account, plan } = accountResult;
 
       if (legacy === true || account === true) {
         setIsMember(true);
+        // The account path is the only one that resolves a specific plan — a
+        // legacy-only grant leaves this null, which the Subscribe page reads
+        // as "member, but plan unknown" rather than a specific product/interval.
+        setActivePlan(account === true ? plan : null);
         localStorage.setItem("ladidier_member", "true");
         localStorage.setItem(CHECKED_AT, String(Date.now()));
       } else if (legacy !== null && account !== null) {
         // Both sources answered definitively and neither granted access.
         setIsMember(false);
+        setActivePlan(null);
         localStorage.removeItem("ladidier_member");
         localStorage.setItem(CHECKED_AT, String(Date.now()));
       }
@@ -166,6 +180,14 @@ export default function App() {
           setRoute("magazine");
           // Drop session_id from the address bar so it is not shared or reused.
           history.replaceState(null, "", `${window.location.pathname}#magazine`);
+
+          // The CHECKED_AT write above makes the membership resolver effect skip
+          // its own re-check for a while, so it won't fill in activePlan on its
+          // own — ask directly, once, right after the checkout that just linked it.
+          fetch("/api/account/status", { credentials: "same-origin" })
+            .then((r) => r.json())
+            .then((d) => { if (!cancelled) setActivePlan(d.plan ?? null); })
+            .catch((err) => console.error("Could not fetch plan after checkout:", err));
         } else {
           backToSubscribe();
         }
@@ -192,7 +214,7 @@ export default function App() {
     case "magazine":  page = <MagazinePage  setRoute={go} isMember={isMember} />; break;
     case "article":   page = <ArticlePage   setRoute={go} />; break;
     case "stores":    page = <StoresPage    setRoute={go} />; break;
-    case "subscribe": page = <SubscribePage setRoute={go} isSubscribed={isSubscribed} setIsSubscribed={setIsSubscribed} user={user} setUser={setUser} authReady={authReady} />; break;
+    case "subscribe": page = <SubscribePage setRoute={go} isSubscribed={isSubscribed} setIsSubscribed={setIsSubscribed} user={user} setUser={setUser} authReady={authReady} isMember={isMember} activePlan={activePlan} />; break;
     case "account":   page = <AccountPage   setRoute={go} user={user} isMember={isMember} />; break;
     case "about":     page = <AboutPage     setRoute={go} />; break;
     default:          page = <HomePage      setRoute={go} heroVariant={THEME.hero} />;

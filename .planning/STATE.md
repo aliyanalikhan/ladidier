@@ -6,9 +6,9 @@ current_phase: 09
 current_phase_name: account-and-billing-page
 status: completed
 stopped_at: Phase 09 complete
-last_updated: "2026-09-01T07:00:00.000Z"
+last_updated: "2026-09-01T07:30:00.000Z"
 last_activity: 2026-09-01
-last_activity_desc: "Quick task 260901-fnc: fixed Vercel deploy failure by consolidating api/auth, api/account, api/issue route groups from 8 files to 3 router files (14 -> 9 Serverless Functions total), via vercel.json rewrites preserving all public URLs."
+last_activity_desc: "Quick task 260901-mbr: Subscribe page now shows a signed-in member's active plan and routes Upgrade/Manage to the Stripe billing portal instead of the become-a-member pitch."
 progress:
   total_phases: 3
   completed_phases: 3
@@ -124,6 +124,7 @@ None yet.
 | 260901-1lc | gate the full ÉCLAT Vol. 2 issue (in-site reader + PDF download) behind an active subscription | 2026-09-01 | 123c72b | | [260901-1lc-gate-the-full-clat-vol-2-issue-in-site-p](.planning/quick/260901-1lc-gate-the-full-clat-vol-2-issue-in-site-p/) |
 | 260901-b1a | fix 10 bugs found in code review of commit a850d59 (Phase 7-9 OAuth/Stripe-linking/account-page work) | 2026-09-01 | ceca8e9 | Needs Review | [260901-b1a-fix-10-bugs-found-in-code-review-of-comm](.planning/quick/260901-b1a-fix-10-bugs-found-in-code-review-of-comm/) |
 | 260901-fnc | fix Vercel deploy failure — consolidated api/auth, api/account, api/issue route groups to stay under the Hobby plan's 12 Serverless Functions cap | 2026-09-01 | 5a22755 | Complete | [260901-fnc-fix-vercel-hobby-serverless-function-limi](.planning/quick/260901-fnc-fix-vercel-hobby-serverless-function-limi/) |
+| 260901-mbr | Subscribe page shows a signed-in member's active plan; Upgrade/Manage now route to the Stripe billing portal instead of re-prompting to become a member | 2026-09-01 | (pending) | Needs Review | [260901-mbr-subscribe-page-shows-active-plan-upgrade-mana](.planning/quick/260901-mbr-subscribe-page-shows-active-plan-upgrade-mana/) |
 
 ## Session Continuity
 
