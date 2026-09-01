@@ -1045,8 +1045,15 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
             The cards below stay visible so an existing member can still see
             what a different plan costs, but their CTAs are relabeled further
             down (see currentProduct) so nothing here reads as "become a
-            member" again. */}
-        {isMember && user && (
+            member" again.
+            Gated on activePlan, not isMember: isMember is also true for a
+            legacy-cookie-only member (pre-account-link Checkout Session) who
+            has no linked Stripe customer, and the Manage billing button below
+            calls /api/account/portal, which 400s "No billing history" for
+            exactly that case. activePlan is null unless the account path
+            (which requires a stripe_customer_id) is what actually granted
+            membership, so it's the correct gate for anything billing-portal-bound. */}
+        {activePlan && user && (
           <div
             className="plan-card"
             style={{ maxWidth: 640, margin: "0 auto 40px", textAlign: "center" }}
@@ -1113,7 +1120,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
               <li>· Access to all 14 stores</li>
               <li>· Quarterly newsletter</li>
             </ul>
-            {isMember && user ? (
+            {activePlan && user ? (
               <button className="btn" disabled style={{ marginTop: "auto", opacity: .6 }}>Included in your membership</button>
             ) : (
               <button className="btn" onClick={() => handleSelectPlan("reader")} style={{ marginTop: "auto" }}>Continue, no charge</button>
@@ -1143,7 +1150,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
               <li>· Members-only store events</li>
               <li>· 10% house credit on first order</li>
             </ul>
-            {isMember && user ? (
+            {activePlan && user ? (
               currentProduct === "online" ? (
                 <button className="btn solid" disabled style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)", opacity: .75 }}>
                   Current plan ✓
@@ -1183,7 +1190,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
               <li>· Direct line to the concierge</li>
               <li>· Name in the back of the magazine</li>
             </ul>
-            {isMember && user ? (
+            {activePlan && user ? (
               currentProduct === "hardcopy" ? (
                 <button className="btn" disabled style={{ opacity: .6 }}>Current plan ✓</button>
               ) : (
@@ -1296,7 +1303,7 @@ function AboutPage({ setRoute }) {
    ACCOUNT — dashboard
    ═══════════════════════════════════════════════════════════ */
 
-function AccountPage({ setRoute, user, isMember }) {
+function AccountPage({ setRoute, user, isMember, activePlan }) {
   const [address, setAddress] = useState({ line1: "", city: "", state: "", postal_code: "", country: "" });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
@@ -1393,7 +1400,20 @@ function AccountPage({ setRoute, user, isMember }) {
             <p className="muted" style={{ fontSize: 14, marginBottom: 24, maxWidth: "34ch", lineHeight: 1.5 }}>
               Manage your subscription, update your payment methods, or view your invoice history through our secure billing portal.
             </p>
-            <button className="btn" onClick={handleManageBilling}>Manage billing →</button>
+            {/* activePlan is only set by the account-linked path (has a Stripe
+                customer id). isMember alone can also come from a legacy
+                checkout-session cookie with no linked customer, for which
+                /api/account/portal has nothing to open — hence the fallback
+                below instead of a button that always fails for that case. */}
+            {activePlan ? (
+              <button className="btn" onClick={handleManageBilling}>Manage billing →</button>
+            ) : (
+              <p className="muted" style={{ fontSize: 13 }}>
+                {isMember
+                  ? "Billing management isn't available for this membership yet."
+                  : "Subscribe to a plan to manage billing here."}
+              </p>
+            )}
           </section>
         </div>
 

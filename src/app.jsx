@@ -215,7 +215,7 @@ export default function App() {
     case "article":   page = <ArticlePage   setRoute={go} />; break;
     case "stores":    page = <StoresPage    setRoute={go} />; break;
     case "subscribe": page = <SubscribePage setRoute={go} isSubscribed={isSubscribed} setIsSubscribed={setIsSubscribed} user={user} setUser={setUser} authReady={authReady} isMember={isMember} activePlan={activePlan} />; break;
-    case "account":   page = <AccountPage   setRoute={go} user={user} isMember={isMember} />; break;
+    case "account":   page = <AccountPage   setRoute={go} user={user} isMember={isMember} activePlan={activePlan} />; break;
     case "about":     page = <AboutPage     setRoute={go} />; break;
     default:          page = <HomePage      setRoute={go} heroVariant={THEME.hero} />;
   }
