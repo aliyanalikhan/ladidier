@@ -6,9 +6,9 @@ current_phase: 09
 current_phase_name: account-and-billing-page
 status: completed
 stopped_at: Phase 09 complete
-last_updated: "2026-09-01T07:45:00.000Z"
+last_updated: "2026-09-01T08:00:00.000Z"
 last_activity: 2026-09-01
-last_activity_desc: "Quick task 260901-nbh: fixed 'No billing history' error reachable from Manage billing on both Subscribe and Account pages for legacy-cookie-only members with no linked Stripe customer — gated on activePlan instead of isMember."
+last_activity_desc: "Quick task 260901-liv: reverted production off Stripe test mode — set live STRIPE_SECRET_KEY, 4 live STRIPE_PRICE_* vars, and a new live STRIPE_WEBHOOK_SECRET on Vercel Production, then redeployed. Verified live via /api/prices. Closes Phase 8's production gate."
 progress:
   total_phases: 3
   completed_phases: 3
@@ -35,7 +35,13 @@ Last activity: 2026-09-01 - Completed quick task 260901-b1a: fix 10 bugs found i
 
 ## Out-of-band work
 
-**⚠ PRODUCTION IS CURRENTLY RUNNING STRIPE TEST MODE (as of 2026-09-01).** At the user's request, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and all four `STRIPE_PRICE_*` env vars on Vercel Production were swapped from live to Stripe test-mode values so the ÉCLAT Vol. 2 gating feature (260901-1lc) could be tested end-to-end on ladidier.com with a real Stripe Checkout flow. **No real customer can complete a real purchase until this is reverted.** A full test subscription (Online, test card 4242...) was created and verified to correctly unlock the in-site reader and PDF download. Reverting requires the LIVE `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` values again — Vercel stores these as write-only "Secret" type vars, so neither Claude nor the account owner can read the old values back via CLI/dashboard; the user must re-reveal them from the Stripe Dashboard (Developers → API keys) and hand them over (or swap back directly in Vercel's dashboard). The four price env vars can be safely reverted to their original live `price_`/`prod_` values once known. **Any future session picking up this project should check `vercel env ls` / ask the user before assuming Production is on live keys.** This directly gates Phase 8 (Stripe-Customer Linking) — see ROADMAP.md's Phase 8 "Production gate" note.
+**✓ PRODUCTION IS BACK ON LIVE STRIPE KEYS (as of 2026-09-01, quick task 260901-liv).** The test-mode swap described below (originally logged here) has been reverted. `STRIPE_SECRET_KEY`, all four `STRIPE_PRICE_*` vars, and `STRIPE_WEBHOOK_SECRET` on Vercel Production were set to live values the user provided directly in chat, and a fresh production deployment was triggered so the change took effect (env var changes alone don't affect an already-built deployment). Verified live via `GET https://ladidier.com/api/prices` returning real live-mode amounts ($14.99/$79.99 Online, $24.99/$99.99 Hard Copy). The `STRIPE_WEBHOOK_SECRET` came from a newly-created live webhook endpoint (`we_1UAt0BPJb1GC1KXLWwtLc8oL`) — the prior live endpoint (`we_1Tddc9PJb1GC1KXLhWvobblq`) was deleted since Stripe never re-exposes an existing endpoint's signing secret via the API. **Real customers can now complete real purchases and be charged real money.** No further action needed for Phase 8's "Production gate" — this closes it. Original context preserved below for history.
+
+<details><summary>Historical: how production ended up on test mode</summary>
+
+At the user's request, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and all four `STRIPE_PRICE_*` env vars on Vercel Production were swapped from live to Stripe test-mode values so the ÉCLAT Vol. 2 gating feature (260901-1lc) could be tested end-to-end on ladidier.com with a real Stripe Checkout flow. A full test subscription (Online, test card 4242...) was created and verified to correctly unlock the in-site reader and PDF download.
+
+</details>
 
 Paid Stripe membership was built and shipped to production on 2026-08-31 **outside the phase structure** — it belongs to no numbered phase and the progress counters above (scoped to v1.2) deliberately exclude it. It reversed the "no backend/API" scope decision; see PROJECT.md Key Decisions and Known Gaps.
 
@@ -126,6 +132,7 @@ None yet.
 | 260901-fnc | fix Vercel deploy failure — consolidated api/auth, api/account, api/issue route groups to stay under the Hobby plan's 12 Serverless Functions cap | 2026-09-01 | 5a22755 | Complete | [260901-fnc-fix-vercel-hobby-serverless-function-limi](.planning/quick/260901-fnc-fix-vercel-hobby-serverless-function-limi/) |
 | 260901-mbr | Subscribe page shows a signed-in member's active plan; Upgrade/Manage now route to the Stripe billing portal instead of re-prompting to become a member | 2026-09-01 | 1c9bec3 | Needs Review | [260901-mbr-subscribe-page-shows-active-plan-upgrade-mana](.planning/quick/260901-mbr-subscribe-page-shows-active-plan-upgrade-mana/) |
 | 260901-nbh | fix "No billing history" error reachable from Manage billing on Subscribe/Account pages for legacy-cookie-only members with no linked Stripe customer | 2026-09-01 | c58d256 | Needs Review | [260901-nbh-fix-no-billing-history-error-for-legacy-only-m](.planning/quick/260901-nbh-fix-no-billing-history-error-for-legacy-only-m/) |
+| 260901-liv | swap Vercel Production off Stripe test mode back to live keys (secret key, 4 prices, new webhook secret), redeployed | 2026-09-01 | (infra, no code commit) | Complete | [260901-liv-swap-production-back-to-live-stripe-keys](.planning/quick/260901-liv-swap-production-back-to-live-stripe-keys/) |
 
 ## Session Continuity
 
