@@ -114,8 +114,8 @@ function HeroSplit({ setRoute }) {
           </span>
         </h1>
         <p className="lede" style={{ marginTop: 36, maxWidth: "44ch", animation: "pageFade .9s .9s ease both" }}>
-          A magazine for the soft-spoken maximalist. Read freely; subscribe when you're ready
-          to receive each new chapter at the door.
+          A magazine for the soft-spoken maximalist. Subscribe to receive each new chapter
+          at the door.
         </p>
         <div className="flex gap-16" style={{ marginTop: 40, flexWrap: "wrap", animation: "pageFade .9s 1.05s ease both" }}>
           <button className="btn solid" onClick={() => setRoute("stores")}>Shop the Houses</button>
@@ -388,19 +388,20 @@ function SubscribeBanner({ setRoute }) {
       </div>
       <div className="subscribe-banner-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
         <div>
-          <div className="eyebrow">Reading is free. Belonging is optional.</div>
+          <div className="eyebrow">The World, Curated. Your Place Within It.</div>
           <h2 className="display h2" style={{ margin: "20px 0 0", maxWidth: "16ch" }}>
             The magazine, at your <em style={{ fontStyle: "italic" }} className="gold-text">door</em> each season.
           </h2>
         </div>
         <div>
           <p className="lede" style={{ margin: 0 }}>
-            For now, every story is open. When you're ready, subscribe to receive the print edition,
-            early store drops, and the editor's quiet letter on Sundays.
+            Discover stories, places, objects, and ideas chosen with a discerning eye. Subscribe to
+            receive each print edition, early access to store drops, and the editor's quiet letter
+            on Sundays.
           </p>
-          <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
-            <button className="btn solid" onClick={() => setRoute("subscribe")}>Choose your subscription</button>
-            <button className="btn ghost" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Continue reading freely →</button>
+          <div className="eyebrow" style={{ marginTop: 28 }}>Enter the World of LaDidiér</div>
+          <div className="flex gap-16" style={{ marginTop: 16, flexWrap: "wrap" }}>
+            <button className="btn solid" onClick={() => setRoute("subscribe")}>Discover your membership →</button>
           </div>
         </div>
       </div>
@@ -449,50 +450,82 @@ const ISSUE_HIGHLIGHTS = [
     title: "One Beat, Many Nations, One World",
     dek: "When the beat drops, borders disappear — how Afrobeats became the rhythm bringing the world together.",
   },
+  {
+    img: "/assets/eclat/highlight-conversation.jpg",
+    kicker: "Behind the Issue · In Conversation",
+    title: "Building Vol. 2: A Conversation",
+    dek: "An unhurried conversation on what it took to bring this issue's vision, voice, and values to the page.",
+  },
 ];
 
 /* Total pages behind /api/issue/page — must match content/eclat-vol2-pages/ */
 const ISSUE_PAGE_COUNT = 62;
 
-/* Full-issue reader, member-gated. Fetches one page image at a time from
-   /api/issue/page (cookie-authenticated) rather than shipping all 62 pages
-   up front. */
+/* Spread pagination: page 1 (front cover) and the final page (back cover)
+   show solo; everything between pairs up as a facing two-page spread
+   (2+3, 4+5, ...), matching how the issue is actually laid out — several
+   photos and headlines cut across the gutter between two facing pages, so
+   showing them one at a time split the image in half. LAST_SPREAD is the
+   index of the solo back-cover spread; spreads 1..LAST_SPREAD-1 are pairs. */
+const LAST_SPREAD = ISSUE_PAGE_COUNT / 2;
+function pagesForSpread(i) {
+  if (i <= 0) return [1];
+  if (i >= LAST_SPREAD) return [ISSUE_PAGE_COUNT];
+  return [2 * i, 2 * i + 1];
+}
+
+/* Full-issue reader, member-gated. Fetches the 1-2 page images for the
+   current spread from /api/issue/page (cookie-authenticated) rather than
+   shipping all 62 pages up front. */
 function IssueReader({ onClose }) {
-  const [pageNum, setPageNum] = useState(1);
-  const [imgUrl, setImgUrl] = useState(null);
+  const [spreadIndex, setSpreadIndex] = useState(0);
+  const [imgUrls, setImgUrls] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const pages = pagesForSpread(spreadIndex);
 
   useEffect(() => {
     let cancelled = false;
-    let objectUrl = null;
+    let objectUrls = [];
     setLoading(true);
     setError(null);
-    fetch(`/api/issue/page?n=${pageNum}`, { credentials: "same-origin" })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(res.status === 403 ? "Your session has expired — please sign back in." : "Could not load this page.");
-        const blob = await res.blob();
+    setImgUrls([]);
+    Promise.all(
+      pages.map((n) =>
+        fetch(`/api/issue/page?n=${n}`, { credentials: "same-origin" }).then(async (res) => {
+          if (!res.ok) throw new Error(res.status === 403 ? "Your session has expired — please sign back in." : "Could not load this page.");
+          return res.blob();
+        })
+      )
+    )
+      .then((blobs) => {
         if (cancelled) return;
-        objectUrl = URL.createObjectURL(blob);
-        setImgUrl(objectUrl);
+        objectUrls = blobs.map((b) => URL.createObjectURL(b));
+        setImgUrls(objectUrls);
       })
       .catch((err) => { if (!cancelled) setError(err.message); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrls.forEach((u) => URL.revokeObjectURL(u));
     };
-  }, [pageNum]);
+    // pagesForSpread(spreadIndex) is re-derived above on every render from
+    // spreadIndex alone, so depending on spreadIndex here is equivalent to
+    // depending on `pages` without recreating the array on each render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spreadIndex]);
 
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") setPageNum((p) => Math.min(ISSUE_PAGE_COUNT, p + 1));
-      if (e.key === "ArrowLeft") setPageNum((p) => Math.max(1, p - 1));
+      if (e.key === "ArrowRight") setSpreadIndex((i) => Math.min(LAST_SPREAD, i + 1));
+      if (e.key === "ArrowLeft") setSpreadIndex((i) => Math.max(0, i - 1));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const pageLabel = pages.length === 2 ? `Pages ${pages[0]}–${pages[1]}` : `Page ${pages[0]}`;
 
   // Portaled straight to document.body: MagazinePage's root carries the
   // site-wide .page-fade entry animation, which animates `transform` and so
@@ -509,21 +542,23 @@ function IssueReader({ onClose }) {
       aria-label="ÉCLAT Vol. 2 reader"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="reader-modal">
+      <div className={`reader-modal${pages.length === 2 ? " reader-modal-spread" : ""}`}>
         <div className="reader-modal-header">
           <span className="mono" style={{ fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--mute)" }}>
-            ÉCLAT Vol. 2 · Page {pageNum} / {ISSUE_PAGE_COUNT}
+            ÉCLAT Vol. 2 · {pageLabel} / {ISSUE_PAGE_COUNT}
           </span>
           <button className="reader-close" onClick={onClose} aria-label="Close reader">×</button>
         </div>
         <div className="reader-page">
           {loading && <div className="mono muted">Loading…</div>}
           {!loading && error && <div className="mono muted">{error}</div>}
-          {!loading && !error && imgUrl && <img src={imgUrl} alt={`ÉCLAT Vol. 2, page ${pageNum}`} />}
+          {!loading && !error && imgUrls.map((url, idx) => (
+            <img key={pages[idx]} src={url} alt={`ÉCLAT Vol. 2, page ${pages[idx]}`} />
+          ))}
         </div>
         <div className="reader-nav">
-          <button className="btn ghost" onClick={() => setPageNum((p) => Math.max(1, p - 1))} disabled={pageNum === 1}>← Prev</button>
-          <button className="btn ghost" onClick={() => setPageNum((p) => Math.min(ISSUE_PAGE_COUNT, p + 1))} disabled={pageNum === ISSUE_PAGE_COUNT}>Next →</button>
+          <button className="btn ghost" onClick={() => setSpreadIndex((i) => Math.max(0, i - 1))} disabled={spreadIndex === 0}>← Prev</button>
+          <button className="btn ghost" onClick={() => setSpreadIndex((i) => Math.min(LAST_SPREAD, i + 1))} disabled={spreadIndex === LAST_SPREAD}>Next →</button>
         </div>
       </div>
     </div>,
@@ -623,7 +658,23 @@ function MagazinePage({ setRoute, isMember }) {
         </div>
       </section>
 
-      <SubscribeBanner setRoute={setRoute} />
+      {/* Closing manifesto — an image in place of the site-wide SubscribeBanner
+          text used elsewhere, per request: this page's bottom section is the
+          one spot on the site that should read as a picture, not a pitch. */}
+      <section className="section container" style={{ textAlign: "center" }}>
+        <div
+          className="ph photo"
+          style={{
+            aspectRatio: "1122/1402",
+            maxWidth: 640,
+            margin: "0 auto",
+            "--bg-image": `url(/assets/eclat/manifesto-one-love.png)`,
+          }}
+        ></div>
+        <button className="btn solid" onClick={() => setRoute("subscribe")} style={{ marginTop: 40 }}>
+          Discover your membership →
+        </button>
+      </section>
     </div>
   );
 }
@@ -672,7 +723,7 @@ function ArticlePage({ setRoute }) {
           the roaster who knows the farmer's children's names, the tailor who insists on a third fitting.
         </p>
         <p>
-          This issue is our small case for the practice. Read freely. Linger. The door is open.
+          This issue is our small case for the practice. Linger. The door is open.
         </p>
         <div style={{ marginTop: 48, textAlign: "center", fontFamily: "var(--mono)", fontSize: 13, letterSpacing: ".2em", color: "var(--mute)" }}>
           · · ·
@@ -808,10 +859,25 @@ function StoresPage({ setRoute }) {
    SUBSCRIBE
    ═══════════════════════════════════════════════════════════ */
 
+// The 4 sellable plans, in the fixed order the page presents them.
+const SUBSCRIBE_PLANS = [
+  { key: "online_monthly", product: "online", interval: "monthly", tag: "Plan 1", name: "ÉcLAT Online", note: "One month, in full digital." },
+  { key: "hardcopy_monthly", product: "hardcopy", interval: "monthly", tag: "Plan 2", name: "ÉcLAT Hard Copy", note: "One month, print at your door.", badge: "Limited · 250" },
+  { key: "online_yearly", product: "online", interval: "yearly", tag: "Plan 3", name: "ÉcLAT Online", note: "A full year, in full digital.", badge: "Most chosen", featured: true },
+  { key: "hardcopy_yearly", product: "hardcopy", interval: "yearly", tag: "Plan 4", name: "ÉcLAT Hard Copy", note: "A full year, print at your door.", badge: "Limited · 250" },
+];
+
+const SUBSCRIBE_PERKS = {
+  online: ["Every issue, the full archive", "Early store access (48h)", "Sunday letter from the editor", "Members-only store events", "10% house credit on first order"],
+  hardcopy: ["Everything in Online", "Hand-numbered print edition", "Annual atelier visit (one house)", "Direct line to the concierge", "Name in the back of the magazine"],
+};
+
 function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser, authReady, isMember, activePlan }) {
-  const [plan, setPlan] = useState("online");
-  const [billing, setBilling] = useState("yearly");
-  const [loading, setLoading] = useState(false);
+  // Tracks which specific plan's checkout is in flight (its SUBSCRIBE_PLANS
+  // key), so only that one card's button reads "Redirecting..." — not a
+  // shared "which product" selection, since each of the 4 cards below now
+  // acts on its own rather than through a shared billing-interval toggle.
+  const [loadingKey, setLoadingKey] = useState(null);
   const [prices, setPrices] = useState(null);
 
   const handleSignOut = async () => {
@@ -877,32 +943,22 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
       minimumFractionDigits: amount % 100 === 0 ? 0 : 2,
     }).format(amount / 100);
 
-  const priceLabel = (product) => {
-    const p = prices?.[product]?.[billing];
+  const priceLabel = (product, interval) => {
+    const p = prices?.[product]?.[interval];
     return p ? money(p.amount, p.currency) : "—";
   };
 
-  // Show the free tier's zero in whatever currency the paid plans are in, rather
-  // than a hardcoded symbol that could contradict them.
-  const freeCurrency =
-    prices?.online?.[billing]?.currency ?? prices?.hardcopy?.[billing]?.currency;
-  const freeLabel = freeCurrency ? money(0, freeCurrency) : "Free";
-
-  const perLabel = billing === "yearly" ? "/year" : "/month";
+  const perLabel = (interval) => (interval === "yearly" ? "/year" : "/month");
 
   // Store the user's intent in sessionStorage so an abandoned checkout attempt
-  // dies with the tab rather than persisting to future visits. interval takes
-  // an explicit argument, defaulted to the current billing state, so the 401
-  // resume path below can persist the interval the visitor actually chose
-  // rather than whatever billing happens to hold in this closure.
-  const startLogin = (product, interval = billing) => {
+  // dies with the tab rather than persisting to future visits.
+  const startLogin = (product, interval) => {
     sessionStorage.setItem(PENDING_PLAN, JSON.stringify({ product, billing: interval }));
     window.location.href = "/api/auth/google?returnTo=subscribe";
   };
 
-  const startCheckout = async (product, interval = billing) => {
-    setPlan(product);
-    setLoading(true);
+  const startCheckout = async (product, interval, key) => {
+    setLoadingKey(key);
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST',
@@ -931,25 +987,17 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
       console.error('Checkout error:', err);
       alert('Failed to initiate checkout. Please try again later.');
     } finally {
-      setLoading(false);
+      setLoadingKey(null);
     }
   };
 
-  const handleSelectPlan = async (product) => {
-    if (product === "reader") {
-      setIsSubscribed(true);
-      localStorage.setItem("ladidier_subscribed", "true");
-      setRoute("magazine");
-      return;
-    }
-
-    setPlan(product);
+  const handleSelectPlan = async (product, interval, key) => {
     if (!user) {
-      startLogin(product);
+      startLogin(product, interval);
       return;
     }
 
-    await startCheckout(product);
+    await startCheckout(product, interval, key);
   };
 
   // Resume checkout if returning from Google sign-in with a pending plan intent.
@@ -963,10 +1011,8 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
     try {
       const { product, billing: savedBilling } = JSON.parse(raw);
       if (product && (product === "online" || product === "hardcopy")) {
-        const targetBilling = savedBilling === "monthly" ? "monthly" : "yearly";
-        setBilling(targetBilling);
-        setPlan(product);
-        startCheckout(product, targetBilling);
+        const targetInterval = savedBilling === "monthly" ? "monthly" : "yearly";
+        startCheckout(product, targetInterval, `${product}_${targetInterval}`);
       }
     } catch (err) {
       console.error("Could not resume pending plan checkout:", err);
@@ -979,15 +1025,15 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
         <div>
           <div className="eyebrow" style={{ marginBottom: 18 }}>Membership</div>
           <h1 className="display h2" style={{ margin: 0 }}>
-            Reading is free.<br/>
-            <em style={{ fontStyle: "italic", color: "var(--gold)" }}>Belonging</em> is by design.
+            Belonging<br/>
+            <em style={{ fontStyle: "italic", color: "var(--gold)" }}>is by design</em>.
           </h1>
         </div>
         <div>
           <p className="lede" style={{ margin: 0 }}>
-            Every story on Ladidier.com is open, today and tomorrow. A membership adds early
-            access to store drops and a Sunday letter from the editor — and, if you want the
-            object as well as the words, the print edition at your door.
+            Four plans, however you want the magazine: online or in hand, one month or the full
+            year. Every membership brings early access to store drops and the editor's quiet
+            letter on Sundays.
           </p>
         </div>
       </header>
@@ -1079,129 +1125,59 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
           </div>
         )}
 
-        {/* Billing interval. Switching it re-labels the cards and changes which
-            price key handleSelectPlan sends, so no separate plan list is needed. */}
-        <div className="flex" style={{ justifyContent: "center", gap: 0, marginBottom: 56 }}>
-          {[["monthly", "Monthly"], ["yearly", "Yearly"]].map(([key, label]) => {
-            const on = billing === key;
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+          {SUBSCRIBE_PLANS.map((p) => {
+            const isCurrent = !!(activePlan && user && currentProduct === p.product && activePlan.interval === p.interval);
             return (
-              <button
-                key={key}
-                className="btn"
-                onClick={() => setBilling(key)}
-                aria-pressed={on}
-                style={{
-                  background: on ? "var(--gold)" : "transparent",
-                  borderColor: on ? "var(--gold)" : "var(--line)",
-                  color: on ? "var(--noir)" : "var(--ink)",
-                }}
-              >
-                {label}
-              </button>
+              <div key={p.key} className={`plan-card${p.featured ? " featured" : ""}`}>
+                <div className="flex between">
+                  <div className="eyebrow" style={p.featured ? { color: "color-mix(in srgb, var(--bg) 65%, transparent)" } : {}}>{p.tag}</div>
+                  {p.badge && <div className="eyebrow" style={p.featured ? { color: "var(--gold)" } : {}}>{p.badge}</div>}
+                </div>
+                <div>
+                  <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>{p.name}</div>
+                  <div className={p.featured ? undefined : "muted"} style={{ fontSize: 13, marginTop: 4, opacity: p.featured ? .7 : 1 }}>{p.note}</div>
+                </div>
+                <div className="price">
+                  {priceLabel(p.product, p.interval)}
+                  <span style={{ fontSize: 16, color: p.featured ? undefined : "var(--mute)", opacity: p.featured ? .55 : 1, marginLeft: 6 }}>
+                    {perLabel(p.interval)}
+                  </span>
+                </div>
+                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12, fontSize: 14 }}>
+                  {SUBSCRIBE_PERKS[p.product].map((perk) => <li key={perk}>· {perk}</li>)}
+                </ul>
+                {activePlan && user ? (
+                  isCurrent ? (
+                    <button
+                      className={p.featured ? "btn solid" : "btn"}
+                      disabled
+                      style={{ marginTop: "auto", opacity: p.featured ? .75 : .6, ...(p.featured ? { background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" } : {}) }}
+                    >
+                      Current plan ✓
+                    </button>
+                  ) : (
+                    <button
+                      className={p.featured ? "btn solid" : "btn"}
+                      onClick={handleManageBilling}
+                      style={{ marginTop: "auto", ...(p.featured ? { background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" } : {}) }}
+                    >
+                      Switch to this plan →
+                    </button>
+                  )
+                ) : (
+                  <button
+                    className={p.featured ? "btn solid" : "btn"}
+                    disabled={loadingKey === p.key}
+                    onClick={() => handleSelectPlan(p.product, p.interval, p.key)}
+                    style={{ marginTop: "auto", ...(p.featured ? { background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" } : {}) }}
+                  >
+                    {loadingKey === p.key ? "Redirecting..." : "Become a member"}
+                  </button>
+                )}
+              </div>
             );
           })}
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
-
-          <div className="plan-card" onClick={() => setPlan("reader")}
-               style={plan === "reader" ? { borderColor: "var(--gold)" } : {}}>
-            <div className="flex between">
-              <div className="eyebrow">Plan I</div>
-              <div className="eyebrow">Free, forever</div>
-            </div>
-            <div>
-              <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>Reader</div>
-              <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>For the casual visitor.</div>
-            </div>
-            <div className="price">{freeLabel}<span style={{ fontSize: 16, color: "var(--mute)", marginLeft: 6 }}>{perLabel}</span></div>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12, fontSize: 14 }}>
-              <li>· Unlimited story reading</li>
-              <li>· Access to all 14 stores</li>
-              <li>· Quarterly newsletter</li>
-            </ul>
-            {activePlan && user ? (
-              <button className="btn" disabled style={{ marginTop: "auto", opacity: .6 }}>Included in your membership</button>
-            ) : (
-              <button className="btn" onClick={() => handleSelectPlan("reader")} style={{ marginTop: "auto" }}>Continue, no charge</button>
-            )}
-          </div>
-
-          <div className="plan-card featured" onClick={() => setPlan("online")}
-               style={{ transform: plan === "online" ? "translateY(-6px)" : "none" }}>
-            <div className="flex between">
-              <div className="eyebrow" style={{ color: "color-mix(in srgb, var(--bg) 65%, transparent)" }}>Plan II</div>
-              <div className="eyebrow" style={{ color: "var(--gold)" }}>Most chosen</div>
-            </div>
-            <div>
-              <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>ÉcLAT Online</div>
-              <div style={{ fontSize: 13, marginTop: 4, opacity: .7 }}>The magazine, in full.</div>
-            </div>
-            <div className="price">
-              {priceLabel("online")}
-              <span style={{ fontSize: 16, opacity: .55, marginLeft: 6 }}>
-                {perLabel}
-              </span>
-            </div>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12, fontSize: 14 }}>
-              <li>· Every issue, the full archive</li>
-              <li>· Early store access (48h)</li>
-              <li>· Sunday letter from the editor</li>
-              <li>· Members-only store events</li>
-              <li>· 10% house credit on first order</li>
-            </ul>
-            {activePlan && user ? (
-              currentProduct === "online" ? (
-                <button className="btn solid" disabled style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)", opacity: .75 }}>
-                  Current plan ✓
-                </button>
-              ) : (
-                <button className="btn solid" onClick={handleManageBilling} style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" }}>
-                  Upgrade →
-                </button>
-              )
-            ) : (
-              <button className="btn solid" disabled={loading} onClick={() => handleSelectPlan("online")} style={{ marginTop: "auto", background: "var(--gold)", borderColor: "var(--gold)", color: "var(--noir)" }}>
-                {loading && plan === "online" ? "Redirecting..." : "Become a member"}
-              </button>
-            )}
-          </div>
-
-          <div className="plan-card" onClick={() => setPlan("hardcopy")}
-               style={plan === "hardcopy" ? { borderColor: "var(--gold)" } : {}}>
-            <div className="flex between">
-              <div className="eyebrow">Plan III</div>
-              <div className="eyebrow">Limited · 250</div>
-            </div>
-            <div>
-              <div className="display" style={{ fontSize: 28, fontWeight: 300 }}>ÉcLAT Hard Copy</div>
-              <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>For the devoted.</div>
-            </div>
-            <div className="price">
-              {priceLabel("hardcopy")}
-              <span style={{ fontSize: 16, color: "var(--mute)", marginLeft: 6 }}>
-                {perLabel}
-              </span>
-            </div>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12, fontSize: 14 }}>
-              <li>· Everything in Online</li>
-              <li>· Hand-numbered print edition</li>
-              <li>· Annual atelier visit (one house)</li>
-              <li>· Direct line to the concierge</li>
-              <li>· Name in the back of the magazine</li>
-            </ul>
-            {activePlan && user ? (
-              currentProduct === "hardcopy" ? (
-                <button className="btn" disabled style={{ opacity: .6 }}>Current plan ✓</button>
-              ) : (
-                <button className="btn" onClick={handleManageBilling}>Upgrade →</button>
-              )
-            ) : (
-              <button className="btn" disabled={loading} onClick={() => handleSelectPlan("hardcopy")}>
-                {loading && plan === "hardcopy" ? "Redirecting..." : "Take the print edition"}
-              </button>
-            )}
-          </div>
         </div>
 
         {/* FAQ */}
@@ -1209,7 +1185,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
           <div className="eyebrow" style={{ marginBottom: 32 }}>The Fine Print, in Plain Words</div>
           <div className="faq-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
             {[
-              ["When does the paywall arrive?", "Eventually, but never for the Editor's Letter or the cover story. The rest will move to members-only over the coming year. We will tell you, twice, before it happens."],
+              ["Is the full issue behind the paywall now?", "Yes — the in-site reader and PDF download are for members. The cover story and Editor's Letter stay visible to everyone; the rest of Volume 2 opens with a plan."],
               ["Will I still receive the stores' product news?", "Yes. The store mailing lists are separate; you control each one from your account."],
               ["Can I gift a membership?", "Yes — gift Online or Hard Copy from any membership card, including a hand-tied print certificate."],
               ["Refunds?", "Within 30 days, no questions. We trust you to be honest; we'll do the same."],

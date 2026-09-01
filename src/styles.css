@@ -996,6 +996,12 @@ body::before {
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 60px 120px -30px color-mix(in srgb, var(--noir) 40%, transparent);
+  transition: max-width .25s ease;
+}
+/* Two facing pages side by side — wide enough that neither page shrinks
+   past legibility, capped so it never outgrows the viewport. */
+.reader-modal-spread {
+  max-width: min(1400px, 96vw);
 }
 .reader-modal-header {
   display: flex;
@@ -1018,6 +1024,7 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 2px;
   overflow: auto;
   background: var(--bg-2);
   min-height: 300px;
@@ -1027,11 +1034,22 @@ body::before {
   max-height: 78vh;
   display: block;
 }
+/* A spread's two images share the row and must each yield half the width —
+   plain max-width:100% would let either one claim the full row on its own. */
+.reader-modal-spread .reader-page img {
+  max-width: calc(50% - 1px);
+}
 .reader-nav {
   display: flex;
   justify-content: space-between;
   padding: 16px 20px;
   border-top: 1px solid var(--line);
+}
+@media (max-width: 700px) {
+  /* Two facing pages at phone width are too small to read — stack them
+     instead of shrinking each to illegibility. */
+  .reader-modal-spread .reader-page { flex-direction: column; overflow-y: auto; }
+  .reader-modal-spread .reader-page img { max-width: 100%; max-height: none; }
 }
 @media (max-width: 480px) {
   .reader-modal { max-width: 100%; max-height: 100vh; border-radius: 0; }

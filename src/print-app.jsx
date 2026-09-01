@@ -46,10 +46,11 @@ export default function PrintApp() {
       </section>
 
       <section className="print-page page-break">
-        {/* setIsSubscribed is required — without it the free-plan button throws.
-            user, setUser, and authReady must also be passed explicitly, for the
+        {/* user, setUser, and authReady must be passed explicitly, for the
             same reason as Nav above: false authReady suppresses the sign-in
-            row, which is exactly today's rendered output. */}
+            row, which is exactly today's rendered output. isSubscribed and
+            setIsSubscribed are no longer read by SubscribePage but stay in
+            its prop signature, so they're still passed here too. */}
         <SubscribePage setRoute={noop} isSubscribed={false} setIsSubscribed={noop} user={null} setUser={noop} authReady={false} />
       </section>
 
