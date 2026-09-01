@@ -868,9 +868,12 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
   const perLabel = billing === "yearly" ? "/year" : "/month";
 
   // Store the user's intent in sessionStorage so an abandoned checkout attempt
-  // dies with the tab rather than persisting to future visits.
-  const startLogin = (product) => {
-    sessionStorage.setItem(PENDING_PLAN, JSON.stringify({ product, billing }));
+  // dies with the tab rather than persisting to future visits. interval takes
+  // an explicit argument, defaulted to the current billing state, so the 401
+  // resume path below can persist the interval the visitor actually chose
+  // rather than whatever billing happens to hold in this closure.
+  const startLogin = (product, interval = billing) => {
+    sessionStorage.setItem(PENDING_PLAN, JSON.stringify({ product, billing: interval }));
     window.location.href = "/api/auth/google?returnTo=subscribe";
   };
 
@@ -889,7 +892,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
       });
 
       if (response.status === 401) {
-        startLogin(product);
+        startLogin(product, interval);
         return;
       }
 

@@ -6,6 +6,7 @@ import {
   sessionCookie,
   signSession,
 } from '../../lib/session.js';
+import { safeReturnTo } from '../../lib/routes.js';
 
 export async function GET(request) {
   const url = new URL(request.url);
@@ -36,7 +37,7 @@ export async function GET(request) {
     return failRedirect();
   }
 
-  const returnTo = savedReturnTo && /^[a-z]+$/.test(savedReturnTo) ? savedReturnTo : 'subscribe';
+  const returnTo = safeReturnTo(savedReturnTo);
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
