@@ -456,6 +456,12 @@ const ISSUE_HIGHLIGHTS = [
     title: "Building Vol. 2: A Conversation",
     dek: "An unhurried conversation on what it took to bring this issue's vision, voice, and values to the page.",
   },
+  {
+    img: "/assets/eclat/manifesto-one-love.png",
+    kicker: "Vision · Voice · Values",
+    title: "One Planet. One Human Race. One Love.",
+    dek: "The manifesto behind ÉCLAT — a reminder, from as far away as the moon, of what actually connects us.",
+  },
 ];
 
 /* Total pages behind /api/issue/page — must match content/eclat-vol2-pages/ */

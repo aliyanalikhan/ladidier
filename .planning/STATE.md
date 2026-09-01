@@ -6,9 +6,9 @@ current_phase: 09
 current_phase_name: account-and-billing-page
 status: completed
 stopped_at: Phase 09 complete
-last_updated: "2026-09-02T04:15:00.000Z"
+last_updated: "2026-09-02T04:25:00.000Z"
 last_activity: 2026-09-02
-last_activity_desc: "Quick task 260902-mag: magazine reader two-page spread view, Magazine page bottom section swapped to an image, new highlight photo (2nd pending from user), sitewide removal of 'free reading' copy/CTAs, Subscribe page redesigned into 4 explicit numbered plans (relabel of the existing 4 subscriptions, no new Stripe products)."
+last_activity_desc: "Quick task 260902-hl2: added the 2nd (previously pending) highlight photo to the Magazine page — closes out 260902-mag's open item."
 progress:
   total_phases: 3
   completed_phases: 3
@@ -134,6 +134,7 @@ None yet.
 | 260901-nbh | fix "No billing history" error reachable from Manage billing on Subscribe/Account pages for legacy-cookie-only members with no linked Stripe customer | 2026-09-01 | c58d256 | Needs Review | [260901-nbh-fix-no-billing-history-error-for-legacy-only-m](.planning/quick/260901-nbh-fix-no-billing-history-error-for-legacy-only-m/) |
 | 260901-liv | swap Vercel Production off Stripe test mode back to live keys (secret key, 4 prices, new webhook secret), redeployed | 2026-09-01 | (infra, no code commit) | Complete | [260901-liv-swap-production-back-to-live-stripe-keys](.planning/quick/260901-liv-swap-production-back-to-live-stripe-keys/) |
 | 260902-mag | magazine reader spread view, Magazine page bottom image, new highlight photo, sitewide free-reading copy removal, Subscribe page redesigned into 4 explicit plans | 2026-09-02 | ed1ee40 | Needs Review | [260902-mag-magazine-spread-view-paywall-copy-4-plan-res](.planning/quick/260902-mag-magazine-spread-view-paywall-copy-4-plan-res/) |
+| 260902-hl2 | added the 2nd pending highlight photo (astronaut manifesto) to the Magazine page | 2026-09-02 | (pending) | Complete | [260902-hl2-add-second-highlight-photo-astronaut-manifest](.planning/quick/260902-hl2-add-second-highlight-photo-astronaut-manifest/) |
 
 ## Session Continuity
 
