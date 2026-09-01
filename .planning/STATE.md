@@ -123,7 +123,7 @@ None yet.
 | 260831-o4v | extend hover-tilt/gold-frame cover interaction to the Magazine page's own cover | 2026-08-31 | 3bb660b | | [260831-o4v-audit-and-fix-the-magazine-cover-s-mouse](.planning/quick/260831-o4v-audit-and-fix-the-magazine-cover-s-mouse/) |
 | 260901-1lc | gate the full ÉCLAT Vol. 2 issue (in-site reader + PDF download) behind an active subscription | 2026-09-01 | 123c72b | | [260901-1lc-gate-the-full-clat-vol-2-issue-in-site-p](.planning/quick/260901-1lc-gate-the-full-clat-vol-2-issue-in-site-p/) |
 | 260901-b1a | fix 10 bugs found in code review of commit a850d59 (Phase 7-9 OAuth/Stripe-linking/account-page work) | 2026-09-01 | ceca8e9 | Needs Review | [260901-b1a-fix-10-bugs-found-in-code-review-of-comm](.planning/quick/260901-b1a-fix-10-bugs-found-in-code-review-of-comm/) |
-| 260901-fnc | fix Vercel deploy failure — consolidated api/auth, api/account, api/issue route groups to stay under the Hobby plan's 12 Serverless Functions cap | 2026-09-01 | (pending) | Complete | [260901-fnc-fix-vercel-hobby-serverless-function-limi](.planning/quick/260901-fnc-fix-vercel-hobby-serverless-function-limi/) |
+| 260901-fnc | fix Vercel deploy failure — consolidated api/auth, api/account, api/issue route groups to stay under the Hobby plan's 12 Serverless Functions cap | 2026-09-01 | 5a22755 | Complete | [260901-fnc-fix-vercel-hobby-serverless-function-limi](.planning/quick/260901-fnc-fix-vercel-hobby-serverless-function-limi/) |
 
 ## Session Continuity
 
