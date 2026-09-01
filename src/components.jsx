@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Laurel, DecoCorner } from './ornaments.jsx';
 import { HiddenPerk } from './perks.jsx';
 import { TreasureProgress } from './treasure.jsx';
+import { safeReturnTo } from '../lib/routes.js';
 
 /* ── Brand / catalog data ─────────────────────────────────── */
 const U = "https://images.unsplash.com/";
@@ -110,7 +111,7 @@ function Nav({ route, setRoute, user, authReady }) {
     </a>
   );
 
-  const returnTo = /^[a-z]+$/.test(route) ? route : "subscribe";
+  const returnTo = safeReturnTo(route);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);

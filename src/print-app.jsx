@@ -23,7 +23,11 @@ export default function PrintApp() {
   return (
     <>
       <section className="print-page">
-        <Nav route="home" setRoute={noop} />
+        {/* user and authReady must be passed explicitly: Nav now expects both,
+            and undefined only happens to satisfy the falsy checks by accident.
+            A null user with authReady=false is exactly today's printed
+            output — no sign-in affordance. */}
+        <Nav route="home" setRoute={noop} user={null} authReady={false} />
         <HomePage setRoute={noop} heroVariant={THEME.hero} />
       </section>
 
@@ -42,8 +46,11 @@ export default function PrintApp() {
       </section>
 
       <section className="print-page page-break">
-        {/* setIsSubscribed is required — without it the free-plan button throws. */}
-        <SubscribePage setRoute={noop} isSubscribed={false} setIsSubscribed={noop} />
+        {/* setIsSubscribed is required — without it the free-plan button throws.
+            user, setUser, and authReady must also be passed explicitly, for the
+            same reason as Nav above: false authReady suppresses the sign-in
+            row, which is exactly today's rendered output. */}
+        <SubscribePage setRoute={noop} isSubscribed={false} setIsSubscribed={noop} user={null} setUser={noop} authReady={false} />
       </section>
 
       <section className="print-page page-break">

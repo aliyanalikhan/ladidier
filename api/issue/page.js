@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { getStripe } from '../../lib/stripe.js';
-import { checkActiveMembership } from '../../lib/membership.js';
+import { hasIssueAccess } from '../../lib/access.js';
 
 // Never let this sit in a shared cache — the answer is per-visitor.
 const PRIVATE = { 'Cache-Control': 'private, no-store' };
@@ -20,7 +20,7 @@ export async function GET(request) {
     return Response.json({ error: 'Stripe is not configured' }, { status: 500, headers: PRIVATE });
   }
 
-  const active = await checkActiveMembership(request, stripe);
+  const active = await hasIssueAccess(request, stripe);
   if (!active) {
     return Response.json({ error: 'Membership required' }, { status: 403, headers: PRIVATE });
   }

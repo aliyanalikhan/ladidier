@@ -25,6 +25,19 @@ import { TreasureIcon } from './treasure.jsx';
 
 const PENDING_PLAN = "ladidier_pending_plan";
 
+// On a shared computer, signing out must not leave paid access behind for the
+// next person. This clears every membership hint App's useState initializers
+// and the account-path status effect can write to localStorage. It does NOT
+// touch the httpOnly Stripe member cookie — that cookie is the legacy
+// device-bound entitlement earned by a purchase made in this browser, which
+// the ROADMAP regression invariant protects, and the shared-computer risk
+// here is the account-path member, who never holds that cookie.
+function clearMemberLocalState() {
+  localStorage.removeItem("ladidier_member");
+  localStorage.removeItem("ladidier_member_checked");
+  localStorage.removeItem("ladidier_subscribed");
+}
+
 /* ═══════════════════════════════════════════════════════════
    HOME — three hero variants + shared body
    ═══════════════════════════════════════════════════════════ */
@@ -810,7 +823,12 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
     } catch (err) {
       console.error("Could not sign out:", err);
     } finally {
-      setUser(null);
+      // A full page load — not setUser(null) — is deliberate: it remounts App
+      // against the storage cleared below, which is what actually drops
+      // isMember, not just the user object. It keeps the visitor on the page
+      // they were on.
+      clearMemberLocalState();
+      window.location.href = "/#subscribe";
     }
   };
 
@@ -850,9 +868,12 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
   const perLabel = billing === "yearly" ? "/year" : "/month";
 
   // Store the user's intent in sessionStorage so an abandoned checkout attempt
-  // dies with the tab rather than persisting to future visits.
-  const startLogin = (product) => {
-    sessionStorage.setItem(PENDING_PLAN, JSON.stringify({ product, billing }));
+  // dies with the tab rather than persisting to future visits. interval takes
+  // an explicit argument, defaulted to the current billing state, so the 401
+  // resume path below can persist the interval the visitor actually chose
+  // rather than whatever billing happens to hold in this closure.
+  const startLogin = (product, interval = billing) => {
+    sessionStorage.setItem(PENDING_PLAN, JSON.stringify({ product, billing: interval }));
     window.location.href = "/api/auth/google?returnTo=subscribe";
   };
 
@@ -871,7 +892,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
       });
 
       if (response.status === 401) {
-        startLogin(product);
+        startLogin(product, interval);
         return;
       }
 
@@ -1252,6 +1273,7 @@ function AccountPage({ setRoute, user, isMember }) {
     } catch (e) {
       console.error(e);
     }
+    clearMemberLocalState();
     window.location.href = "/";
   };
 

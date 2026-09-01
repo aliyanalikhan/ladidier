@@ -29,40 +29,6 @@ export default function App() {
   // once rather than tracking individual palette/typeset changes.
   useEffect(() => { applyTheme(THEME); }, []);
 
-  // Whether a membership is still paid for is Stripe's answer, not the browser's.
-  // Re-ask periodically so a cancellation or a failed renewal actually closes the
-  // edition again — localStorage on its own would grant access forever.
-  useEffect(() => {
-    const CHECKED_AT = "ladidier_member_checked";
-    const RECHECK_AFTER = 6 * 60 * 60 * 1000;
-    const checkedAt = Number(localStorage.getItem(CHECKED_AT) || 0);
-
-    // Members are re-checked on a schedule; everyone else is checked every load,
-    // which costs nothing (with no cookie the endpoint answers without calling
-    // Stripe) and lets a member who cleared local storage recover access.
-    if (isMember && Date.now() - checkedAt < RECHECK_AFTER) return;
-
-    let cancelled = false;
-    fetch("/api/entitlement", { credentials: "same-origin" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (cancelled) return;
-        localStorage.setItem(CHECKED_AT, String(Date.now()));
-        if (d.active) {
-          setIsMember(true);
-          localStorage.setItem("ladidier_member", "true");
-        } else {
-          setIsMember(false);
-          localStorage.removeItem("ladidier_member");
-        }
-      })
-      // On a network failure leave the current state alone rather than locking
-      // out a paying member because their connection dropped.
-      .catch((err) => console.error("Could not verify membership:", err));
-
-    return () => { cancelled = true; };
-  }, []);
-
   // Identify the signed-in visitor from the httpOnly session cookie. We do not
   // mirror this identity into localStorage or sessionStorage — the httpOnly cookie
   // is the single source of truth, and a local copy would risk becoming stale.
@@ -89,27 +55,72 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
-  // Phase 8: Cross-device membership.
-  // When a user is signed in, check if they have an active subscription via
-  // their linked Stripe customer. If they do, elevate isMember to true.
-  // Note: we never set isMember to false here, to preserve legacy cookie access.
+  // Single membership resolver. Two independent answers can grant access —
+  // the legacy browser-cookie-bound Checkout Session, and the account-linked
+  // Stripe customer — so both are asked together and isMember is the OR of
+  // whichever is true. Two separate effects previously wrote isMember from
+  // two independent async sources, so whichever settled last silently won,
+  // and a real member could be locked out by the slower request finishing
+  // with a stale "false". One effect, one resolution, avoids that.
   useEffect(() => {
-    if (!user) return;
-    
+    const CHECKED_AT = "ladidier_member_checked";
+    const RECHECK_AFTER = 6 * 60 * 60 * 1000;
+    const checkedAt = Number(localStorage.getItem(CHECKED_AT) || 0);
+
+    // Members are re-checked on a schedule; everyone else is checked every load,
+    // which costs nothing (with no cookie the endpoint answers without calling
+    // Stripe) and lets a member who cleared local storage recover access.
+    // isMember is read directly here (not via the dependency array below) —
+    // this is the recheck-skip guard, not a reason to re-run the effect.
+    if (isMember && Date.now() - checkedAt < RECHECK_AFTER) return;
+
+    // Wait until we know whether there is a signed-in user before asking either
+    // question, so the account request (if any) is only sent once, not fired
+    // speculatively before authReady and then again once user resolves.
+    if (!authReady) return;
+
     let cancelled = false;
-    fetch("/api/account/status", { credentials: "same-origin" })
-      .then(r => r.json())
-      .then(d => {
-        if (cancelled) return;
-        if (d.active) {
-          setIsMember(true);
-          localStorage.setItem("ladidier_member", "true");
-        }
-      })
-      .catch(err => console.error("Could not verify account membership status:", err));
+
+    const askLegacy = fetch("/api/entitlement", { credentials: "same-origin" })
+      .then((r) => r.json())
+      .then((d) => (typeof d.active === "boolean" ? d.active : null))
+      .catch((err) => {
+        console.error("Could not verify membership:", err);
+        return null;
+      });
+
+    // With no signed-in user the account path has a definitive answer — false —
+    // without a request; it does not need to be asked to know nobody is linked.
+    const askAccount = user
+      ? fetch("/api/account/status", { credentials: "same-origin" })
+          .then((r) => r.json())
+          .then((d) => (typeof d.active === "boolean" ? d.active : null))
+          .catch((err) => {
+            console.error("Could not verify account membership status:", err);
+            return null;
+          })
+      : Promise.resolve(false);
+
+    Promise.all([askLegacy, askAccount]).then(([legacy, account]) => {
+      if (cancelled) return;
+
+      if (legacy === true || account === true) {
+        setIsMember(true);
+        localStorage.setItem("ladidier_member", "true");
+        localStorage.setItem(CHECKED_AT, String(Date.now()));
+      } else if (legacy !== null && account !== null) {
+        // Both sources answered definitively and neither granted access.
+        setIsMember(false);
+        localStorage.removeItem("ladidier_member");
+        localStorage.setItem(CHECKED_AT, String(Date.now()));
+      }
+      // Otherwise at least one source is unknown (network/parse failure) —
+      // leave state and storage untouched rather than risk locking out a
+      // paying member because one request failed.
+    });
 
     return () => { cancelled = true; };
-  }, [user]);
+  }, [authReady, user]);
 
 
   // simple hash routing

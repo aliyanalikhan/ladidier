@@ -1,4 +1,5 @@
 import { stateCookie } from '../../lib/session.js';
+import { safeReturnTo } from '../../lib/routes.js';
 
 export async function GET(request) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -15,9 +16,7 @@ export async function GET(request) {
 
   const url = new URL(request.url);
   const rawReturnTo = url.searchParams.get('returnTo');
-  // Allow only lowercase alphanumeric hash route names (e.g., 'subscribe')
-  // to prevent open-redirect vulnerabilities.
-  const returnTo = rawReturnTo && /^[a-z]+$/.test(rawReturnTo) ? rawReturnTo : 'subscribe';
+  const returnTo = safeReturnTo(rawReturnTo);
 
   const nonce = crypto.randomUUID();
   const statePayload = `${nonce}:${returnTo}`;
