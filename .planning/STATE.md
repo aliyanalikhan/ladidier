@@ -134,7 +134,7 @@ None yet.
 | 260901-nbh | fix "No billing history" error reachable from Manage billing on Subscribe/Account pages for legacy-cookie-only members with no linked Stripe customer | 2026-09-01 | c58d256 | Needs Review | [260901-nbh-fix-no-billing-history-error-for-legacy-only-m](.planning/quick/260901-nbh-fix-no-billing-history-error-for-legacy-only-m/) |
 | 260901-liv | swap Vercel Production off Stripe test mode back to live keys (secret key, 4 prices, new webhook secret), redeployed | 2026-09-01 | (infra, no code commit) | Complete | [260901-liv-swap-production-back-to-live-stripe-keys](.planning/quick/260901-liv-swap-production-back-to-live-stripe-keys/) |
 | 260902-mag | magazine reader spread view, Magazine page bottom image, new highlight photo, sitewide free-reading copy removal, Subscribe page redesigned into 4 explicit plans | 2026-09-02 | ed1ee40 | Needs Review | [260902-mag-magazine-spread-view-paywall-copy-4-plan-res](.planning/quick/260902-mag-magazine-spread-view-paywall-copy-4-plan-res/) |
-| 260902-hl2 | added the 2nd pending highlight photo (astronaut manifesto) to the Magazine page | 2026-09-02 | (pending) | Complete | [260902-hl2-add-second-highlight-photo-astronaut-manifest](.planning/quick/260902-hl2-add-second-highlight-photo-astronaut-manifest/) |
+| 260902-hl2 | added the 2nd pending highlight photo (astronaut manifesto) to the Magazine page | 2026-09-02 | 632b44c | Complete | [260902-hl2-add-second-highlight-photo-astronaut-manifest](.planning/quick/260902-hl2-add-second-highlight-photo-astronaut-manifest/) |
 
 ## Session Continuity
 
