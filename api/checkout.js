@@ -1,4 +1,6 @@
+import { ensureStripeCustomer } from '../lib/account.js';
 import { PRICE_ENV } from '../lib/plans.js';
+import { readSession } from '../lib/session.js';
 import { getStripe } from '../lib/stripe.js';
 
 // Resolved product -> price lookups, kept for the life of a warm instance so a
@@ -92,6 +94,15 @@ export async function POST(request) {
     return Response.json({ error: 'Unknown plan' }, { status: 400 });
   }
 
+  // Every key in PRICE_ENV is a paid plan (online or hardcopy), so checking
+  // for an authenticated session here gates all paid subscriptions before any
+  // price resolution or Stripe round trip. The free Reader tier is handled
+  // entirely on the client and never reaches this route.
+  const session = await readSession(request.headers.get('cookie'));
+  if (!session) {
+    return Response.json({ error: 'Sign in to subscribe' }, { status: 401 });
+  }
+
   const configured = process.env[envName];
   if (!configured) {
     console.error(`[stripe] ${envName} is not set`);
@@ -111,7 +122,15 @@ export async function POST(request) {
   const origin = `${proto}://${host}`;
 
   try {
-    const session = await stripe.checkout.sessions.create({
+    const customer = await ensureStripeCustomer({
+      userId: session.uid,
+      email: session.email,
+      name: session.name,
+      stripe
+    });
+
+    const checkoutSession = await stripe.checkout.sessions.create({
+      customer,
       mode: 'subscription',
       line_items: [{ price, quantity: 1 }],
       // Only ask for a delivery address when something physical is being posted.
@@ -137,7 +156,7 @@ export async function POST(request) {
       cancel_url: `${origin}/?checkout=canceled#subscribe`,
     });
 
-    return Response.json({ url: session.url });
+    return Response.json({ url: checkoutSession.url });
   } catch (err) {
     // Log the detail, return something opaque — Stripe errors can echo config.
     console.error('[stripe] could not create Checkout Session:', err);

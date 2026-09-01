@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Accounts & Cross-Device Membership
-current_phase: 7
-current_phase_name: OAuth + Database Foundation
-status: planning
-stopped_at: Phase 07 UI-SPEC approved
-last_updated: "2026-08-31T23:39:40.721Z"
+current_phase: 09
+current_phase_name: account-and-billing-page
+status: completed
+stopped_at: Phase 09 complete
+last_updated: "2026-09-01T06:26:00.000Z"
 last_activity: 2026-09-01
-last_activity_desc: "v1.2 ROADMAP.md written (Phase 7: OAuth + Database Foundation, Phase 8: Stripe-Customer Linking, Phase 9: Account & Billing Page)"
+last_activity_desc: "Phase 09 (account-and-billing-page) executed and verified. Account dashboard, Stripe portal, and address form are fully functional."
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 3
   total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-01)
 
 **Core value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
-**Current focus:** Phase 7 — OAuth + Database Foundation (roadmap just defined; not yet planned)
+**Current focus:** Milestone v1.2 Complete
 
 ## Current Position
 
-Phase: Phase 7 (OAuth + Database Foundation) — not started
-Plan: —
-Status: Roadmap defined for v1.2 (Phases 7-9) — ready for `/gsd-plan-phase 7`
-Last activity: 2026-09-01 — v1.2 ROADMAP.md written (Phase 7: OAuth + Database Foundation, Phase 8: Stripe-Customer Linking, Phase 9: Account & Billing Page)
+Phase: 09 (account-and-billing-page) — COMPLETED
+Plan: 3 of 3 completed
+Status: Phase 09 Complete
+Last activity: 2026-09-01 — Phase 09 verified
 
 ## Out-of-band work
 

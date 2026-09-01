@@ -101,7 +101,7 @@ function Logo({ height = 30 }) {
 }
 
 /* ── Nav ──────────────────────────────────────────────────── */
-function Nav({ route, setRoute }) {
+function Nav({ route, setRoute, user, authReady }) {
   const item = (slug, label) => (
     <a href={`#${slug}`}
        className={route === slug ? "active" : ""}
@@ -109,6 +109,8 @@ function Nav({ route, setRoute }) {
       {label}
     </a>
   );
+
+  const returnTo = /^[a-z]+$/.test(route) ? route : "subscribe";
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -135,6 +137,29 @@ function Nav({ route, setRoute }) {
         </div>
         <div className="nav-right">
           <a href="#search" onClick={(e) => e.preventDefault()}>Search</a>
+          {authReady && (
+            user ? (
+              <a
+                href="#account"
+                className="nav-signin"
+                title={user.email}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setRoute("account");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                {user.name || user.email}
+              </a>
+            ) : (
+              <a
+                href={`/api/auth/google?returnTo=${returnTo}`}
+                className="nav-signin"
+              >
+                Sign in
+              </a>
+            )
+          )}
           {item("subscribe", "Subscribe")}
           <a href="#account" onClick={(e) => e.preventDefault()} className="mono" style={{ fontSize: 11, letterSpacing: ".1em" }}>EN · USD</a>
           <TreasureProgress />

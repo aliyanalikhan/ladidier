@@ -175,6 +175,14 @@ hr.rule-strong {
   content: ''; position: absolute; left: 0; right: 0; bottom: -6px;
   height: 1px; background: var(--fg);
 }
+.nav-signin {
+  display: inline-block;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
 
 /* Buttons */
 .btn {

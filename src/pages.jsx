@@ -23,6 +23,8 @@ import {
 } from './ornaments.jsx';
 import { TreasureIcon } from './treasure.jsx';
 
+const PENDING_PLAN = "ladidier_pending_plan";
+
 /* ═══════════════════════════════════════════════════════════
    HOME — three hero variants + shared body
    ═══════════════════════════════════════════════════════════ */
@@ -793,11 +795,24 @@ function StoresPage({ setRoute }) {
    SUBSCRIBE
    ═══════════════════════════════════════════════════════════ */
 
-function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
+function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser, authReady }) {
   const [plan, setPlan] = useState("online");
   const [billing, setBilling] = useState("yearly");
   const [loading, setLoading] = useState(false);
   const [prices, setPrices] = useState(null);
+
+  const handleSignOut = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+    } catch (err) {
+      console.error("Could not sign out:", err);
+    } finally {
+      setUser(null);
+    }
+  };
 
   // Stripe is the source of truth for what a plan costs, so the cards render
   // whatever it reports. Nothing here records an amount, which is what keeps the
@@ -834,14 +849,14 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
 
   const perLabel = billing === "yearly" ? "/year" : "/month";
 
-  const handleSelectPlan = async (product) => {
-    if (product === "reader") {
-      setIsSubscribed(true);
-      localStorage.setItem("ladidier_subscribed", "true");
-      setRoute("magazine");
-      return;
-    }
+  // Store the user's intent in sessionStorage so an abandoned checkout attempt
+  // dies with the tab rather than persisting to future visits.
+  const startLogin = (product) => {
+    sessionStorage.setItem(PENDING_PLAN, JSON.stringify({ product, billing }));
+    window.location.href = "/api/auth/google?returnTo=subscribe";
+  };
 
+  const startCheckout = async (product, interval = billing) => {
     setPlan(product);
     setLoading(true);
     try {
@@ -849,8 +864,16 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // The server maps this key to a price id — the browser never names a price.
-        body: JSON.stringify({ planType: `${product}_${billing}` }),
+        // interval is taken as an argument rather than read from state so that
+        // the post-login resume effect can set billing and launch checkout in
+        // the same render tick without stale state issues.
+        body: JSON.stringify({ planType: `${product}_${interval}` }),
       });
+
+      if (response.status === 401) {
+        startLogin(product);
+        return;
+      }
 
       if (!response.ok) throw new Error('Checkout response not ok');
       const data = await response.json();
@@ -867,6 +890,44 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
       setLoading(false);
     }
   };
+
+  const handleSelectPlan = async (product) => {
+    if (product === "reader") {
+      setIsSubscribed(true);
+      localStorage.setItem("ladidier_subscribed", "true");
+      setRoute("magazine");
+      return;
+    }
+
+    setPlan(product);
+    if (!user) {
+      startLogin(product);
+      return;
+    }
+
+    await startCheckout(product);
+  };
+
+  // Resume checkout if returning from Google sign-in with a pending plan intent.
+  useEffect(() => {
+    if (!authReady || !user) return;
+
+    const raw = sessionStorage.getItem(PENDING_PLAN);
+    if (!raw) return;
+    sessionStorage.removeItem(PENDING_PLAN);
+
+    try {
+      const { product, billing: savedBilling } = JSON.parse(raw);
+      if (product && (product === "online" || product === "hardcopy")) {
+        const targetBilling = savedBilling === "monthly" ? "monthly" : "yearly";
+        setBilling(targetBilling);
+        setPlan(product);
+        startCheckout(product, targetBilling);
+      }
+    } catch (err) {
+      console.error("Could not resume pending plan checkout:", err);
+    }
+  }, [authReady, user]);
 
   return (
     <div className="page-fade">
@@ -888,6 +949,54 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed }) {
       </header>
 
       <section className="section container">
+        {/* Sign-in / sign-out row. Renders only when auth state is resolved. */}
+        {authReady && (
+          <div
+            className="flex"
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 24,
+            }}
+          >
+            {user ? (
+              <>
+                <span
+                  className="muted"
+                  title={user.email}
+                  style={{
+                    fontSize: 13,
+                    maxWidth: 320,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Signed in as {user.email}
+                </span>
+                <button className="btn ghost" onClick={handleSignOut}>
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="muted" style={{ fontSize: 13 }}>
+                  Members sign in with Google.
+                </span>
+                <button
+                  className="btn ghost"
+                  onClick={() => {
+                    window.location.href = "/api/auth/google?returnTo=subscribe";
+                  }}
+                >
+                  Sign in with Google
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Billing interval. Switching it re-labels the cards and changes which
             price key handleSelectPlan sends, so no separate plan list is needed. */}
         <div className="flex" style={{ justifyContent: "center", gap: 0, marginBottom: 56 }}>
@@ -1084,6 +1193,136 @@ function AboutPage({ setRoute }) {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════
+   ACCOUNT — dashboard
+   ═══════════════════════════════════════════════════════════ */
+
+function AccountPage({ setRoute, user, isMember }) {
+  const [address, setAddress] = useState({ line1: "", city: "", state: "", postal_code: "", country: "" });
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    fetch("/api/address", { credentials: "same-origin" })
+      .then(r => r.json())
+      .then(d => { if (!cancelled && d.address) setAddress(d.address); })
+      .catch(e => console.error("Could not fetch address", e));
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const handleSaveAddress = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMsg("");
+    try {
+      const res = await fetch("/api/address", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(address)
+      });
+      if (res.ok) setMsg("Address saved.");
+      else setMsg("Error saving address.");
+    } catch {
+      setMsg("Error saving address.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    try {
+      const res = await fetch("/api/account/portal", { credentials: "same-origin" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Could not open billing portal.");
+      }
+    } catch (e) {
+      alert("Error opening billing portal.");
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
+    } catch (e) {
+      console.error(e);
+    }
+    window.location.href = "/";
+  };
+
+  if (!user) {
+    return (
+      <div className="page-fade container" style={{ paddingTop: 120, minHeight: "60vh" }}>
+        <div className="eyebrow">Account</div>
+        <p style={{ marginTop: 20 }}>Please sign in to view your account.</p>
+        <button className="btn" style={{ marginTop: 20 }} onClick={() => setRoute("subscribe")}>Sign In</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-fade account-dash" style={{ padding: "120px var(--gutter) 80px", maxWidth: 980, margin: "0 auto", minHeight: "75vh" }}>
+      <header className="page-head" style={{ padding: 0, marginBottom: 64, border: "none" }}>
+        <h1 className="display h2" style={{ margin: 0 }}>Your <em style={{ fontStyle: "italic", color: "var(--gold)" }}>Account</em>.</h1>
+      </header>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 64 }}>
+        <div className="col gap-40">
+          <section className="account-section">
+            <div className="eyebrow" style={{ marginBottom: 24 }}>Profile</div>
+            <div className="flex" style={{ gap: 20, alignItems: "center" }}>
+              {user.picture && <img src={user.picture} alt="Avatar" className="account-avatar" style={{ width: 64, height: 64, borderRadius: "50%", border: "1px solid var(--line)" }} />}
+              <div>
+                <div className="display" style={{ fontSize: 24 }}>{user.name || "Member"}</div>
+                <div className="mono muted" style={{ fontSize: 13, marginTop: 4 }}>{user.email}</div>
+              </div>
+            </div>
+            <button className="btn ghost" onClick={handleSignOut} style={{ marginTop: 24 }}>Sign out</button>
+          </section>
+
+          <section className="account-section">
+            <div className="eyebrow" style={{ marginBottom: 24 }}>Membership & Billing</div>
+            <div style={{ fontSize: 18, marginBottom: 8, color: "var(--ink)" }}>
+              {isMember ? "Status: Active (Digital & Print)" : "Status: No Active Membership"}
+            </div>
+            <p className="muted" style={{ fontSize: 14, marginBottom: 24, maxWidth: "34ch", lineHeight: 1.5 }}>
+              Manage your subscription, update your payment methods, or view your invoice history through our secure billing portal.
+            </p>
+            <button className="btn" onClick={handleManageBilling}>Manage billing →</button>
+          </section>
+        </div>
+
+        <section className="account-section">
+          <div className="eyebrow" style={{ marginBottom: 24 }}>Delivery Address</div>
+          <p className="muted" style={{ fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
+            Where should we send your seasonal copies of ÉcLAT? Updating this address does not affect past orders.
+          </p>
+          <form onSubmit={handleSaveAddress} className="col gap-16">
+            <input className="account-input" placeholder="Address Line 1" value={address.line1 || ""} onChange={e => setAddress({...address, line1: e.target.value})} required />
+            <div className="flex gap-16" style={{ flexWrap: "wrap" }}>
+              <input className="account-input" placeholder="City" style={{ flex: "2 1 120px" }} value={address.city || ""} onChange={e => setAddress({...address, city: e.target.value})} required />
+              <input className="account-input" placeholder="State/Province" style={{ flex: "1 1 80px" }} value={address.state || ""} onChange={e => setAddress({...address, state: e.target.value})} />
+            </div>
+            <div className="flex gap-16" style={{ flexWrap: "wrap" }}>
+              <input className="account-input" placeholder="Postal Code" style={{ flex: "1 1 80px" }} value={address.postal_code || ""} onChange={e => setAddress({...address, postal_code: e.target.value})} required />
+              <input className="account-input" placeholder="Country" style={{ flex: "2 1 120px" }} value={address.country || ""} onChange={e => setAddress({...address, country: e.target.value})} required />
+            </div>
+            <div className="flex gap-16 center" style={{ marginTop: 8 }}>
+              <button type="submit" className="btn solid" disabled={loading}>{loading ? "Saving..." : "Save address"}</button>
+              {msg && <span className="mono" style={{ fontSize: 12, color: "var(--gold)" }}>{msg}</span>}
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 export {
-  HomePage, MagazinePage, ArticlePage, StoresPage, SubscribePage, AboutPage, SubscribeBanner,
+  HomePage, MagazinePage, ArticlePage, StoresPage, SubscribePage, AboutPage, SubscribeBanner, AccountPage,
 };

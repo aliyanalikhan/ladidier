@@ -168,15 +168,15 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 07-01-PLAN.md — Tracer: package legitimacy gate, Vercel Postgres + Google OAuth provisioning, `users` schema + `lib/db.js` + `lib/session.js` + the four `api/auth/*` routes
+- [x] 07-01-PLAN.md — Tracer: package legitimacy gate, Vercel Postgres + Google OAuth provisioning, `users` schema + `lib/db.js` + `lib/session.js` + the four `api/auth/*` routes
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 07-02-PLAN.md — Client auth state in `App`, Nav sign-in indicator (+ `.nav-signin` CSS), Subscribe page sign-in/sign-out row
+- [x] 07-02-PLAN.md — Client auth state in `App`, Nav sign-in indicator (+ `.nav-signin` CSS), Subscribe page sign-in/sign-out row
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 07-03-PLAN.md — 401 session gate on `POST /api/checkout`, sign-in-then-resume flow on Subscribe, and the phase click-through gate on production
+- [x] 07-03-PLAN.md — 401 session gate on `POST /api/checkout`, sign-in-then-resume flow on Subscribe, and the phase click-through gate on production
 
 **Planning note (kept for Phase 8/9 reference)**: these plans reuse Tasks 1-5 of the unexecuted draft `.planning/quick/260831-8ug-user-should-login-before-subscription-al/260831-8ug-PLAN.md` rather than re-deriving the approach — do not delete or move that file. Two deliberate deviations from it: the session lifetime is 7 days (not 30), and its Task 6 (addresses table, `lib/shipping.js`, `api/address.js`, in-app address form) is deferred to Phase 9 and must be replanned there rather than copied. That draft's `api/checkout.js` change also passes `customer_email` into Stripe Checkout session creation; Phase 7 deliberately omits it and Phase 8 must use a stored `customer:` id instead — `customer_email` is the exact anti-pattern that creates duplicate Stripe customers (see Phase 8).
 **Regression check**: `git diff` against `api/entitlement.js`, `api/verify-session.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js` must be empty
@@ -227,9 +227,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Copy & CTA Conversion Pass | v1.1 | 5/5 | Complete   | 2026-08-20 |
 | 5. Hidden Perks Discovery Feature | v1.1 | 1/3 | In Progress|  |
 | 6. Mall Treasure Hunt | v1.1 | 0/4 | Planned | - |
-| 7. OAuth + Database Foundation | v1.2 | 0/3 | Planned | - |
-| 8. Stripe-Customer Linking | v1.2 | 0/TBD | Planned | - |
-| 9. Account & Billing Page | v1.2 | 0/TBD | Planned | - |
+| 7. OAuth + Database Foundation | v1.2 | 3/3 | Complete | 2026-09-01 |
+| 8. Stripe-Customer Linking | v1.2 | 3/3 | Complete | 2026-09-01 |
+| 9. Account & Billing Page | v1.2 | 3/3 | Complete | 2026-09-01 |
 
 ---
 *Roadmap created: 2026-05-19 — v1.0 Mobile Responsiveness & Vercel Deploy*

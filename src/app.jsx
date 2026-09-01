@@ -9,6 +9,7 @@ import {
   ArticlePage,
   StoresPage,
   SubscribePage,
+  AccountPage,
   AboutPage,
 } from './pages.jsx';
 import { TreasureHuntComplete } from './treasure.jsx';
@@ -21,6 +22,8 @@ export default function App() {
   //   isMember     — has a live paid subscription; gates the digital edition
   const [isSubscribed, setIsSubscribed] = useState(() => localStorage.getItem("ladidier_subscribed") === "true");
   const [isMember, setIsMember] = useState(() => localStorage.getItem("ladidier_member") === "true");
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
 
   // THEME is a frozen constant now that the Tweaks panel is gone, so this runs
   // once rather than tracking individual palette/typeset changes.
@@ -59,6 +62,55 @@ export default function App() {
 
     return () => { cancelled = true; };
   }, []);
+
+  // Identify the signed-in visitor from the httpOnly session cookie. We do not
+  // mirror this identity into localStorage or sessionStorage — the httpOnly cookie
+  // is the single source of truth, and a local copy would risk becoming stale.
+  // authReady is set to true on both success and failure because it signals that
+  // we have finished asking, allowing UI components to distinguish between
+  // "not signed in" and "still waiting for server response".
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me", { credentials: "same-origin" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        setUser(d.user || null);
+        setAuthReady(true);
+      })
+      .catch((err) => {
+        console.error("Could not verify auth session:", err);
+        if (!cancelled) {
+          setUser(null);
+          setAuthReady(true);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // Phase 8: Cross-device membership.
+  // When a user is signed in, check if they have an active subscription via
+  // their linked Stripe customer. If they do, elevate isMember to true.
+  // Note: we never set isMember to false here, to preserve legacy cookie access.
+  useEffect(() => {
+    if (!user) return;
+    
+    let cancelled = false;
+    fetch("/api/account/status", { credentials: "same-origin" })
+      .then(r => r.json())
+      .then(d => {
+        if (cancelled) return;
+        if (d.active) {
+          setIsMember(true);
+          localStorage.setItem("ladidier_member", "true");
+        }
+      })
+      .catch(err => console.error("Could not verify account membership status:", err));
+
+    return () => { cancelled = true; };
+  }, [user]);
+
 
   // simple hash routing
   useEffect(() => {
@@ -129,14 +181,15 @@ export default function App() {
     case "magazine":  page = <MagazinePage  setRoute={go} isMember={isMember} />; break;
     case "article":   page = <ArticlePage   setRoute={go} />; break;
     case "stores":    page = <StoresPage    setRoute={go} />; break;
-    case "subscribe": page = <SubscribePage setRoute={go} isSubscribed={isSubscribed} setIsSubscribed={setIsSubscribed} />; break;
+    case "subscribe": page = <SubscribePage setRoute={go} isSubscribed={isSubscribed} setIsSubscribed={setIsSubscribed} user={user} setUser={setUser} authReady={authReady} />; break;
+    case "account":   page = <AccountPage   setRoute={go} user={user} isMember={isMember} />; break;
     case "about":     page = <AboutPage     setRoute={go} />; break;
     default:          page = <HomePage      setRoute={go} heroVariant={THEME.hero} />;
   }
 
   return (
     <>
-      <Nav route={route} setRoute={go} />
+      <Nav route={route} setRoute={go} user={user} authReady={authReady} />
       {/* The key remount is what drives the .page-fade entry animation. */}
       <main key={route}>{page}</main>
       <Footer setRoute={go} />
