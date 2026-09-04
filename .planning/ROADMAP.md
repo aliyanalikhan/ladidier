@@ -5,6 +5,7 @@
 - ✅ **v1.0 Mobile Responsiveness & Vercel Deploy** - Phases 1-3 (shipped 2026-08-20, confirmed live)
 - 🚧 **v1.1 Shopping Mall Conversion Pass** - Phases 4-6 (in progress)
 - 🚧 **v1.2 Accounts & Cross-Device Membership** - Phases 7-9 (planned)
+- 🚧 **v1.3 AI Video Avatar FAQ Concierge** - Phases 10-12 (planned)
 
 ## Phases
 
@@ -214,10 +215,71 @@ Plans:
 **Regression check**: `git diff` against `api/entitlement.js`, `api/verify-session.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js` must be empty
 **UI hint**: yes
 
+### 🚧 v1.3 AI Video Avatar FAQ Concierge (Planned)
+
+**Milestone Goal:** Add a floating, bottom-right popup widget to the homepage where a pre-recorded AI avatar answers 15 categorized FAQs via existing video files — a premium video concierge, not a text chatbot.
+
+**Summary:**
+
+- [ ] **Phase 10: Avatar Video Engine — Data, State Machine & Playback** - FAQ/video data file + state machine wired to a real video element (intro → idle loop → answer → idle, immediate mid-answer cut)
+- [ ] **Phase 11: Widget UI — Launcher, Categories & Bespoke Chrome** - Bottom-right launcher, 4-category/15-question accordion, on-brand non-chatbot styling
+- [ ] **Phase 12: Accessibility, Robustness & Responsiveness** - Keyboard/screen-reader support, reduced-motion, background-audio cleanup, responsive sizing, asset-failure fallback
+
+#### Phase 10: Avatar Video Engine — Data, State Machine & Playback
+
+**Goal**: Visitors experience the full avatar video sequence on the homepage — intro autoplay, looping idle, instant question-to-answer playback, clean return to idle, and immediate mid-answer interrupts — all driven by a correctly-modeled state machine and a FAQ-to-video data structure kept separate from UI code
+**Depends on**: Nothing new — continues phase numbering after Phase 9; no functional dependency on v1.1/v1.2 work
+**Requirements**: AVATAR-01, AVATAR-02, AVATAR-03, AVATAR-04, AVATAR-05, AVATAR-06, FAQ-04
+**Success Criteria** (what must be TRUE):
+
+  1. On homepage load, the widget's intro video autoplays muted; once it finishes, the idle video begins looping continuously until a question is selected
+  2. Clicking any FAQ question immediately plays that question's answer video with audio enabled, replacing the idle loop
+  3. When an answer video finishes, playback automatically returns to the looping idle video
+  4. Clicking a different question while an answer is playing cuts immediately to the new question's answer video — no queueing, no waiting for the interrupted clip to finish
+  5. The intro plays once per homepage visit — it never replays on a re-render, and only plays again if the visitor navigates away from the homepage and back
+
+**Plans**: TBD
+**Research note** (per research/SUMMARY.md): build and manually exercise the FAQ-to-video data module (FAQ-04) and the phase/transition reducer (intro/idle/answering + a stale-event generation-counter guard) before wiring to a real `<video>` element — the mid-answer interrupt rule (AVATAR-05) is the most expensive thing to get wrong retroactively. iOS Safari autoplay/Low-Power-Mode behavior is flagged as needing a focused pass during planning; verify muted+playsInline+autoPlay together on a real device, and always `.catch()` the `play()` promise (distinguish expected `AbortError` from a real `NotAllowedError`).
+**UI hint**: yes
+
+#### Phase 11: Widget UI — Launcher, Categories & Bespoke Chrome
+
+**Goal**: Visitors can discover, open, and navigate the widget through a premium, on-brand interface — not a generic chatbot — reaching any of the 15 questions across 4 categories on desktop, tablet, and mobile
+**Depends on**: Phase 10 (needs a working video engine to mount the UI around)
+**Requirements**: FAQ-01, FAQ-02, FAQ-03, WIDGET-01, WIDGET-02, WIDGET-03, WIDGET-04
+**Success Criteria** (what must be TRUE):
+
+  1. A floating widget appears bottom-right on the homepage only — never as a hero section, never on any other page — styled with the existing LaDidiér fonts/palette/spacing and with no generic chatbot chrome (no speech bubbles, "online" dot, or typing indicator)
+  2. The visitor can browse all 15 questions organized under 4 categories (About LaDidiér, Shipping & Delivery, Orders/Returns & Exchanges, Payments & Customer Support); clicking a question shows a visible selected/"Playing" state
+  3. On mobile, the visitor reaches any question without all 15 being shown at once — category-first or accordion navigation
+  4. The visitor can close or minimize the widget at any time via a persistent, always-reachable control
+  5. The widget's stacking never gets obscured by, or conflicts with, other homepage overlays (mobile nav overlay, hidden perk, treasure hunt icons)
+
+**Plans**: TBD
+**Research note** (per research/SUMMARY.md): directly reuses this codebase's existing `.perk-reveal`/`.treasure-reveal` popup precedent (Escape-to-close, no focus trap) — flagged as low technical risk with standard patterns already proven in this repo. Idle-loop footage quality (does `Idle.mp4` read as a natural "alive" loop, not an obvious repeat) is a content decision to confirm with the content owner during this phase, not assumable from research.
+**UI hint**: yes
+
+#### Phase 12: Accessibility, Robustness & Responsiveness
+
+**Goal**: The widget is fully usable and safe for every visitor — keyboard and screen-reader users, reduced-motion preferences, background/navigation edge cases, every screen size, and missing-asset failures
+**Depends on**: Phase 11 (needs the real UI in place to verify against)
+**Requirements**: A11Y-01, A11Y-02, A11Y-03, A11Y-04, A11Y-05
+**Success Criteria** (what must be TRUE):
+
+  1. Every question is a keyboard-operable button (Tab/Enter/Space) with a visible focus state and a correct ARIA label read by screen readers
+  2. A visitor with `prefers-reduced-motion` enabled does not get forced autoplay/motion
+  3. Navigating away from the homepage immediately stops any playing video/audio — nothing keeps playing in the background
+  4. The widget is fully usable on desktop, tablet, and mobile without excessive vertical video height
+  5. A missing or failed video asset shows a graceful fallback — no broken player, no crash
+
+**Plans**: TBD
+**Research note** (per research/SUMMARY.md): WCAG 1.4.2 audio-control requirements and Vercel plan-tier/bandwidth verification (~250MB of new static assets; Hobby plan caps at 100MB total static-file uploads) are one-time checks to confirm against current official docs during planning, not assumed from research alone — treat as a pre-merge checklist item before the first production deploy that includes the avatar video assets.
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -230,6 +292,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 7. OAuth + Database Foundation | v1.2 | 3/3 | Complete | 2026-09-01 |
 | 8. Stripe-Customer Linking | v1.2 | 3/3 | Complete | 2026-09-01 |
 | 9. Account & Billing Page | v1.2 | 3/3 | Complete | 2026-09-01 |
+| 10. Avatar Video Engine — Data, State Machine & Playback | v1.3 | 0/TBD | Not started | - |
+| 11. Widget UI — Launcher, Categories & Bespoke Chrome | v1.3 | 0/TBD | Not started | - |
+| 12. Accessibility, Robustness & Responsiveness | v1.3 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-05-19 — v1.0 Mobile Responsiveness & Vercel Deploy*
@@ -242,3 +307,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 *Phase 6 planned: 2026-08-22 — 4 plans, 4 waves (sequential: build core → popup+CSS → wire in → gate; every plan after 01 depends on the file the previous one created)*
 *Phase 7 planned: 2026-09-01 — 3 plans, 3 waves (sequential: tracer proves sign-in end-to-end → client surfaces consume it → checkout gate and phase click-through; Plans 02 and 03 both edit src/pages.jsx so they cannot share a wave)*
 *v1.2 roadmap added: 2026-09-01 — Phase 7 (OAuth + Database Foundation), Phase 8 (Stripe-Customer Linking), Phase 9 (Account & Billing Page), continuing phase numbering from Phase 6; derived from research/SUMMARY.md's validated three-phase dependency chain (identity → linking → UI). Phase 7 has an existing unexecuted draft plan to reuse (260831-8ug); Phase 8 is flagged highest-risk and gated on the pending Stripe live-key revert; all three phases carry a standing regression check against the five frozen legacy entitlement files.*
+*v1.3 roadmap added: 2026-09-05 — Phase 10 (Avatar Video Engine — Data, State Machine & Playback), Phase 11 (Widget UI — Launcher, Categories & Bespoke Chrome), Phase 12 (Accessibility, Robustness & Responsiveness), continuing phase numbering from Phase 9; derived from research/SUMMARY.md's proposed 4-phase structure (Data+State Machine → Video Playback+Lifecycle → Widget UI → Accessibility/Mobile/Deployment), compressed to 3 roadmap phases by folding the data-module/reducer-only phase into Phase 10 — a reducer with no rendered UI produces no human-observable behavior, so research's recommended build order (data + state machine before DOM wiring) is preserved as internal Phase 10 plan sequencing rather than a separate roadmap phase. All 19 v1.3 requirements mapped, no orphans.*

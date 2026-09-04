@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: AI Video Avatar FAQ Concierge
 status: planning
-last_updated: "2026-09-04T15:27:04.881Z"
-last_activity: 2026-09-04
+last_updated: "2026-09-05T00:00:00.000Z"
+last_activity: 2026-09-05
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,17 +17,19 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-09-01)
+See: .planning/PROJECT.md (updated 2026-09-04)
 
 **Core value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
-**Current focus:** Milestone v1.2 Complete
+**Current focus:** Phase 10: Avatar Video Engine — Data, State Machine & Playback
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-09-04 — Milestone v1.3 started
+Phase: 10 of 12 (Avatar Video Engine — Data, State Machine & Playback)
+Plan: Not yet planned
+Status: Ready to plan
+Last activity: 2026-09-05 — v1.3 roadmap created (Phases 10-12); 19/19 requirements mapped, no orphans
+
+Progress: [░░░░░░░░░░] 0% (v1.3 — 0/3 phases)
 
 ## Out-of-band work
 
@@ -39,9 +41,7 @@ At the user's request, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and all fou
 
 </details>
 
-Paid Stripe membership was built and shipped to production on 2026-08-31 **outside the phase structure** — it belongs to no numbered phase and the progress counters above (scoped to v1.2) deliberately exclude it. It reversed the "no backend/API" scope decision; see PROJECT.md Key Decisions and Known Gaps.
-
-Progress: [░░░░░░░░░░] 0% (v1.2 — 0/3 phases; v1.1's prior 83% figure no longer applies now that the milestone has advanced)
+Paid Stripe membership was built and shipped to production on 2026-08-31 **outside the phase structure** — it belongs to no numbered phase and the progress counters above (scoped to v1.3) deliberately exclude it. It reversed the "no backend/API" scope decision; see PROJECT.md Key Decisions and Known Gaps.
 
 ## Performance Metrics
 
@@ -97,11 +97,14 @@ Progress: [░░░░░░░░░░] 0% (v1.2 — 0/3 phases; v1.1's prior
 - [Quick 260901-1lc]: Fixed a gap surfaced in conversation — subscribing to ÉcLAT Online charged a real Stripe subscription but delivered no visible benefit since MagazinePage dropped its isMember prop when the old paywall was retired. Added member-gated api/issue/pdf.js + api/issue/page.js (serving compressed content/eclat-vol2-issue.pdf and content/eclat-vol2-pages/*.jpg, kept outside public/ so the gate is a real server check) backed by a new checkActiveMembership() helper in lib/membership.js reusing api/entitlement.js's existing Stripe logic. MagazinePage now shows members a "Read the full issue" reader modal + "Download PDF"; free visitors see the unchanged teaser. Found and fixed a real bug during build: the reader modal's position:fixed backdrop was broken by .page-fade's transform animation creating a containing block — fixed via createPortal to document.body. Known gaps (not in scope): no one-time non-subscription purchase path; Subscribe page still doesn't recognize an existing member (risk of accidental double-subscribe); Hard Copy and Online get identical digital access by design (matches Hard Copy's own "Everything in Online" copy).
 - [v1.2 roadmap]: Phase numbering continues from Phase 6 (Phases 7-9) rather than resetting, per this milestone's phase_id_convention (sequential, no milestone prefix in config.json).
 - [v1.2 roadmap]: Stripe-customer linking (LINK-01..04) isolated into its own phase (8) rather than folded into Phase 7 or 9, because it concentrates the highest-severity new risks (duplicate customers, race conditions, account-takeover-by-email) — per research/SUMMARY.md's explicit phase-ordering rationale.
+- [v1.3 roadmap]: Phase numbering continues from Phase 9 (Phases 10-12) rather than resetting, per this milestone's phase_id_convention (sequential, no milestone prefix in config.json).
+- [v1.3 roadmap]: Compressed research/SUMMARY.md's proposed 4-phase split into 3 roadmap phases by folding "Data + State Machine Foundation" into "Video Playback + Lifecycle" (now Phase 10) — a standalone reducer/data-module phase has no rendered UI and therefore no human-observable success criteria. The research-recommended build order (data module + reducer built and manually exercised before wiring to a real `<video>` element) is preserved as internal Phase 10 plan sequencing, not lost.
 
 ### Roadmap Evolution
 
 - Phase 6 added: Mall Treasure Hunt — multi-page hidden-icon hunt (3-4 icons across Home/Stores/Magazine) with a "You found the treasure!" reveal, discount code, and subscribe/WhatsApp capture prompt. Runs alongside Phase 5's single hidden perk (user chose "keep both, side by side" over replacing it). Depends on Phase 5.
 - v1.2 roadmap added 2026-09-01: Phase 7 (OAuth + Database Foundation: AUTH-01..04, ACCT-01..02), Phase 8 (Stripe-Customer Linking: LINK-01..04), Phase 9 (Account & Billing Page: PROF-01..05) — derived from research/SUMMARY.md's validated three-phase dependency chain (identity must exist before anything links to it; linking is isolated as the highest-risk phase; the account/billing UI is a pure consumer of the prior two). Phase 7 has an existing, unexecuted draft plan (`260831-8ug`) covering most of its technical approach — flagged for reuse rather than re-derivation. All 15 v1.2 requirements mapped, no orphans.
+- v1.3 roadmap added 2026-09-05: Phase 10 (Avatar Video Engine — Data, State Machine & Playback: AVATAR-01..06 + FAQ-04), Phase 11 (Widget UI — Launcher, Categories & Bespoke Chrome: FAQ-01..03 + WIDGET-01..04), Phase 12 (Accessibility, Robustness & Responsiveness: A11Y-01..05) — derived from research/SUMMARY.md's proposed 4-phase structure, compressed to 3 phases (see Decisions). All 19 v1.3 requirements mapped, no orphans.
 
 ### Pending Todos
 
@@ -113,6 +116,9 @@ None yet.
 - Phase 5: `perks.jsx` script tag must be added to both `Ladidier Portal.html` and `Ladidier Portal-print.html` — `PrintApp` also renders `Footer`, so missing either causes a `ReferenceError`.
 - Phase 8: cannot be marked done in Production until the Stripe test-mode-to-live-key revert (see Out-of-band work above) is completed and verified with one successful live webhook delivery.
 - Phase 8: the webhook log-only-vs-actor decision (whether `api/webhook.js`-adjacent logic ever becomes a linking writer) needs an explicit recorded choice during `/gsd-plan-phase 8` — flagged by research/SUMMARY.md as needing deeper design review before task planning.
+- Phase 10: iOS Safari autoplay/Low-Power-Mode behavior (muted+playsInline+autoPlay together, real-device testing) and the stale-event generation-counter guard for rapid FAQ switching are flagged by research/SUMMARY.md as subtle enough to warrant a focused pass during `/gsd-plan-phase 10`.
+- Phase 11: Idle-loop footage quality (does `Idle.mp4` read as a natural "alive" loop vs. an obviously-repeating cheap loop) is a content decision that depends on footage already in hand — surface to the content owner during Phase 11, not assumed fine.
+- Phase 12: Vercel plan-tier and bandwidth verification for ~250MB of new video static assets (Hobby plan caps at 100MB total static-file uploads) must be confirmed in the actual Vercel dashboard before the first production deploy that includes the avatar video assets — flagged as a pre-merge checklist item by research/SUMMARY.md.
 
 ### Quick Tasks Completed
 
@@ -135,6 +141,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-31T23:18:42.746Z
-Stopped at: Phase 07 UI-SPEC approved
-Resume file: .planning/phases/07-oauth-database-foundation/07-UI-SPEC.md
+Last session: 2026-09-05
+Stopped at: v1.3 ROADMAP.md created (Phases 10-12), REQUIREMENTS.md traceability updated — ready for `/gsd-plan-phase 10`
+Resume file: None

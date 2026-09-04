@@ -237,6 +237,25 @@ Deferred to future milestones. Tracked but not in current roadmap.
 | PROF-03 | Phase 9 | Pending |
 | PROF-04 | Phase 9 | Pending |
 | PROF-05 | Phase 9 | Pending |
+| AVATAR-01 | Phase 10 | Pending |
+| AVATAR-02 | Phase 10 | Pending |
+| AVATAR-03 | Phase 10 | Pending |
+| AVATAR-04 | Phase 10 | Pending |
+| AVATAR-05 | Phase 10 | Pending |
+| AVATAR-06 | Phase 10 | Pending |
+| FAQ-04 | Phase 10 | Pending |
+| FAQ-01 | Phase 11 | Pending |
+| FAQ-02 | Phase 11 | Pending |
+| FAQ-03 | Phase 11 | Pending |
+| WIDGET-01 | Phase 11 | Pending |
+| WIDGET-02 | Phase 11 | Pending |
+| WIDGET-03 | Phase 11 | Pending |
+| WIDGET-04 | Phase 11 | Pending |
+| A11Y-01 | Phase 12 | Pending |
+| A11Y-02 | Phase 12 | Pending |
+| A11Y-03 | Phase 12 | Pending |
+| A11Y-04 | Phase 12 | Pending |
+| A11Y-05 | Phase 12 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 19 total
@@ -245,7 +264,10 @@ Deferred to future milestones. Tracked but not in current roadmap.
 - v1.2 requirements: 15 total
 - Mapped to phases: 15 (Phase 7: AUTH-01..04 + ACCT-01..02, Phase 8: LINK-01..04, Phase 9: PROF-01..05)
 - Unmapped: 0 ✓
+- v1.3 requirements: 19 total
+- Mapped to phases: 19 (Phase 10: AVATAR-01..06 + FAQ-04, Phase 11: FAQ-01..03 + WIDGET-01..04, Phase 12: A11Y-01..05)
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-05-19*
-*Last updated: 2026-09-01 — v1.2 (Accounts & Cross-Device Membership) requirements mapped to Phases 7-9 in ROADMAP.md; 100% coverage confirmed*
+*Last updated: 2026-09-05 — v1.3 (AI Video Avatar FAQ Concierge) requirements mapped to Phases 10-12 in ROADMAP.md; 100% coverage confirmed*
