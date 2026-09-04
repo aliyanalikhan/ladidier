@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Accounts & Cross-Device Membership
-current_phase: 09
-current_phase_name: account-and-billing-page
-status: completed
-stopped_at: Phase 09 complete
-last_updated: "2026-09-02T04:35:00.000Z"
-last_activity: 2026-09-02
-last_activity_desc: "Quick task 260902-rma: removed the Magazine page's closing manifesto image + CTA section (added in 260902-mag) per user request. The image stays in use as an ISSUE_HIGHLIGHTS card."
+milestone: v1.3
+milestone_name: AI Video Avatar FAQ Concierge
+status: planning
+last_updated: "2026-09-04T15:27:04.881Z"
+last_activity: 2026-09-04
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-09-01)
 
 ## Current Position
 
-Phase: 09 (account-and-billing-page) — COMPLETED
-Plan: 3 of 3 completed
-Status: Phase 09 Complete
-Last activity: 2026-09-01 - Completed quick task 260901-b1a: fix 10 bugs found in code review of commit a850d59 (Phase 7-9 OAuth/Stripe-linking/account-page work) — 13/13 code-level must-haves verified; 7 items need live-deploy human verification (see 260901-b1a-VERIFICATION.md)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-09-04 — Milestone v1.3 started
 
 ## Out-of-band work
 
