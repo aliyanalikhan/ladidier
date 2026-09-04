@@ -1,289 +1,326 @@
 # Architecture Research
 
-**Domain:** Adding Google OAuth + Postgres accounts, with Stripe-customer linking, to an existing Stripe-only serverless (Vercel) app
-**Researched:** 2026-09-01
-**Confidence:** HIGH — based directly on reading the live codebase (`api/entitlement.js`, `lib/membership.js`, `lib/stripe.js`, `api/checkout.js`, `api/verify-session.js`, `api/webhook.js`, `src/app.jsx`, `src/pages.jsx`, `src/components.jsx`, `package.json`, `index.html`) and the existing unexecuted draft plan `.planning/quick/260831-8ug-.../260831-8ug-PLAN.md`, not on general web research. This is a codebase-specific integration design, not an ecosystem survey.
+**Domain:** React 19 SPA feature addition — floating video-driven FAQ widget
+**Researched:** 2026-09-04
+**Confidence:** HIGH (codebase conventions read directly from `app.jsx`/`perks.jsx`/`treasure.jsx`; video-autoplay and state-machine patterns corroborated across MDN/browser-vendor docs and multiple independent React sources)
 
 ## Standard Architecture
 
 ### System Overview
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                         BROWSER (React 18, no build-tool                │
-│                         constraint violated already: Vite bundles it)   │
-├────────────────────────────────────────────────────────────────────────┤
-│  src/app.jsx (hash router)                                              │
-│    ├─ isMember  (legacy, per-browser)   ──┐                             │
-│    ├─ user / authReady  (NEW, per-account)─┤─► OR'd into effective      │
-│    └─ route switch → pages.jsx             │    "can see digital issue" │
-├────────────────────────────────────────────────────────────────────────┤
-│                    VERCEL SERVERLESS FUNCTIONS (api/)                   │
-│                                                                          │
-│  LEGACY LANE (untouched, byte-for-byte)   NEW LANE (this milestone)     │
-│  ┌───────────────────────────────┐        ┌──────────────────────────┐ │
-│  │ api/checkout.js*    (MODIFIED)│        │ api/auth/google.js       │ │
-│  │ api/verify-session.js         │        │ api/auth/callback.js     │ │
-│  │ api/entitlement.js            │        │ api/auth/me.js           │ │
-│  │ api/webhook.js                │        │ api/auth/logout.js       │ │
-│  │ api/prices.js                 │        │ api/address.js           │ │
-│  └───────────────┬───────────────┘        │ api/account/status.js   │ │
-│                  │                        │ api/account/portal.js   │ │
-│                  │                        └────────────┬─────────────┘ │
-├──────────────────┼─────────────────────────────────────┼───────────────┤
-│                  ▼                                      ▼               │
-│  lib/membership.js (untouched)          lib/session.js (new)            │
-│  lib/stripe.js (untouched, SHARED) ◄────┴── lib/account.js (new)        │
-│                  │                              │                       │
-│                  │                       lib/db.js (new)                │
-├──────────────────┼──────────────────────────────┼───────────────────────┤
-│                  ▼                              ▼                       │
-│             Stripe API                   Neon/Postgres (via             │
-│      (checkout.sessions,                 @neondatabase/serverless)      │
-│       customers, subscriptions,                 │                      │
-│       billingPortal)                     Google OAuth (accounts.google) │
-└──────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│  App (app.jsx)                                                        │
+│  owns: route, isMember, isSubscribed, user, activePlan                │
+│  ┌─────────┐  ┌──────────────────────────────┐  ┌──────────┐         │
+│  │  Nav    │  │  <main key={route}>            │  │ Footer   │        │
+│  └─────────┘  │    page = <HomePage .../>       │  └──────────┘        │
+│               │  ┌────────────────────────────┐ │                     │
+│               │  │ HomePage (pages.jsx)        │ │                     │
+│               │  │  Hero*                      │ │                     │
+│               │  │  StoreMarquee                │ │                     │
+│               │  │  TreasureIcon page="home"    │ │  ← existing sibling │
+│               │  │  Manifesto                   │ │    pattern to copy  │
+│               │  │  FeaturedStories              │ │                     │
+│               │  │  StoresPreview                 │ │                     │
+│               │  │  SubscribeBanner               │ │                     │
+│               │  │  AIAvatarFAQ  ◄── NEW          │ │                     │
+│               │  └────────────────────────────┘ │                     │
+│               └──────────────────────────────┘  │                     │
+│  TreasureHuntComplete  ← global, cross-page (site-wide hunt)          │
+└──────────────────────────────────────────────────────────────────────┘
+
+AIAvatarFAQ (new, homepage-only — does NOT get an App.jsx-level mount)
+  ├─ useVideoAvatar()      → reducer: phase (intro/idle/answering) + activeQuestionId
+  ├─ AvatarVideo            → single <video> element, ref-controlled, no business logic
+  └─ FAQCategories          → 4 categories × 15 questions, reads avatarFaqData.js
 ```
 
-*`api/checkout.js` is the one legacy file that must be touched — both by the old draft plan (login gate, hardcopy address) and by this milestone (customer creation/linking). Everything else in the legacy lane stays byte-for-byte.
+The key structural fact from `app.jsx` (line 227: `<main key={route}>{page}</main>`) is that **the entire page subtree remounts on every route change**. Anything mounted inside `HomePage` is destroyed and recreated each time the user (re)navigates to `#home` — this is why AIAvatarFAQ belongs inside `HomePage`, not in `App`: it gets the "intro autoplays on load" behavior for free, every time, with zero extra wiring.
 
 ### Component Responsibilities
 
-| Component | Responsibility | Status this milestone |
-|-----------|----------------|------------------------|
-| `lib/stripe.js` | Lazy singleton Stripe client | Untouched — reused (imported) by every new Stripe-touching module |
-| `lib/membership.js` | Cookie name, `ACTIVE_STATUSES` set, `readCookie`, per-browser entitlement cache | Untouched — `ACTIVE_STATUSES` is imported/reused, not re-declared, by the new account-status endpoint |
-| `api/entitlement.js` | Per-browser (cookie) "is this Checkout Session's subscription active" | Untouched, no new logic added |
-| `api/verify-session.js` | Confirms a just-completed Checkout Session, sets `ladidier_member_session` | Untouched |
-| `api/webhook.js` | Signature-verified audit log of Stripe events | Untouched |
-| `api/checkout.js` | Creates a Checkout Session | Modified (already scheduled by the draft plan for the login gate + hardcopy address gate); this milestone adds one more responsibility: find-or-create the caller's Stripe Customer and pass `customer:` into `sessions.create` |
-| `lib/db.js` (new) | Owns the Postgres schema and every parameterised query — the draft plan's own convention ("the only place that knows the schema") | New — extend with one additive column and two new query functions |
-| `lib/session.js` (new) | HMAC-signed httpOnly session cookie (`ladidier_session`) and OAuth state cookie | New, as drafted |
-| `lib/account.js` (new) | Orchestrates `lib/db.js` + `lib/stripe.js` to answer "what is this signed-in user's Stripe customer id, and is it active" — the seam that keeps Stripe-customer logic out of `lib/db.js` (pure SQL) and out of `api/checkout.js` (route handler) | New — this milestone's addition, not in the draft plan |
-| `api/auth/google.js`, `api/auth/callback.js`, `api/auth/me.js`, `api/auth/logout.js` | Google OAuth 2.0 flow, session issuance | New, as drafted — unchanged by this milestone |
-| `api/address.js` | In-app Hard Copy delivery address, keyed to the signed-in user | New, as drafted — unchanged by this milestone |
-| `api/account/status.js` (new) | Given a session, return profile + live Stripe membership status for that **account** (not that browser) | New — this milestone |
-| `api/account/portal.js` (new) | Given a session, mint a Stripe Billing Portal URL for that account's customer | New — this milestone |
+| Component | Responsibility | Typical Implementation |
+|-----------|----------------|-------------------------|
+| `AIAvatarFAQ` | Outer shell: floating launcher chrome, open/closed panel state, click-outside/Escape-to-close, composes the two pieces below | `useState` for panel open/closed (mirrors `HiddenPerk`'s `open` pattern) |
+| `useVideoAvatar` (the "VideoController") | Owns the phase state machine and the video-src/muted/loop derivation; the single source of truth both children read from | `useReducer` + a `useRef` to the `<video>` DOM node + one `useEffect` syncing state → imperative video API |
+| `AvatarVideo` | Pure presentational `<video>` wrapper; renders whatever src/muted/loop/onEnded it's given, no state of its own | Controlled component, forwards `ref` |
+| `FAQCategories` | Renders 4 categories × N questions from the data module, highlights the active question, emits `onSelect(questionId)` | Plain map over `avatarFaqData.js`, no video/DOM knowledge |
+| `avatarFaqData.js` | Static content: category labels, question text, video file paths | Plain JS array/object, no React import — same role `theme.js` already plays for the palette |
 
 ## Recommended Project Structure
 
 ```
-api/
-├── auth/
-│   ├── google.js       # unchanged from draft plan
-│   ├── callback.js     # unchanged from draft plan
-│   ├── me.js            # unchanged from draft plan
-│   └── logout.js        # unchanged from draft plan
-├── account/             # NEW this milestone
-│   ├── status.js        # GET — profile + live membership status for the account
-│   └── portal.js        # POST — Stripe Billing Portal redirect URL
-├── address.js            # unchanged from draft plan
-├── checkout.js           # MODIFIED (draft plan's login gate/address gate + this
-│                          #   milestone's customer find-or-create)
-├── entitlement.js         # DO NOT TOUCH
-├── verify-session.js      # DO NOT TOUCH
-├── webhook.js             # DO NOT TOUCH
-└── prices.js              # DO NOT TOUCH
-lib/
-├── stripe.js              # DO NOT TOUCH — imported by lib/account.js and api/account/*
-├── membership.js          # DO NOT TOUCH — ACTIVE_STATUSES imported by lib/account.js
-├── db.js                  # extend: add stripe_customer_id column + 2 query fns
-├── session.js              # unchanged from draft plan
-├── shipping.js             # unchanged from draft plan
-└── account.js              # NEW — Stripe-customer linking + status logic
 src/
-├── app.jsx                 # extend: add an ADDITIVE effect/state for account-based
-│                            #   entitlement; add "account" route case
-├── pages.jsx                # extend: add AccountPage; SubscribePage unaffected beyond
-│                            #   the draft plan's own edits
-└── components.jsx           # extend: Nav gets a real account link (currently a dead
-                              #   `href="#account"` stub that only renders "EN · USD")
+├── avatarFaqData.js     # NEW — plain data: categories → questions → video paths
+├── avatarFaq.jsx         # NEW — AIAvatarFAQ, AvatarVideo, FAQCategories, useVideoAvatar
+├── pages.jsx             # MODIFIED — import + mount <AIAvatarFAQ /> inside HomePage
+├── styles.css            # MODIFIED — append .avatar-faq-* rules (global stylesheet convention)
+├── perks.jsx             # unchanged — reference pattern
+├── treasure.jsx          # unchanged — reference pattern
+├── theme.js              # unchanged — reference pattern for "plain data module" convention
+└── app.jsx               # unchanged — no route/state wiring needed
+
+public/assets/
+└── avatar/               # NEW — INTRO.mp4, Idle.mp4, Q1.mp4 … Q15.mp4 (copied in, static)
 ```
 
 ### Structure Rationale
 
-- **`api/account/` as its own folder, not a modification to `api/entitlement.js`.** `api/entitlement.js` answers one question — "does this cookie's Checkout Session still have an active subscription" — for the pre-login flow. Bolting a second, unrelated question ("does this logged-in user have an active subscription via their linked customer") onto the same file conflates two independent trust boundaries (cookie vs. session) in one handler, and violates the draft plan's own hard constraint that `api/entitlement.js` must keep working byte-for-byte. A sibling endpoint costs nothing and keeps the diff on the do-not-touch file at zero.
-- **`lib/account.js` as a new layer above `lib/db.js`, not folded into `lib/db.js`.** The draft plan's own comment on `lib/db.js` calls it "the only place that knows the schema" — i.e., SQL only. Stripe-customer find-or-create logic needs both a DB read/write and a Stripe API call; putting that orchestration in `lib/db.js` would make it import `lib/stripe.js`, which breaks the existing separation (`lib/stripe.js` and `lib/membership.js` currently know nothing about Postgres, and should stay that way). `lib/account.js` is the seam: it imports both `lib/db.js` and `lib/stripe.js`, but neither of those needs to know about the other.
+- **`avatarFaq.jsx` as one file, not four:** `perks.jsx` and `treasure.jsx` both bundle several components (`HiddenPerk`; `TreasureIcon`/`TreasureProgress`/`TreasureHuntComplete`) in a single file and export only what other files need to import, at the bottom (`export { HiddenPerk }` / `export { TreasureIcon, TreasureProgress, TreasureHuntComplete }`). This project's convention is **one file per feature**, not one file per component. Splitting `AvatarVideo`/`FAQCategories`/`useVideoAvatar` into separate files would be idiomatic React elsewhere but would break the established pattern here for no benefit — the whole feature is small enough (a launcher, one video element, one list) to read as a single file, same as the other two features.
+- **`avatarFaqData.js` as its own file, separate from `avatarFaq.jsx`:** this is the one deliberate deviation from "one file per feature," and it's justified by an explicit project requirement ("FAQ-to-video mapping kept as a separate data structure from UI logic," PROJECT.md) plus existing precedent — `theme.js` already sits next to `app.jsx`/`pages.jsx` as a plain-JS (non-JSX) data/config module consumed by components rather than containing any. `avatarFaqData.js` plays the identical role: a non-technical editor can open it and add a 16th question or change a video filename without touching component code.
+- **No new folders.** The codebase is flat (`src/*.jsx` + `src/*.js`), no `components/` or `features/` subdirectories exist anywhere. Introducing one for this feature alone would be inconsistent with every other feature module in the project.
 
 ## Architectural Patterns
 
-### Pattern 1: Two independent, additive entitlement lanes (do not merge)
+### Pattern 1: Single-file feature module, mounted as a page sibling
 
-**What:** The pre-login cookie flow (`ladidier_member_session` → `api/entitlement.js`) and the new logged-in flow (`ladidier_session` → `api/account/status.js`) are two separate, parallel checks that both terminate in "is a subscription active," but never share a code path or a cookie.
+**What:** A self-contained `.jsx` file owns all of a feature's local state, renders its own DOM (usually `position: fixed`/`absolute`, so it doesn't participate in page layout), and exports only its top-level component(s) for a page to mount as a plain JSX sibling — no props threaded through `App`, no context, no global store.
+**When to use:** Features that are visually/behaviorally self-contained and don't need to share state with the rest of the app. `HiddenPerk`, `TreasureIcon`, and now `AIAvatarFAQ` all qualify — none of them need anything from `App`'s route/auth/membership state.
+**Trade-offs:** Very low coupling and easy to delete/disable (remove one import + one JSX line). The cost is that if a future feature *does* need cross-page state, this pattern doesn't scale to that — but `AIAvatarFAQ` is explicitly homepage-only, so that limitation doesn't apply here.
 
-**When to use:** Exactly this situation — an existing entitlement mechanism has live paying users depending on it, and a new identity layer is being added that must not regress them, and migration between the two is explicitly out of scope for this milestone (per PROJECT.md: "Existing pre-login Stripe subscribers are NOT migrated in this milestone").
-
-**Trade-offs:** A member who bought before signing in with Google, then later signs in, gets **two disconnected identities** — the browser's Checkout Session cookie and a fresh, unlinked `users` row — until a future migration milestone reconciles them by email or a claim flow. This is a known, accepted gap, not an oversight; do not try to silently auto-link by matching email in `api/account/status.js`, since an unverified match on Stripe's `customer_details.email` from the anonymous flow is not proof of account ownership — that reconciliation deserves its own reviewed design.
-
-**Example (client-side OR, additive to the existing effect in `src/app.jsx`):**
+**Example (matches `pages.jsx` today):**
 ```jsx
-// Existing effect (UNTOUCHED): sets isMember from the per-browser cookie via /api/entitlement.
-// NEW, separate effect, added alongside it — never inside it:
-useEffect(() => {
-  if (!authReady || !user) return;
-  let cancelled = false;
-  fetch("/api/account/status", { credentials: "same-origin" })
-    .then((r) => r.json())
-    .then((d) => { if (!cancelled && d.active) setIsMember(true); })
-    .catch((err) => console.error("Could not verify account membership:", err));
-  return () => { cancelled = true; };
-}, [authReady, user]);
-```
-`setIsMember(true)` only ever turns access **on** from the new lane; it never turns it off, so a false/slow response from the new endpoint cannot revoke access the legacy cookie already granted — the legacy effect remains the sole authority for revocation, exactly as it is today.
+// pages.jsx
+import { TreasureIcon } from './treasure.jsx';
+import { AIAvatarFAQ } from './avatarFaq.jsx';
 
-### Pattern 2: Link the Stripe Customer at checkout-creation time, not at webhook or verify-session time
-
-**What:** Because the draft plan already gates `POST /api/checkout` behind a signed-in session (Task 5 of the draft plan), by the time a request reaches `stripe.checkout.sessions.create`, the caller's `uid` is already known. Find-or-create the user's Stripe Customer **inside `api/checkout.js`**, before creating the Checkout Session, and pass `customer: stripeCustomerId` (replacing the plain `customer_email` the draft plan proposed). Persist the customer id on the `users` row immediately.
-
-**When to use:** Any time the identity that needs linking to a Stripe object is already authenticated before that Stripe object is created — this avoids needing to react to Stripe's asynchronous webhook or the return-trip `verify-session` call to discover "whose purchase was this," which would require touching two do-not-touch files.
-
-**Trade-offs:** This only links customers for **new** checkouts created after this milestone ships. It does not, and should not, try to retroactively link old Checkout Sessions or Stripe Customers created before login existed — that is exactly the deferred migration.
-
-**Example:**
-```js
-// inside api/checkout.js POST, after the session/login-gate check the draft
-// plan already adds, and before stripe.checkout.sessions.create:
-import { ensureStripeCustomer } from '../lib/account.js';
-
-const customerId = await ensureStripeCustomer(session.uid, session.email, stripe);
-// ... sessions.create({ ..., customer: customerId, /* no customer_email */ })
-```
-```js
-// lib/account.js
-import { getSql } from './db.js';      // or getStripeCustomerId/linkStripeCustomer helpers in lib/db.js
-import { ACTIVE_STATUSES } from './membership.js';
-
-// Idempotent by design: re-reads the column after an optimistic UPDATE so a
-// double-click race creates at most one extra, unused Stripe Customer rather
-// than two conflicting rows in `users`.
-export async function ensureStripeCustomer(userId, email, stripe) {
-  const existing = await getStripeCustomerId(userId);
-  if (existing) return existing;
-
-  const customer = await stripe.customers.create({ email, metadata: { user_id: String(userId) } });
-  const linked = await linkStripeCustomerIfUnset(userId, customer.id);
-  return linked; // returns the id that actually won the race, not necessarily customer.id
+function HomePage({ setRoute, heroVariant }) {
+  return (
+    <div className="page-fade">
+      {/* ...hero, marquee, manifesto, etc... */}
+      <TreasureIcon page="home" />
+      <AIAvatarFAQ />
+    </div>
+  );
 }
 ```
 
-### Pattern 3: Account/billing status delegates to Stripe's hosted Billing Portal, never reimplements cancel/manage
+### Pattern 2: `useReducer` finite state machine for the video phases
 
-**What:** `api/account/portal.js` calls `stripe.billingPortal.sessions.create({ customer, return_url })` and returns the URL for the client to redirect to. The account page never calls `stripe.subscriptions.update` / `.del` directly.
+**What:** Model `intro | idle | answering` as a true finite state machine via `useReducer`, not three independent booleans/`useState` calls. The reducer is the *only* place transition rules live (e.g., "answering → answering directly, skipping idle, when a new question is clicked mid-answer").
+**When to use:** Whenever a component has a small number of **mutually exclusive** states with explicit transition rules — exactly this widget's spec (INTRO → IDLE → ANSWERING → IDLE, with the mid-answer interrupt rule). This is the textbook case the React community consistently reaches for `useReducer` over `useState` soup, because a reducer can enforce "only these transitions are legal" in one place instead of scattering `if` guards across multiple `setX` calls that can drift out of sync.
+**Trade-offs:** Slightly more ceremony than three `useState`s for a trivial case, but this case isn't trivial — it has a non-obvious interrupt rule that a plain `useState` version would need to re-derive correctly in every event handler. A reducer collapses that into one switch statement, and unit-testing "what state comes after this action" needs no DOM/video mocking at all.
 
-**When to use:** Whenever "manage or cancel" is a requirement and Stripe is already the source of truth for subscription state — exactly this project's existing philosophy (`lib/stripe.js`'s whole reason for existing is "the only question is 'is this subscription still paid for', which Stripe already answers").
+**Example:**
+```jsx
+function avatarReducer(state, action) {
+  switch (action.type) {
+    case "INTRO_ENDED":
+      return { phase: "idle", questionId: null };
+    case "ASK":
+      // Legal from idle OR answering — this is the "cut immediately" rule.
+      return { phase: "answering", questionId: action.questionId };
+    case "ANSWER_ENDED":
+      // Guard against a stale onEnded firing after the user already
+      // switched questions (src changed before the old video's end event).
+      if (state.questionId !== action.questionId) return state;
+      return { phase: "idle", questionId: null };
+    default:
+      return state;
+  }
+}
 
-**Trade-offs:** Requires enabling the Customer Portal in the Stripe Dashboard (a `user_setup` dashboard task, same category as the OAuth consent screen in the draft plan) and, since production currently runs Stripe **test-mode** keys (per PROJECT.md, 2026-09-01), the portal must be tested in test mode and re-verified after the pending revert to live keys. Saves rebuilding proration/cancellation UI and logic that Stripe already ships.
+function useVideoAvatar() {
+  const [state, dispatch] = useReducer(avatarReducer, { phase: "intro", questionId: null });
+  const videoRef = useRef(null);
+
+  const videoSrc =
+    state.phase === "intro" ? AVATAR_INTRO_SRC :
+    state.phase === "idle"  ? AVATAR_IDLE_SRC :
+    FAQ_QUESTIONS_BY_ID[state.questionId].videoSrc;
+
+  const muted = state.phase !== "answering";
+  const loop = state.phase === "idle";
+
+  // Sync declarative state → imperative <video> API. This is the one place
+  // that talks to the DOM node directly — everything else stays declarative.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = muted;      // set the IDL property, not just the JSX attribute —
+                           // some browsers only honor autoplay if muted is set
+                           // this way before play() is called.
+    v.load();              // changing the `src` attribute does not reliably
+                           // reload/reset playback across browsers on its own.
+    v.play().catch((err) => {
+      // Autoplay can still be blocked (e.g. iOS Low Power Mode). Fail silently
+      // for muted intro/idle; a rejected ANSWERING play (user-initiated click)
+      // should surface a visible "tap to play" affordance instead.
+      console.error("Avatar video play() rejected:", err);
+    });
+  }, [videoSrc, muted]);
+
+  return {
+    phase: state.phase,
+    activeQuestionId: state.questionId,
+    videoRef, videoSrc, muted, loop,
+    onIntroEnded: () => dispatch({ type: "INTRO_ENDED" }),
+    onAnswerEnded: () => dispatch({ type: "ANSWER_ENDED", questionId: state.questionId }),
+    askQuestion: (questionId) => dispatch({ type: "ASK", questionId }),
+  };
+}
+```
+
+### Pattern 3: One persistent `<video>` element, src swapped in place
+
+**What:** A single `<video>` DOM node lives for the whole widget's lifetime; transitions change its `src`/`muted`/`loop` rather than mounting/unmounting different `<video>` elements per clip.
+**When to use:** Any UI that plays one-of-many clips sequentially (exactly this case: 17 clips, only one ever playing).
+**Trade-offs:** Do **not** put `key={videoSrc}` on the `<video>` element to force a remount on every question change — that's the tempting shortcut but it recreates the DOM node, drops any buffered data, and can cause a visible flash/black-frame between clips. Keep the node stable and drive it through the effect in Pattern 2 instead.
+
+### Pattern 4: Content-as-data, separate from the component tree
+
+**What:** The FAQ categories/questions/video paths live in a plain `.js` module with no React import, structured as nested plain objects/arrays, exposing both the nested shape (for rendering categories) and a flat `id → question` lookup (for O(1) resolution inside the reducer/effect).
+**When to use:** Whenever content is expected to change independently of logic — exactly the stated requirement ("easy to edit later"). This project already has the identical pattern in `theme.js`.
+**Trade-offs:** None meaningful at this scale (15 questions, 4 categories). At larger scale this is also exactly the shape that would let the data move to a CMS/JSON fetch later without touching any component.
+
+**Example:**
+```js
+// avatarFaqData.js — no React import, no JSX
+export const AVATAR_ASSET_BASE = "/assets/avatar";
+export const AVATAR_INTRO_SRC = `${AVATAR_ASSET_BASE}/INTRO.mp4`;
+export const AVATAR_IDLE_SRC = `${AVATAR_ASSET_BASE}/Idle.mp4`;
+
+export const FAQ_CATEGORIES = [
+  {
+    id: "about",
+    label: "About LaDidiér",
+    questions: [
+      { id: "q1", question: "What is LaDidiér?", videoSrc: `${AVATAR_ASSET_BASE}/Q1.mp4` },
+      // ...
+    ],
+  },
+  { id: "shipping", label: "Shipping & Delivery", questions: [ /* q5–q8 */ ] },
+  { id: "orders",   label: "Orders, Returns & Exchanges", questions: [ /* q9–q12 */ ] },
+  { id: "payments", label: "Payments & Customer Support", questions: [ /* q13–q15 */ ] },
+];
+
+// Flat lookup so the reducer/effect never walks the nested tree.
+export const FAQ_QUESTIONS_BY_ID = Object.fromEntries(
+  FAQ_CATEGORIES.flatMap((c) => c.questions).map((q) => [q.id, q])
+);
+```
 
 ## Data Flow
 
-### Request Flow — Account/Billing page
+### Request Flow (a question click)
 
 ```
-Account page mounts
+[User clicks a question in FAQCategories]
     ↓
-GET /api/auth/me            (unchanged, draft plan)  → { user: { id, email, name, picture } }
-    ↓ (parallel)
-GET /api/account/status     (NEW)                     → { linked, active, status, plan, currentPeriodEnd }
-    │
-    ├─ readSession(cookie) → uid                       [lib/session.js, unchanged]
-    ├─ getStripeCustomerId(uid)                         [lib/db.js / lib/account.js]
-    │     └─ no row / no customer id → { linked: false, active: false }   (no Stripe call — cheap default)
-    └─ has customer id → stripe.subscriptions.list({ customer, status: 'all' })
-          └─ map status through ACTIVE_STATUSES          [imported from lib/membership.js, NOT re-declared]
+askQuestion(questionId)  →  dispatch({ type: "ASK", questionId })
     ↓
-User clicks "Manage billing"
+avatarReducer  →  { phase: "answering", questionId }
     ↓
-POST /api/account/portal    (NEW) → { url }  → window.location.href = url
+videoSrc recomputed  →  FAQ_QUESTIONS_BY_ID[questionId].videoSrc
     ↓
-Stripe-hosted portal: cancel / update payment method / view invoices
+useEffect([videoSrc, muted])  →  video.muted=false; video.load(); video.play()
     ↓
-return_url back to #account → GET /api/account/status re-fetched to reflect the change
+<video onEnded={onAnswerEnded}>  fires when the clip finishes
+    ↓
+dispatch({ type: "ANSWER_ENDED", questionId })  →  guarded against stale events
+    ↓
+phase: "idle"  →  videoSrc = AVATAR_IDLE_SRC (loops muted, unattended)
 ```
+
+### State Management
+
+```
+useVideoAvatar()  (lives inside AIAvatarFAQ)
+    ↓ returns
+{ phase, activeQuestionId, videoRef, videoSrc, muted, loop, askQuestion, onIntroEnded, onAnswerEnded }
+    ↓ passed as props
+AvatarVideo (ref, src, muted, loop, onEnded)   FAQCategories (categories, activeQuestionId, onSelect=askQuestion)
+```
+
+Neither child owns state; both are pure consumers of the single reducer in the parent. This avoids the two-sources-of-truth bug the project's own `app.jsx` explicitly called out and fixed once already (the membership-resolution comment about "two separate effects... whichever settled last silently won") — don't reintroduce that shape here by giving `AvatarVideo` its own "is playing" state that could drift from the reducer's `phase`.
 
 ### Key Data Flows
 
-1. **Sign-in → link (new, once per user):** Google OAuth (draft plan, unchanged) creates/updates a `users` row keyed on `google_sub`. The **first paid checkout** after that (this milestone) is what actually creates the Stripe Customer and writes `stripe_customer_id` — signing in alone does not create a Stripe Customer, since a Reader-tier (free) user may never need one.
-2. **Legacy entitlement (unchanged):** `ladidier_member_session` cookie → `api/entitlement.js` → Stripe Checkout Session → expanded subscription status. Zero new code touches this path.
-3. **Account entitlement (new):** `ladidier_session` cookie → `api/account/status.js` → `users.stripe_customer_id` → Stripe Customer's subscriptions → status, reusing `ACTIVE_STATUSES` from `lib/membership.js` so "what counts as active" can never drift between the two lanes.
-4. **Client merge (new, additive):** `src/app.jsx`'s existing `isMember` effect is left alone; a second effect ORs in the account-based result. Revocation authority stays entirely with the existing legacy effect.
+1. **Mount → intro → idle:** On first mount, `phase` starts at `"intro"`, the effect loads/plays `INTRO.mp4` muted; its `onEnded` dispatches `INTRO_ENDED`, dropping to `"idle"` and swapping to the looping `Idle.mp4` (native `loop` attribute — no need to re-dispatch on every idle loop iteration).
+2. **Idle → answering → idle:** A question click always wins immediately, whether coming from idle or from a different in-progress answer, because `ASK` is legal from both phases in the reducer and the src-swap effect doesn't care what the previous src was.
+3. **Route away and back:** Because `<main key={route}>` unmounts `HomePage` on navigation, `AIAvatarFAQ`'s reducer resets to `"intro"` on every return to the homepage — this is the desired behavior per the milestone spec ("opens automatically on page load"), not a bug to work around.
 
 ## Scaling Considerations
 
+This is a static, client-only widget with no backend and a fixed content set (15 questions), so "scaling" here means asset growth and content growth, not traffic.
+
 | Scale | Architecture Adjustments |
-|-------|--------------------------|
-| Current (single-digit to low hundreds of members) | Exactly as designed above — no caching needed on `api/account/status.js` beyond `Cache-Control: private, no-store` (matching the existing `PRIVATE` header pattern in `api/entitlement.js`/`api/auth/me.js`) |
-| Growth | If `api/account/status.js` calls become frequent (e.g. rendered on every page, not just the account page), add the same short-TTL in-memory per-warm-instance cache pattern `lib/membership.js` already uses for `checkActiveMembership` — keyed on `stripe_customer_id` instead of session id |
-| Much larger | Neon/Postgres connection handling via `@neondatabase/serverless` is already HTTP-based (no pooled TCP connections to manage) per the draft plan's package choice, so this does not become a bottleneck before Stripe API rate limits would |
+|-------|---------------------------|
+| Current (15 Q&A, ~250MB total) | Plain files in `public/assets/avatar/`, all under GitHub's 100MB/file limit — no changes needed, matches existing `public/assets/` convention for images |
+| Question count grows to 30-40 | `avatarFaqData.js` shape already accommodates this (just append entries); consider lazy-loading only the active category's video metadata isn't necessary since `<video>` elements load on demand via `src`, not eagerly |
+| Total asset size grows past a few GB / needs CDN delivery | Swap `AVATAR_ASSET_BASE` from `/assets/avatar` to a CDN URL in one place in `avatarFaqData.js` — no component changes needed, which is the payoff of centralizing paths in the data module now |
 
 ### Scaling Priorities
 
-1. **First bottleneck:** Stripe API calls per account-status check, if the account page is polled aggressively — mitigate with the same TTL-cache pattern already established in `lib/membership.js`, applied inside `lib/account.js` rather than duplicated.
-2. **Second bottleneck:** `ensureSchema()`'s one DDL round-trip per cold start (already an accepted, documented trade-off in the draft plan's threat register) — adding one more `alter table` statement for `stripe_customer_id` does not change this risk profile.
+1. **First real constraint:** repo/deploy size from committing ~250MB of video directly into `public/assets/`. This is a Key Decision already made in PROJECT.md (accepted for this milestone since all files are under the 100MB/file limit), not something to solve architecturally here — but worth flagging if the asset count/size grows meaningfully in a future milestone, since Vercel and git both have practical repo-size ergonomics limits well before any per-file limit is hit.
+2. **Second:** if a future milestone wants this site-wide instead of homepage-only, the reducer/data module need no changes — only the mount point moves from `HomePage` to `App` (following the existing `TreasureHuntComplete` precedent for a cross-page mount), which is exactly why keeping `AIAvatarFAQ` self-contained (no props from `App`) pays off later.
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: Modifying `api/entitlement.js` to also check the session cookie
+### Anti-Pattern 1: One `<video>` element per clip, toggled with CSS `display`
 
-**What people do:** Add an `else if (session) { check stripe_customer_id }` branch to the existing entitlement handler so there's "one endpoint" for membership status.
-**Why it's wrong:** Violates the explicit, hard constraint carried over from the draft plan ("the existing paid-member entitlement path must keep working byte-for-byte") and conflates two independent trust boundaries (an anonymous Checkout Session cookie vs. an authenticated user session) in a file whose entire job today is answering one narrow question correctly for the pre-login flow. It also makes the do-not-touch list meaningless the moment it's convenient to ignore.
-**Do this instead:** A sibling `api/account/status.js`, with the client-side OR happening in `src/app.jsx`, not on the server.
+**What people do:** Render all 17 `<video>` tags in the DOM simultaneously and show/hide the active one with `display: none`/`block`.
+**Why it's wrong:** Browsers eagerly start fetching `<video>` sources (even without `autoplay`) depending on the `preload` default, so this can trigger up to 17 concurrent network requests for ~250MB of video on page load. It also multiplies event-listener wiring (`onEnded` on 17 elements instead of 1) for no benefit.
+**Do this instead:** One persistent `<video>` element with `src` swapped imperatively (Pattern 3).
 
-### Anti-Pattern 2: Replacing `ladidier_member_session`/`ladidier_member` with the new session everywhere
+### Anti-Pattern 2: Keying the video element by clip id to force a remount
 
-**What people do:** Treat the new `ladidier_session` as a full replacement and rip out the old cookie plumbing since "now we have real accounts."
-**Why it's wrong:** Every live paying member today has no `users` row and no Google session — only the old cookie. Removing or bypassing the old lane locks out every current paying customer the moment this ships, which is the one outcome both PROJECT.md and the draft plan explicitly forbid.
-**Do this instead:** Coexist. New session is the primary check for anyone signed in; old cookie logic is untouched and remains the only check for anyone who bought before this milestone and never signs in.
+**What people do:** `<video key={videoSrc} src={videoSrc} />`, relying on React's remount-on-key-change to "reset" playback.
+**Why it's wrong:** Destroys and recreates the DOM node on every question click — visible flash/black frame, loses any pre-buffered data, and re-runs `autoplay` policy checks from scratch every time instead of once.
+**Do this instead:** Stable node + `useEffect` that calls `.load()`/`.play()` on src change (Pattern 2/3).
 
-### Anti-Pattern 3: Linking Stripe customers by matching email address after the fact
+### Anti-Pattern 3: Letting `AvatarVideo` or `FAQCategories` own their own copy of "which question is active"
 
-**What people do:** In `api/account/status.js`, if there's no `stripe_customer_id`, fall back to `stripe.customers.list({ email: user.email })` and auto-link the first match.
-**Why it's wrong:** `customer_details.email` on an old, pre-login Checkout Session is unverified user input from Stripe's own hosted form, not proof that the Google-authenticated visitor now looking at the account page is the same person. Silently attaching someone else's subscription (or a wrong one, if there are multiple Stripe Customers sharing an email) is an entitlement/PII leak. This is precisely the "claim by email" flow PROJECT.md defers to a later milestone specifically because it needs its own verification step (e.g., re-confirming via the email itself), not an implicit lookup.
-**Do this instead:** Leave `linked: false` for these users this milestone; design the claim flow later, deliberately, per PROJECT.md's own deferred-scope note.
+**What people do:** Give the video component local `useState` for "am I playing" and the FAQ list local `useState` for "which one did I click," syncing them via effects that watch each other's props.
+**Why it's wrong:** Two sources of truth that can desync — this project's own `app.jsx` had exactly this bug once (two independent effects writing `isMember`, "whichever settled last silently won") and fixed it by consolidating into one resolver. Don't reintroduce the pattern here.
+**Do this instead:** One reducer in the parent (`useVideoAvatar`), both children are pure props-in/callback-out.
+
+### Anti-Pattern 4: Hardcoding video file paths inline in JSX
+
+**What people do:** `<video src="/assets/avatar/Q7.mp4">` scattered across the FAQ list markup, or a `switch` on question id inside the component that returns a path string.
+**Why it's wrong:** Violates the project's explicit requirement to keep FAQ-to-video mapping separate from UI logic, and makes future edits (renaming a file, adding Q16) require touching component code instead of data.
+**Do this instead:** All paths live in `avatarFaqData.js` (Pattern 4); components only ever see a `videoSrc` value that was already resolved.
 
 ## Integration Points
 
 ### External Services
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| Google OAuth 2.0 / OIDC | Hand-rolled `fetch`-based flow, four routes under `api/auth/` (already designed in the draft plan) | No new integration needed beyond the draft plan; this milestone does not add scopes or touch the OAuth routes |
-| Stripe (Customers, Billing Portal) | New calls via the **existing, shared** `getStripe()` singleton from `lib/stripe.js` — `stripe.customers.create`, `stripe.subscriptions.list`, `stripe.billingPortal.sessions.create` | Do not construct a second Stripe client; do not duplicate `ACTIVE_STATUSES`. Verify Billing Portal is enabled in the Stripe Dashboard (test mode first, given the current test-key state noted in PROJECT.md) |
-| Neon/Postgres | `@neondatabase/serverless`, via `lib/db.js`'s lazy `sql` wrapper (already designed in the draft plan) | This milestone's only schema change: one additive, nullable `stripe_customer_id text unique` column on `users` — added via the same `ensureSchema()` memoised-DDL pattern, not a new migration mechanism |
+None. This feature is fully static/client-side — pre-recorded video files, no live AI inference, no new API route under `api/`, no new environment variables. This is worth calling out explicitly since the feature name ("AI Video Avatar") could otherwise suggest a live model call; per PROJECT.md it is "existing video files... no video generation/synthesis."
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| `api/checkout.js` (modified) ↔ `lib/account.js` (new) | Direct function call (`ensureStripeCustomer`) | The one legacy file this milestone must touch; keep the diff to "gate + find-or-create customer," nothing else |
-| `api/account/status.js` (new) ↔ `lib/membership.js` (untouched) | Import of `ACTIVE_STATUSES` only | Read-only reuse; `lib/account.js`/`api/account/*` must never write to or wrap `MEMBER_COOKIE` — that cookie belongs solely to the legacy lane |
-| `src/app.jsx` (extended) ↔ `api/account/status.js` (new) | `fetch`, additive `useEffect`, OR'd into `isMember` | Must not replace or reorder the existing entitlement effect; new effect can only ever set `isMember` to `true`, never `false` |
-| `src/components.jsx` `Nav` (extended) ↔ `src/app.jsx` | Existing prop-drilling pattern (`route`, `setRoute`) | The current `href="#account"` link is a dead stub (`onClick` calls `preventDefault()` and renders "EN · USD") — repurpose or replace it deliberately; do not leave two competing `#account` behaviors |
+| `pages.jsx` (`HomePage`) ↔ `avatarFaq.jsx` (`AIAvatarFAQ`) | Plain JSX mount, no props | Mirrors `<TreasureIcon page="home" />`, except `AIAvatarFAQ` needs no props at all — it's fully self-contained, unlike `TreasureIcon` which needs to know which page it's on |
+| `AIAvatarFAQ` ↔ `useVideoAvatar` | Direct hook call, same file | Hook, not a separate component — no visual output of its own, so a hook is the idiomatic React 19 shape rather than a wrapper component |
+| `avatarFaq.jsx` ↔ `avatarFaqData.js` | Static `import` | One-directional; the data module never imports from the component file |
+| `avatarFaq.jsx` ↔ `styles.css` | className hooks (`avatar-faq-*`) | Follow the existing convention — no CSS modules/styled-components in this codebase, one global stylesheet, palette via `var(--gold)` etc. from `theme.js` |
+| `avatarFaq.jsx` ↔ `public/assets/avatar/*.mp4` | Static `src` URLs resolved at runtime, not imported/bundled | Vite serves `public/` verbatim at the site root, matching how `public/assets/*.jpeg` image paths are already referenced elsewhere in `pages.jsx` |
 
-## Answers to the Specific Integration Questions
+**Explicitly not touched:** `app.jsx` (no new route/state — homepage-only per Key Decision), `theme.js` (no new palette tokens needed, reuse existing CSS custom properties), any `api/*` serverless function.
 
-1. **Coexist, don't replace.** `ladidier_member_session`/`ladidier_member`/`ladidier_subscribed` stay exactly as they are (already true per the draft plan's own constraint list). The new `ladidier_session` becomes the primary check for anyone who signs in; the old cookie flow remains the sole and unmodified fallback/authority for anyone who hasn't. Client-side, this is one additive `useEffect` in `src/app.jsx` that can only turn `isMember` on, never off.
+### Suggested Build Order
 
-2. **`lib/account.js`, new, alongside `lib/db.js`/`lib/session.js`.** It owns the "find-or-create Stripe Customer for this user" and "is this account's linked customer active" logic, importing `lib/db.js` (SQL) and `lib/stripe.js` (the existing shared Stripe client) — neither of which should import the other. `api/entitlement.js` is **not modified**; a new `api/account/status.js` sits beside it, reading the session and calling `lib/account.js`.
-
-3. **`GET /api/account/status` + `POST /api/account/portal`.** Status reuses `ACTIVE_STATUSES` imported from `lib/membership.js` (no duplicated logic) and the shared `getStripe()` client from `lib/stripe.js`. Manage/cancel is delegated entirely to Stripe's hosted Billing Portal rather than reimplementing subscription mutation.
-
-4. **No new tooling — the project already runs through Vite** (`package.json`'s `vite build`, `index.html`'s `<script type="module" src="/src/main.jsx">`), despite PROJECT.md's "no build step" framing referring to *not needing a bundler pipeline decision*, not literal CDN/Babel-in-browser (there is no CDN `<script>` tag for React in `index.html` — it's a module entry point). Add `AccountPage` to `src/pages.jsx` following the existing page-component pattern (see `SubscribePage`), export it, import it in `src/app.jsx`, add a `case "account":` to the route switch, and give it a real link in `Nav` (`src/components.jsx`) — most naturally by replacing the currently-dead `href="#account"` stub rather than adding a second, confusingly-named nav entry.
-
-5. **Build order:**
-   1. Draft plan's own baseline, unmodified in intent: `lib/db.js` (users/addresses schema) + `lib/session.js` + the four `api/auth/*` routes + the checkout login gate — this is prerequisite identity infrastructure this milestone builds on, not replaces.
-   2. Schema extension: add `stripe_customer_id` to `users` in `lib/db.js`'s `ensureSchema()`.
-   3. `lib/account.js`: find-or-create/link logic, built and unit-testable against the extended schema before touching any route.
-   4. Modify `api/checkout.js` again (on top of the draft plan's own edit) to call `ensureStripeCustomer` and pass `customer:` instead of `customer_email`.
-   5. `api/account/status.js` and `api/account/portal.js` — depend on step 3/4 having a real, linked customer to query against.
-   6. Client: additive `isMember` effect in `src/app.jsx`, then `AccountPage` in `src/pages.jsx`, then the `Nav` link — UI is last because it's a pure consumer of every API above.
-   7. Regression pass covering both the draft plan's own verification list (pre-login member cookie untouched, Reader one-click unlock unchanged, `git diff` touches none of the four do-not-touch files) and this milestone's additions (new checkout creates and links a Stripe Customer exactly once even under a double-click race; account page reflects Stripe status; Billing Portal cancel round-trips back to an updated status).
+1. **`avatarFaqData.js`** — define the shape first (categories → questions → video paths + the flat lookup). Nothing else can be written against a moving target; this file has zero dependencies on anything else in the feature.
+2. **`useVideoAvatar` reducer** — write and manually exercise the state machine (phase transitions, the mid-answer interrupt rule, the stale-`ANSWER_ENDED` guard) before wiring it to any DOM node. A reducer is trivially testable without a browser.
+3. **`AvatarVideo` + the DOM-sync effect** — wire the reducer's output to a real `<video>` element (muted intro/idle, unmuted answering, `.load()`+`.play()` on src change, `onEnded` wired back to `dispatch`).
+4. **`FAQCategories`** — render the 4-category list from `avatarFaqData.js`, wire clicks to `askQuestion`.
+5. **`AIAvatarFAQ` shell** — floating launcher chrome, open/closed panel state (reuse the `HiddenPerk`/`TreasureHuntComplete` outside-click + Escape pattern), compose the pieces above.
+6. **Styling** — `.avatar-faq-*` rules in `styles.css`, using existing palette custom properties, matching the luxury-editorial visual language (not a generic chat-widget look, per PROJECT.md).
+7. **Mount** — one import + one JSX line in `HomePage` (`pages.jsx`).
+8. **A11y/responsive polish** — `aria-live` status region, `aria-pressed`/keyboard nav on question buttons, focus management on open/close, `prefers-reduced-motion` handling for the *widget's own* entrance/UI animation (not the concierge video itself, which is core content and should still autoplay muted regardless — reduced-motion should suppress decorative slide-in/fade flourishes, not the feature's function), and a visible "tap to play" fallback for the rare case where `video.play()`'s promise rejects (Safari Low Power Mode, etc.).
 
 ## Sources
 
-- Direct codebase reads (HIGH confidence, primary source): `api/entitlement.js`, `lib/membership.js`, `lib/stripe.js`, `api/checkout.js`, `api/verify-session.js`, `api/webhook.js`, `lib/plans.js`, `src/app.jsx`, `src/pages.jsx` (SubscribePage), `src/components.jsx` (Nav), `package.json`, `index.html`
-- `.planning/PROJECT.md` — milestone goal, requirements, deferred-migration decision, current test-mode-keys caveat
-- `.planning/quick/260831-8ug-user-should-login-before-subscription-al/260831-8ug-PLAN.md` — baseline OAuth/DB/session architecture, do-not-touch list, threat register (used as the validated starting point per the research brief)
+- Direct reads: `src/app.jsx`, `src/perks.jsx`, `src/treasure.jsx`, `src/pages.jsx` (`HomePage`), `.planning/PROJECT.md` — primary source, HIGH confidence, these are the actual conventions in this repo.
+- [Turning your React Component into a Finite State Machine With useReducer — DEV Community](https://dev.to/rohanfaiyazkhan/turning-your-react-component-into-a-finite-state-machine-with-usereducer-14nm)
+- [How to Use `useReducer` as a Finite State Machine — Kyle Shevlin](https://kyleshevlin.com/how-to-use-usereducer-as-a-finite-state-machine/)
+- [React Video Player Component Using Hooks, TypeScript, and xState — Joel Hooks](https://joelhooks.com/react-video-player/)
+- [Autoplay your videos — Mux docs](https://www.mux.com/docs/guides/web-autoplay-your-videos)
+- [Video `autoplay` Attribute Considered Harmful — Mux blog](https://www.mux.com/blog/video-autoplay-considered-harmful)
+- [Autoplay muted HTML5 video using React on mobile (Safari/iOS) — Medium](https://medium.com/@BoltAssaults/autoplay-muted-html5-video-safari-ios-10-in-react-673ae50ba1f5)
 
 ---
-*Architecture research for: adding accounts (Google OAuth + Postgres + Stripe-customer linking) to an existing Stripe-only serverless app*
-*Researched: 2026-09-01*
+*Architecture research for: AI Video Avatar FAQ Concierge widget (LaDidiér v1.3)*
+*Researched: 2026-09-04*
