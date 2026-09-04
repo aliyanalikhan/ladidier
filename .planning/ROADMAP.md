@@ -238,7 +238,25 @@ Plans:
   4. Clicking a different question while an answer is playing cuts immediately to the new question's answer video — no queueing, no waiting for the interrupted clip to finish
   5. The intro plays once per homepage visit — it never replays on a re-render, and only plays again if the visitor navigates away from the homepage and back
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 10-01-PLAN.md — FAQ-to-video data module (FAQ-04), Vercel plan-tier decision gate (D-08), and the 17-clip asset copy
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 10-02-PLAN.md — Tracer: end-to-end video engine on one question (reducer + generation guard, DOM-sync, portal mount, print guard, positioning CSS) plus the session-scoped intro-once flag
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 10-03-PLAN.md — Expand to all 15 questions across 4 categories, and pause playback when the mobile nav overlay opens
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 10-04-PLAN.md — Structural conformance sweep plus the D-09 desktop and D-10 real-iPhone acceptance gates
+
 **Research note** (per research/SUMMARY.md): build and manually exercise the FAQ-to-video data module (FAQ-04) and the phase/transition reducer (intro/idle/answering + a stale-event generation-counter guard) before wiring to a real `<video>` element — the mid-answer interrupt rule (AVATAR-05) is the most expensive thing to get wrong retroactively. iOS Safari autoplay/Low-Power-Mode behavior is flagged as needing a focused pass during planning; verify muted+playsInline+autoPlay together on a real device, and always `.catch()` the `play()` promise (distinguish expected `AbortError` from a real `NotAllowedError`).
 **UI hint**: yes
 
