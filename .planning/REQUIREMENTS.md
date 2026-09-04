@@ -1,6 +1,6 @@
 # Requirements: LaDidiér Portal
 
-**Defined:** 2026-05-19 (v1.0) · updated 2026-08-20 (v1.1) · updated 2026-09-01 (v1.2)
+**Defined:** 2026-05-19 (v1.0) · updated 2026-08-20 (v1.1) · updated 2026-09-01 (v1.2) · updated 2026-09-04 (v1.3)
 **Core Value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
 
 ## Shipped — v1.0 Mobile Responsiveness & Vercel Deploy
@@ -65,36 +65,71 @@
 - [x] **TREAS-05**: Once a visitor completes the hunt once, the icons never reappear for them on any future visit or session (persistent one-time-only completion)
 - [x] **TREAS-06**: A subtle dot/glyph progress indicator in the nav bar shows found-count once at least 1 icon is found this session; invisible before that
 
-## v1.2 Requirements
+## Shipped — v1.2 Accounts & Cross-Device Membership
 
-Requirements for the "Accounts & Cross-Device Membership" milestone. Each maps to roadmap phases.
+<!-- Confirmed shipped 2026-09-02 — Phases 7-9 complete, see MILESTONES.md/STATE.md. -->
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can sign in with Google (OAuth 2.0/OIDC) — the only login method
-- [ ] **AUTH-02**: Signed-in session persists across page reloads via a signed httpOnly cookie
-- [ ] **AUTH-03**: User can sign out, clearing their session
-- [ ] **AUTH-04**: Paid plans (ÉcLAT Online, Hard Copy) require sign-in before Stripe Checkout; the free Reader tier stays sign-in-free
+- [x] **AUTH-01**: User can sign in with Google (OAuth 2.0/OIDC) — the only login method
+- [x] **AUTH-02**: Signed-in session persists across page reloads via a signed httpOnly cookie
+- [x] **AUTH-03**: User can sign out, clearing their session
+- [x] **AUTH-04**: Paid plans (ÉcLAT Online, Hard Copy) require sign-in before Stripe Checkout; the free Reader tier stays sign-in-free
 
 ### Accounts Database
 
-- [ ] **ACCT-01**: Signing in with Google creates or updates a persistent user record, keyed on the Google account id
-- [ ] **ACCT-02**: Signing in twice with the same Google account never creates a duplicate user record
+- [x] **ACCT-01**: Signing in with Google creates or updates a persistent user record, keyed on the Google account id
+- [x] **ACCT-02**: Signing in twice with the same Google account never creates a duplicate user record
 
 ### Cross-Device Membership (Stripe-Customer Linking)
 
-- [ ] **LINK-01**: A signed-in user's account is linked to a Stripe customer, created idempotently (never duplicated) at checkout time
-- [ ] **LINK-02**: A signed-in user's membership/subscription status is read from their linked Stripe customer, not a per-browser cookie
-- [ ] **LINK-03**: A member who signs in on a new device or browser sees their active membership immediately, without repurchasing
-- [ ] **LINK-04**: The existing per-browser cookie entitlement flow (`api/entitlement.js`, `api/verify-session.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js`) stays byte-for-byte unmodified so current paying members never regress
+- [x] **LINK-01**: A signed-in user's account is linked to a Stripe customer, created idempotently (never duplicated) at checkout time
+- [x] **LINK-02**: A signed-in user's membership/subscription status is read from their linked Stripe customer, not a per-browser cookie
+- [x] **LINK-03**: A member who signs in on a new device or browser sees their active membership immediately, without repurchasing
+- [x] **LINK-04**: The existing per-browser cookie entitlement flow (`api/entitlement.js`, `api/verify-session.js`, `api/webhook.js`, `lib/membership.js`, `lib/stripe.js`) stays byte-for-byte unmodified so current paying members never regress
 
 ### Account & Billing Page
 
-- [ ] **PROF-01**: Signed-in user has an account page showing their name and avatar from Google
-- [ ] **PROF-02**: Account page shows current membership/subscription status
-- [ ] **PROF-03**: Account page has a "Manage billing" action opening Stripe's Customer Portal (view invoices, upgrade/downgrade, cancel)
-- [ ] **PROF-04**: Signed-in user can view and edit one saved delivery address on their account page, stored in the database
-- [ ] **PROF-05**: The saved account-page address is separate from — not a replacement for — Stripe Checkout's own address collection at purchase time
+- [x] **PROF-01**: Signed-in user has an account page showing their name and avatar from Google
+- [x] **PROF-02**: Account page shows current membership/subscription status
+- [x] **PROF-03**: Account page has a "Manage billing" action opening Stripe's Customer Portal (view invoices, upgrade/downgrade, cancel)
+- [x] **PROF-04**: Signed-in user can view and edit one saved delivery address on their account page, stored in the database
+- [x] **PROF-05**: The saved account-page address is separate from — not a replacement for — Stripe Checkout's own address collection at purchase time
+
+## v1.3 Requirements
+
+Requirements for the "AI Video Avatar FAQ Concierge" milestone. Each maps to roadmap phases.
+
+### Avatar — Video State Machine
+
+- [ ] **AVATAR-01**: Widget auto-opens on homepage load and autoplays the intro video (muted, per browser autoplay policy)
+- [ ] **AVATAR-02**: After the intro finishes, the idle video loops continuously until a question is selected
+- [ ] **AVATAR-03**: Selecting a question immediately plays that question's answer video with audio enabled
+- [ ] **AVATAR-04**: When an answer video finishes, playback automatically returns to the looping idle video
+- [ ] **AVATAR-05**: Selecting a different question while an answer is playing cuts immediately to the new answer — no queueing or waiting
+- [ ] **AVATAR-06**: The intro plays once per homepage visit — it does not replay on every re-render, only when the visitor navigates away from and back to the homepage
+
+### FAQ — Content & Data
+
+- [ ] **FAQ-01**: 15 questions are organized into 4 categories (About LaDidiér, Shipping & Delivery, Orders/Returns & Exchanges, Payments & Customer Support)
+- [ ] **FAQ-02**: Each question is a clickable card/button with a visible selected/active + "Playing" state
+- [ ] **FAQ-03**: On mobile, questions are reachable without showing all 15 at once (category-first / accordion navigation)
+- [ ] **FAQ-04**: The FAQ-to-video mapping lives in its own data file, separate from UI/component code, so questions or videos can be added/changed without touching component logic
+
+### Widget — Chrome & Placement
+
+- [ ] **WIDGET-01**: The experience is a floating, bottom-right popup widget on the homepage only (not a hero section, not site-wide)
+- [ ] **WIDGET-02**: The widget has a persistent, always-reachable close/minimize control
+- [ ] **WIDGET-03**: Visual design uses the existing LaDidiér design system (fonts, palette, spacing) and explicitly avoids generic chatbot chrome (speech bubbles, "online" dot, typing indicator)
+- [ ] **WIDGET-04**: The widget's stacking (z-index) doesn't conflict with or get obscured by existing homepage UI (mobile nav overlay, hidden perk, treasure hunt icons)
+
+### Accessibility, Robustness & Responsiveness
+
+- [ ] **A11Y-01**: All questions are semantic, keyboard-operable buttons with visible focus states and ARIA labels
+- [ ] **A11Y-02**: prefers-reduced-motion is respected (suppresses autoplay/motion where applicable)
+- [ ] **A11Y-03**: Video playback stops when navigating away from the homepage — no audio/video continues in the background
+- [ ] **A11Y-04**: The widget is fully responsive and usable on desktop, tablet, and mobile without excessive vertical video height
+- [ ] **A11Y-05**: A missing or failed video asset is handled gracefully — no broken player, no crash
 
 ## v2 Requirements
 
@@ -122,6 +157,13 @@ Deferred to future milestones. Tracked but not in current roadmap.
 - **ADDR-02**: Support for multiple saved addresses per account (v1.2 ships exactly one)
 - **AUTH-05**: Additional OAuth providers or email/password login
 
+### Avatar FAQ Concierge (from v1.3)
+
+- **AVATAR-07**: Smooth crossfade/dissolve transition when switching questions mid-answer (v1.3 ships an instant cut, per the original brief)
+- **WIDGET-05**: Auto-advancing "next question" carousel suggestion after an answer finishes
+- **WIDGET-06**: Multi-language video variants
+- **WIDGET-07**: Personalized/targeted question ordering or suggestions based on visitor behavior
+
 ## Out of Scope
 
 | Feature | Reason |
@@ -134,6 +176,11 @@ Deferred to future milestones. Tracked but not in current roadmap.
 | Email/password or non-Google login methods (v1.2) | Google OAuth is the only method this milestone ships |
 | Self-rolled billing management UI (v1.2) | Delegated to Stripe's hosted Customer Portal per research — avoids reimplementing proration/dunning/invoice history |
 | Account deletion/export, multiple saved addresses, admin dashboard (v1.2) | Not required by any target feature this milestone |
+| Video generation/synthesis of any kind (v1.3) | Explicit constraint — only pre-recorded, existing video files are connected; no AI video generation |
+| Free-text chat input or AI-generated answers (v1.3) | User rejected a chatbot-style interaction in favor of click-a-question-play-a-video; reintroducing text input reintroduces the exact surface area being avoided |
+| Site-wide rollout beyond the homepage (v1.3) | User explicitly scoped this to the homepage only |
+| Replacing/taking over the homepage hero, or a full-screen modal (v1.3) | User explicitly chose a floating bottom-right popup over a hero-section or full-page treatment |
+| External video storage/CDN service, e.g. Vercel Blob (v1.3) | All 17 video files are under GitHub's 100MB per-file limit; served as static assets from `public/assets/avatar/` per the existing convention, avoiding a new storage dependency |
 
 ## Traceability
 
