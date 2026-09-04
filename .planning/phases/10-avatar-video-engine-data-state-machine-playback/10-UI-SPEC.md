@@ -1,7 +1,7 @@
 ---
 phase: 10
 slug: avatar-video-engine-data-state-machine-playback
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-09-05
@@ -74,6 +74,7 @@ Notes:
 - Exactly 2 sizes (16px, 14px) and 2 weights (400, 600) are declared — no more.
 - Font-family for both rows: `var(--sans)` (inherited, no declaration needed in the interim markup).
 - Heading/Display rows are intentionally empty: this phase renders no launcher title, no widget headline, and no "Playing" badge — those are Phase 11 (FAQ-02, WIDGET-03) additions layered onto this same DOM position.
+- **No visual hierarchy is declared this phase, deliberately.** DOM/category order (the locked D-01 sequence) is the only ordering signal — no size, weight, or color differentiates one question button from another, and no element is styled to draw the eye first. Phase 11 (WIDGET-03) owns establishing real visual hierarchy on top of this same markup.
 
 ---
 
@@ -136,11 +137,11 @@ Applicable state considerations resolved: 4 covered, 1 backstop, 0 unresolved, 4
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS (FLAG resolved — visual-hierarchy statement added to Typography Notes)
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-09-05
