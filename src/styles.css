@@ -1317,6 +1317,11 @@ body::before {
   width: min(360px, calc(100vw - 48px));
   max-height: min(600px, calc(100vh - 48px));
   overflow-y: auto;
+  /* Flex column so the max-height cap constrains the question list,
+     not just the widget: the video stays put at the top while the
+     list scrolls in its own area beneath it (UI-SPEC overflow). */
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
   border: 1px solid var(--mute);
   /* 40 sits below .mobile-overlay's 100 so the mobile nav covers
@@ -1327,6 +1332,39 @@ body::before {
 .avatar-faq-video {
   width: 100%;
   display: block;
+  flex: none;
+  /* never shrinks — the list area absorbs the cap */
+}
+
+/* The scroll area (UI-SPEC overflow state): all 15 buttons stay
+   reachable by scrolling inside the widget's max-height cap rather
+   than the widget growing past its approximate final size (D-03). */
+.avatar-faq-questions {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* One category group. The lg step (24px) separates groups via the
+   bottom margin; the sm step (8px) separates the buttons within a
+   group via the gap — the gap lives here rather than on the list
+   container because the buttons are this element's children. */
+.avatar-faq-category {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+/* The only 14px and 600 declarations this phase makes — the UI-SPEC
+   caps the ladder at exactly two sizes and two weights. */
+.avatar-faq-category-label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 8px;
 }
 
 .avatar-faq-question-btn {

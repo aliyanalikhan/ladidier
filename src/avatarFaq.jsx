@@ -7,7 +7,7 @@
 import { useReducer, useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { avatarReducer, initAvatarState } from './avatarReducer.js';
-import { AVATAR_INTRO_SRC, AVATAR_IDLE_SRC, FAQ_QUESTIONS_BY_ID } from './avatarFaqData.js';
+import { AVATAR_INTRO_SRC, AVATAR_IDLE_SRC, FAQ_CATEGORIES, FAQ_QUESTIONS_BY_ID } from './avatarFaqData.js';
 
 const AVATAR_INTRO_PLAYED_KEY = "ladidier_avatar_intro_played";
 
@@ -120,15 +120,48 @@ function AvatarVideo({ videoRef, videoSrc, muted, loop, phase, onIntroEnded, onA
     );
 }
 
-/* Tracer widget (D-04 interim UI): exactly one question button in
-   this plan — 10-03 widens the same proven slice to all 15. */
+/* All 15 questions under their 4 locked category headings, in the
+   locked D-01 order, unconditionally — no accordion, no collapse,
+   no drill-down, no search (FAQ-03's category-first navigation is
+   Phase 11 scope; this phase's populated state is "all of them,
+   always"). Every string is read from the data module at render
+   time (FAQ-04): no question text, category label, or media path
+   is copied into this file. activeQuestionId is threaded through
+   because the hook already returns it and Phase 11's selected/
+   Playing state (FAQ-02) will consume it — but it deliberately
+   drives NO visual difference this phase, and no local copy of
+   the active question lives here: the reducer stays the single
+   source of truth. */
+function FAQCategories({ categories, activeQuestionId, onSelect }) {
+    return (
+        <div className="avatar-faq-questions">
+            {categories.map((cat) => (
+                <div key={cat.id} className="avatar-faq-category">
+                    <p className="avatar-faq-category-label">{cat.label}</p>
+                    {cat.questions.map((q) => (
+                        <button
+                            key={q.id}
+                            type="button"
+                            className="avatar-faq-question-btn"
+                            onClick={() => onSelect(q.id)}
+                        >
+                            {q.question}
+                        </button>
+                    ))}
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/* Interim widget (D-04): the full plain question list under the
+   video — Phase 11 builds the launcher and bespoke chrome on this
+   same DOM position without relocating it (D-03). */
 function AIAvatarFAQ() {
     const {
-        phase, videoRef, videoSrc, muted, loop, blocked,
+        phase, activeQuestionId, videoRef, videoSrc, muted, loop, blocked,
         onIntroEnded, onAnswerEnded, askQuestion, retryPlay,
     } = useVideoAvatar();
-
-    const q1 = FAQ_QUESTIONS_BY_ID.q1;
 
     // Portaled straight to document.body: HomePage's root carries the
     // site-wide .page-fade entry animation, which animates `transform`
@@ -156,15 +189,11 @@ function AIAvatarFAQ() {
                     Tap to play
                 </button>
             )}
-            <div className="avatar-faq-questions">
-                <button
-                    type="button"
-                    className="avatar-faq-question-btn"
-                    onClick={() => askQuestion(q1.id)}
-                >
-                    {q1.question}
-                </button>
-            </div>
+            <FAQCategories
+                categories={FAQ_CATEGORIES}
+                activeQuestionId={activeQuestionId}
+                onSelect={askQuestion}
+            />
         </div>,
         document.body
     );
