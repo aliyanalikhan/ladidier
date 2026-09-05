@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: AI Video Avatar FAQ Concierge
 current_phase: 10
-current_phase_name: Avatar Video Engine — Data, State Machine & Playback
+current_phase_name: avatar-video-engine-data-state-machine-playback
 status: executing
-stopped_at: Phase 10 UI-SPEC approved
-last_updated: "2026-09-04T23:19:37.298Z"
+stopped_at: Plan 10-01 complete (data module + 17 clips committed; D-08 resolved tier-confirmed-pro)
+last_updated: "2026-09-05T00:29:00.000Z"
 last_activity: 2026-09-05
-last_activity_desc: v1.3 roadmap created (Phases 10-12); 19/19 requirements mapped, no orphans
+last_activity_desc: Plan 10-01 executed — avatarFaqData.js + tests green, 17 video clips committed (eea09ed, d0ac846)
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 25
 ---
 
 # Project State
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-04)
 
 **Core value:** Every page must feel like opening a luxury magazine — and it must do so on any device, at any screen size.
-**Current focus:** Phase 10: Avatar Video Engine — Data, State Machine & Playback
+**Current focus:** Phase 10 — avatar-video-engine-data-state-machine-playback
 
 ## Current Position
 
-Phase: 10 of 12 (Avatar Video Engine — Data, State Machine & Playback)
-Plan: Not yet planned
-Status: Ready to execute
-Last activity: 2026-09-05 — v1.3 roadmap created (Phases 10-12); 19/19 requirements mapped, no orphans
+Phase: 10 (avatar-video-engine-data-state-machine-playback) — EXECUTING
+Plan: 2 of 4 (10-01 complete)
+Status: Executing Phase 10
+Last activity: 2026-09-05 — Plan 10-01 complete
 
-Progress: [░░░░░░░░░░] 0% (v1.3 — 0/3 phases)
+Progress: [██░░░░░░░░░] 25% (v1.3 — 0/3 phases, 1/4 plans)
 
 ## Out-of-band work
 
@@ -121,6 +121,7 @@ None yet.
 - Phase 8: cannot be marked done in Production until the Stripe test-mode-to-live-key revert (see Out-of-band work above) is completed and verified with one successful live webhook delivery.
 - Phase 8: the webhook log-only-vs-actor decision (whether `api/webhook.js`-adjacent logic ever becomes a linking writer) needs an explicit recorded choice during `/gsd-plan-phase 8` — flagged by research/SUMMARY.md as needing deeper design review before task planning.
 - Phase 10: iOS Safari autoplay/Low-Power-Mode behavior (muted+playsInline+autoPlay together, real-device testing) and the stale-event generation-counter guard for rapid FAQ switching are flagged by research/SUMMARY.md as subtle enough to warrant a focused pass during `/gsd-plan-phase 10`.
+- Phase 10 (resolved 2026-09-05, plan 10-01): D-08 Vercel plan-tier gate answered — developer confirmed **Pro tier or higher** in the Vercel dashboard (team TNneMwMrfJWJTS1CLnpGwglM); the ~249 MiB avatar payload fits under Pro's 1GB static-upload cap. The Phase 12 blocker/concern entry below about plan-tier verification is now satisfied for this project.
 - Phase 11: Idle-loop footage quality (does `Idle.mp4` read as a natural "alive" loop vs. an obviously-repeating cheap loop) is a content decision that depends on footage already in hand — surface to the content owner during Phase 11, not assumed fine.
 - Phase 12: Vercel plan-tier and bandwidth verification for ~250MB of new video static assets (Hobby plan caps at 100MB total static-file uploads) must be confirmed in the actual Vercel dashboard before the first production deploy that includes the avatar video assets — flagged as a pre-merge checklist item by research/SUMMARY.md.
 
@@ -145,6 +146,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-04T22:44:27.478Z
-Stopped at: Phase 10 UI-SPEC approved
-Resume file: ./.planning/phases/10-avatar-video-engine-data-state-machine-playback/10-UI-SPEC.md
+Last session: 2026-09-05T00:29:00.000Z
+Stopped at: Plan 10-01 complete; next is Plan 10-02 (avatarReducer + state machine)
+Resume file: ./.planning/phases/10-avatar-video-engine-data-state-machine-playback/10-02-PLAN.md
