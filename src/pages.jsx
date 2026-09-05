@@ -307,7 +307,7 @@ function StoresPreview({ setRoute }) {
 }
 
 /* Brand manifesto block */
-function Manifesto() {
+function Manifesto({ printMode = false }) {
   return (
     <section className="section container" style={{ position: "relative" }}>
       <div className="ornament-divider" style={{ paddingTop: 0, marginBottom: 32 }}>
@@ -319,6 +319,14 @@ function Manifesto() {
           <div className="eyebrow">Welcome · I</div>
           <Crest size={64} color="var(--gold)" />
           <Laurel width={200} color="var(--gold)" opacity={.7} />
+          {/* Mounted here — inside Manifesto's left column, .col.gap-24 —
+              rather than at the HomePage level, so it is an in-flow block
+              in the editorial column instead of an overlay. It is still a
+              descendant of HomePage's route-keyed tree, so app.jsx's
+              route-keyed <main> still unmounts it on navigate and stops
+              playback for free (Pitfall D). printMode still excludes it
+              from the print build, which also renders HomePage. */}
+          {!printMode && <AIAvatarFAQ />}
         </div>
         <div>
           <p className="display" style={{ fontSize: "clamp(28px, 3.4vw, 56px)", fontWeight: 300, lineHeight: 1.12, margin: 0, letterSpacing: "-.02em" }}>
@@ -372,15 +380,10 @@ function HomePage({ setRoute, heroVariant, printMode = false }) {
 
       <StoreMarquee />
       <TreasureIcon page="home" />
-      <Manifesto />
+      <Manifesto printMode={printMode} />
       <FeaturedStories setRoute={setRoute} />
       <StoresPreview setRoute={setRoute} />
       <SubscribeBanner setRoute={setRoute} />
-      {/* Mounted inside HomePage — not at the App level — so the
-          route-keyed <main> in app.jsx unmounts it on navigate and
-          stops playback for free (Pitfall D). printMode excludes it
-          from the print build, which also renders HomePage. */}
-      {!printMode && <AIAvatarFAQ />}
     </div>
   );
 }

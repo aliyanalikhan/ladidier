@@ -28,8 +28,8 @@ export default function PrintApp() {
             A null user with authReady=false is exactly today's printed
             output — no sign-in affordance. */}
         <Nav route="home" setRoute={noop} user={null} authReady={false} />
-        {/* printMode must be passed: the avatar FAQ widget is a
-            fixed-position autoplaying video element with no meaning
+        {/* printMode must be passed: the avatar FAQ widget is an
+            autoplaying video element with no meaning
             on paper — without the guard, print.html would fetch and
             autoplay a 31MB clip. */}
         <HomePage setRoute={noop} heroVariant={THEME.hero} printMode={true} />

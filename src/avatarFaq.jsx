@@ -1,11 +1,11 @@
 /* ─────────────────────────────────────────────────────────────
    LADIDIÉR — AI video avatar FAQ concierge
    One persistent video element, one reducer as the single
-   source of truth, portalled to document.body. Every media path
-   comes from avatarFaqData.js — none is restated here (FAQ-04).
+   source of truth, mounted in-flow inside the Home page's
+   Manifesto column. Every media path comes from avatarFaqData.js
+   — none is restated here (FAQ-04).
    ───────────────────────────────────────────────────────────── */
 import { useReducer, useRef, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { avatarReducer, initAvatarState } from './avatarReducer.js';
 import { AVATAR_INTRO_SRC, AVATAR_IDLE_SRC, FAQ_CATEGORIES, FAQ_QUESTIONS_BY_ID, FAQ_STARTER_IDS } from './avatarFaqData.js';
 import { AVATAR_MOBILENAV_EVENT } from './components.jsx';
@@ -242,8 +242,11 @@ function FAQOverlay({ categories, starterIds, questionsById, activeQuestionId, o
     );
 }
 
-/* The widget mounts at the same DOM position D-04/D-03 established;
-   quick task 260905-rw7 redesigned the chrome inside it into the
+/* The widget now mounts as an ordinary in-flow child of the Home
+   page's Manifesto left column (quick task 260905-t26), not as a
+   fixed-position overlay — so it no longer needs to be detached from
+   the React tree to escape an ancestor's positioning context. Quick
+   task 260905-rw7 redesigned the chrome inside it into the
    overlay-on-video look with progressive disclosure (FAQOverlay),
    replacing the interim full plain question list. Phase 11 still owns
    the launcher and any remaining bespoke chrome. */
@@ -253,17 +256,11 @@ function AIAvatarFAQ() {
         onIntroEnded, onAnswerEnded, askQuestion, retryPlay,
     } = useVideoAvatar();
 
-    // Portaled straight to document.body: HomePage's root carries the
-    // site-wide .page-fade entry animation, which animates `transform`
-    // and so establishes a containing block for any position: fixed
-    // descendant for its 0.5s duration — without the portal the widget
-    // computes its offsets against that ancestor's box instead of the
-    // viewport, a mispositioned flash at exactly the moment the intro
-    // starts. Same bug as the reader modal (quick task 260901-1lc),
-    // same fix. The portal changes only where the DOM lands — React's
-    // component tree and unmount behavior are unaffected, so the
-    // route-keyed unmount still works.
-    return createPortal(
+    // Deliberately an ordinary in-flow child of the Manifesto column now
+    // — it must NOT be re-detached from the tree to somewhere else in
+    // the document. The old positioning reason for moving this element's
+    // DOM location no longer applies once the widget is not fixed.
+    return (
         <div className="avatar-faq-widget">
             <AvatarVideo
                 videoRef={videoRef}
@@ -286,8 +283,7 @@ function AIAvatarFAQ() {
                 activeQuestionId={activeQuestionId}
                 onSelect={askQuestion}
             />
-        </div>,
-        document.body
+        </div>
     );
 }
 

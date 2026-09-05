@@ -1307,25 +1307,21 @@ body::before {
 /* ─────────────────────────────────────────────────────────────
    AI video avatar FAQ — overlay chrome (quick task 260905-rw7):
    the video fills the widget and the question pills float on it
-   as a dark scrim over its lower portion, at the same DOM mount
-   point and footprint D-04/D-03 established. Phase 11 still owns
-   the launcher.
+   as a dark scrim over its lower portion. Quick task 260905-t26
+   moved the widget in-flow into the Home page's Manifesto left
+   column — it is no longer a fixed bottom-right popup. Phase 11
+   still owns the launcher.
    ───────────────────────────────────────────────────────────── */
 .avatar-faq-widget {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  width: min(360px, calc(100vw - 48px));
-  height: min(600px, calc(100vh - 48px));
+  position: relative;
+  width: min(100%, 320px);
+  aspect-ratio: 9 / 16;
   /* overflow: hidden (not auto): children are absolutely positioned
      now, not stacked, so the scrim must clip to the widget box
      instead of scrolling the whole widget. */
   overflow: hidden;
   background: var(--noir);
   border: 1px solid var(--mute);
-  /* 40 sits below .mobile-overlay's 100 so the mobile nav covers
-     the widget — the z-index scale stays legible in one place. */
-  z-index: 40;
 }
 
 .avatar-faq-video {
@@ -1439,14 +1435,4 @@ body::before {
   color: var(--ivory);
   font-size: 14px;
   line-height: 1.2;
-}
-
-@media (max-width: 480px) {
-  .avatar-faq-widget {
-    right: 16px;
-    left: 16px;
-    bottom: 16px;
-    width: auto;
-    height: min(560px, calc(100vh - 32px));
-  }
 }
