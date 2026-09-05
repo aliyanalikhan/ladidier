@@ -1311,17 +1311,41 @@ body::before {
    moved the widget in-flow into the Home page's Manifesto left
    column — it is no longer a fixed bottom-right popup. Phase 11
    still owns the launcher.
+
+   Quick task 260905-twl: widened to 380px (from 320px) per the
+   developer's follow-up styling request, with 8px rounded corners
+   matching .magazine-frame. The old 1px --mute outline was dropped
+   — a hard line around a box whose edges are meant to dissolve
+   reads as a rendering bug, not a design choice. All four edges
+   now feather to transparent via a two-layer linear-gradient mask,
+   composited with intersect (-webkit: source-in). The composite
+   declaration is load-bearing: with the default `add` compositing
+   the two layers union and the feather silently disappears — the
+   acceptable degradation on a browser lacking mask-composite
+   entirely is "no fade", never "no content". No outer box-shadow
+   is present: a CSS mask clips to border-box and would erase an
+   outer shadow outright, so matching .magazine-frame's lift shadow
+   would require a wrapper element in src/avatarFaq.jsx, out of
+   this task's scope.
    ───────────────────────────────────────────────────────────── */
 .avatar-faq-widget {
   position: relative;
-  width: min(100%, 320px);
+  width: min(100%, 380px);
   aspect-ratio: 9 / 16;
+  border-radius: 8px;
   /* overflow: hidden (not auto): children are absolutely positioned
      now, not stacked, so the scrim must clip to the widget box
      instead of scrolling the whole widget. */
   overflow: hidden;
   background: var(--noir);
-  border: 1px solid var(--mute);
+  mask-image:
+    linear-gradient(to right, transparent 0, #000 3%, #000 97%, transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 2%, #000 98%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0, #000 3%, #000 97%, transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 2%, #000 98%, transparent 100%);
+  -webkit-mask-composite: source-in;
 }
 
 .avatar-faq-video {
