@@ -6,9 +6,9 @@ current_phase: 10
 current_phase_name: avatar-video-engine-data-state-machine-playback
 status: executing
 stopped_at: Phase 10 complete — all 4 plans done (structural sweep 27/27, D-09 + D-10 gates approved); next is /gsd-plan-phase 11
-last_updated: "2026-09-05T01:45:00.000Z"
+last_updated: "2026-09-05T15:45:00.000Z"
 last_activity: 2026-09-05
-last_activity_desc: Phase 10 closed out — 27/27 structural sweep + D-09/D-10 human gates approved
+last_activity_desc: Completed quick task 260905-stj: replace avatar idle-loop video asset
 progress:
   total_phases: 3
   completed_phases: 1
@@ -153,6 +153,8 @@ None yet.
 | 260902-hl2 | added the 2nd pending highlight photo (astronaut manifesto) to the Magazine page | 2026-09-02 | 632b44c | Complete | [260902-hl2-add-second-highlight-photo-astronaut-manifest](.planning/quick/260902-hl2-add-second-highlight-photo-astronaut-manifest/) |
 | 260902-rma | removed the Magazine page's closing manifesto image + CTA section (image stays in use as a highlight card) | 2026-09-02 | dedb5c7 | Complete | [260902-rma-remove-magazine-page-closing-manifesto-image](.planning/quick/260902-rma-remove-magazine-page-closing-manifesto-image/) |
 | 260905-avc | fixed avatar FAQ widget: oversized portrait video (unconstrained aspect ratio) was collapsing the question list to 0px, making all 15 questions invisible/unreachable — explains both "audio not coming" and "UI not good" reports | 2026-09-05 | (pending) | Complete | [260905-avc-fix-oversized-avatar-video-hiding-faq-quest](.planning/quick/260905-avc-fix-oversized-avatar-video-hiding-faq-quest/) |
+| 260905-rw7 | redesigned avatar FAQ widget chrome — question pills now float on a dark scrim over the video (lettered badges) instead of a list below it; replaced "all 15 questions always" with progressive disclosure (4 starters -> More topics -> 4 keyword chips -> per-category pills -> Back), advancing FAQ-03/WIDGET-03 early | 2026-09-05 | ec77f1f | Awaiting checkpoint approval (Task 3: human visual check against reference screenshot) | [260905-rw7-redesign-avatar-faq-popup-to-overlay-the](.planning/quick/260905-rw7-redesign-avatar-faq-popup-to-overlay-the/) |
+| 260905-stj | replaced the avatar widget's idle-loop video asset (public/ + dist/) with a user-supplied re-recorded clip, same filename — no code change | 2026-09-05 | ce38293 | Complete | [260905-stj-replace-the-avatar-idle-loop-video-asset](.planning/quick/260905-stj-replace-the-avatar-idle-loop-video-asset/) |
 
 ## Session Continuity
 
