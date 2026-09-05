@@ -22,6 +22,7 @@ import {
   RomanReveal,
 } from './ornaments.jsx';
 import { TreasureIcon } from './treasure.jsx';
+import { AIAvatarFAQ } from './avatarFaq.jsx';
 
 const PENDING_PLAN = "ladidier_pending_plan";
 
@@ -362,7 +363,7 @@ function Manifesto() {
   );
 }
 
-function HomePage({ setRoute, heroVariant }) {
+function HomePage({ setRoute, heroVariant, printMode = false }) {
   return (
     <div className="page-fade">
       {heroVariant === "manifest" && <HeroManifest setRoute={setRoute} />}
@@ -375,6 +376,11 @@ function HomePage({ setRoute, heroVariant }) {
       <FeaturedStories setRoute={setRoute} />
       <StoresPreview setRoute={setRoute} />
       <SubscribeBanner setRoute={setRoute} />
+      {/* Mounted inside HomePage — not at the App level — so the
+          route-keyed <main> in app.jsx unmounts it on navigate and
+          stops playback for free (Pitfall D). printMode excludes it
+          from the print build, which also renders HomePage. */}
+      {!printMode && <AIAvatarFAQ />}
     </div>
   );
 }

@@ -1303,3 +1303,46 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .treasure-reveal { animation: none !important; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   AI video avatar FAQ — interim positioning only (D-04), at the
+   final widget's size and footprint (D-03): Phase 11 builds the
+   launcher and accordion chrome on top of this mount point
+   without relocating it.
+   ───────────────────────────────────────────────────────────── */
+.avatar-faq-widget {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: min(360px, calc(100vw - 48px));
+  max-height: min(600px, calc(100vh - 48px));
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--mute);
+  /* 40 sits below .mobile-overlay's 100 so the mobile nav covers
+     the widget — the z-index scale stays legible in one place. */
+  z-index: 40;
+}
+
+.avatar-faq-video {
+  width: 100%;
+  display: block;
+}
+
+.avatar-faq-question-btn {
+  min-height: 44px;
+  padding: 16px;
+  font-size: 16px;
+  line-height: 1.4;
+  width: 100%;
+  text-align: left;
+}
+
+@media (max-width: 480px) {
+  .avatar-faq-widget {
+    right: 16px;
+    left: 16px;
+    bottom: 16px;
+    width: auto;
+  }
+}
