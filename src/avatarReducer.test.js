@@ -128,3 +128,31 @@ test('realistic interrupt: ASK q1, ASK q2 before q1 ends, then the late ANSWER_E
     assert.equal(state.questionId, 'q2');
     assert.equal(state.generation, 2);
 });
+
+/* ── Task 2 (AVATAR-06): the session flag and the init coercion ── */
+
+test('initAvatarState(undefined) is treated as not-yet-played and yields the intro phase', () => {
+    // A guarded storage read that fails returns undefined/false — the
+    // intro branch must be the degradation path, never a broken state.
+    assert.deepEqual(initAvatarState(undefined), { phase: 'intro', questionId: null, generation: 0 });
+});
+
+test('from initAvatarState(true), a stray INTRO_ENDED is harmless: phase stays idle, generation unchanged', () => {
+    // The ended event from an intro that was skipped can still fire if
+    // the intro clip began loading before the state resolved. The
+    // reducer must absorb it without ever leaving idle.
+    const state = fromIdle();
+    const next = avatarReducer(state, { type: 'INTRO_ENDED' });
+    assert.equal(next.phase, 'idle');
+    assert.equal(next.questionId, null);
+    assert.equal(next.generation, 0);
+});
+
+test('from initAvatarState(true), ASK then a matching ANSWER_ENDED round-trips to idle — skipping the intro disturbs nothing', () => {
+    let state = initAvatarState(true);
+    state = avatarReducer(state, { type: 'ASK', questionId: 'q6' });
+    assert.equal(state.phase, 'answering');
+    assert.equal(state.generation, 1);
+    state = avatarReducer(state, { type: 'ANSWER_ENDED', generation: 1 });
+    assert.deepEqual(state, { phase: 'idle', questionId: null, generation: 1 });
+});

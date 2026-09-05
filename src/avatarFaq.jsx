@@ -24,6 +24,19 @@ function hasIntroPlayedThisSession() {
     }
 }
 
+/* Write side, guarded identically: a storage failure (private mode,
+   quota, storage disabled) must never break playback itself. Written
+   on intro COMPLETION rather than on mount — navigating away three
+   seconds in has not "played" the intro, and the next visit still
+   gets the full thing. */
+function markIntroPlayed() {
+    try {
+        sessionStorage.setItem(AVATAR_INTRO_PLAYED_KEY, "true");
+    } catch (e) {
+        // Swallowed on purpose: the flag is a UX nicety, not a contract.
+    }
+}
+
 function useVideoAvatar() {
     // Lazy init: the session flag is read once at mount, not per render.
     const [state, dispatch] = useReducer(avatarReducer, hasIntroPlayedThisSession(), initAvatarState);
@@ -62,7 +75,13 @@ function useVideoAvatar() {
         phase: state.phase,
         activeQuestionId: state.questionId,
         videoRef, videoSrc, muted, loop, blocked,
-        onIntroEnded: () => dispatch({ type: 'INTRO_ENDED' }),
+        // Write the flag BEFORE dispatching, on completion (never on
+        // mount): an interrupted intro replays on the next visit,
+        // because it never actually finished (Pitfall E's other half).
+        onIntroEnded: () => {
+            markIntroPlayed();
+            dispatch({ type: 'INTRO_ENDED' });
+        },
         // The generation current when the event fires — the reducer's
         // equality guard compares against this (AVATAR-05, Pitfall C).
         onAnswerEnded: () => dispatch({ type: 'ANSWER_ENDED', generation: state.generation }),
