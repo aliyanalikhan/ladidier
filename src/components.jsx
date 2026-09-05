@@ -7,6 +7,13 @@ import { HiddenPerk } from './perks.jsx';
 import { TreasureProgress } from './treasure.jsx';
 import { safeReturnTo } from '../lib/routes.js';
 
+/* Cross-component signal (Pitfall F): Nav's open/close state is local
+   to Nav, so consumers that must yield to the overlay (the avatar
+   widget's video, per the UI-SPEC pairing) listen on window for this
+   event rather than prop-drilling or lifting state. detail: { open }.
+   Exported so listeners import the constant, never a string copy. */
+export const AVATAR_MOBILENAV_EVENT = "ladidier:mobilenav";
+
 /* ── Brand / catalog data ─────────────────────────────────── */
 const U = "https://images.unsplash.com/";
 const IMG = {
@@ -117,9 +124,16 @@ function Nav({ route, setRoute, user, authReady }) {
   const [isClosing, setIsClosing] = useState(false);
   const hamburgerRef = useRef(null);
 
-  const openMenu = () => { setMenuOpen(true); setIsClosing(false); };
+  const openMenu = () => {
+    setMenuOpen(true);
+    setIsClosing(false);
+    window.dispatchEvent(new CustomEvent(AVATAR_MOBILENAV_EVENT, { detail: { open: true } }));
+  };
   const closeMenu = () => {
     setIsClosing(true);
+    // Emitted immediately, NOT inside the 300ms timeout: listeners
+    // reacting to "closed" must not wait out the exit animation.
+    window.dispatchEvent(new CustomEvent(AVATAR_MOBILENAV_EVENT, { detail: { open: false } }));
     setTimeout(() => { setMenuOpen(false); setIsClosing(false); }, 300);
   };
 

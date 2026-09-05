@@ -8,6 +8,7 @@ import { useReducer, useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { avatarReducer, initAvatarState } from './avatarReducer.js';
 import { AVATAR_INTRO_SRC, AVATAR_IDLE_SRC, FAQ_CATEGORIES, FAQ_QUESTIONS_BY_ID } from './avatarFaqData.js';
+import { AVATAR_MOBILENAV_EVENT } from './components.jsx';
 
 const AVATAR_INTRO_PLAYED_KEY = "ladidier_avatar_intro_played";
 
@@ -70,6 +71,22 @@ function useVideoAvatar() {
             });
         }
     }, [videoSrc, muted]);
+
+    // Mobile-nav pause (Pitfall F): Nav's menu state never leaves Nav,
+    // so the widget listens for the window event Nav emits instead.
+    // One-directional on purpose — opening the nav pauses the video,
+    // closing it does NOT auto-resume: the reducer's phase stays the
+    // single source of truth for what should be playing, and a silent
+    // background resume would fight it. Empty deps: bound once, reads
+    // the ref (not state), so it never goes stale. Guarded detail — a
+    // synthetic or malformed event must not throw.
+    useEffect(() => {
+        const onMobileNav = (e) => {
+            if (e.detail?.open === true) videoRef.current?.pause();
+        };
+        window.addEventListener(AVATAR_MOBILENAV_EVENT, onMobileNav);
+        return () => window.removeEventListener(AVATAR_MOBILENAV_EVENT, onMobileNav);
+    }, []);
 
     return {
         phase: state.phase,
