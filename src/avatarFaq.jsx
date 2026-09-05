@@ -242,26 +242,19 @@ function FAQOverlay({ categories, starterIds, questionsById, activeQuestionId, o
     );
 }
 
-/* The widget now mounts as an ordinary in-flow child of the Home
-   page's Manifesto left column (quick task 260905-t26), not as a
-   fixed-position overlay — so it no longer needs to be detached from
-   the React tree to escape an ancestor's positioning context. Quick
-   task 260905-rw7 redesigned the chrome inside it into the
-   overlay-on-video look with progressive disclosure (FAQOverlay),
-   replacing the interim full plain question list. Phase 11 still owns
-   the launcher and any remaining bespoke chrome. */
-function AIAvatarFAQ() {
+/* The engine + chrome, relocated here from AIAvatarFAQ (quick task
+   260905-t26) so it can be mounted conditionally. NOT exported: this
+   is the piece that must not exist in the tree until first
+   scroll-visibility. Byte-identical to the old AIAvatarFAQ body
+   otherwise — same hook call, same three children, same props. */
+function AvatarWidgetContent() {
     const {
         phase, activeQuestionId, videoRef, videoSrc, muted, loop, blocked,
         onIntroEnded, onAnswerEnded, askQuestion, retryPlay,
     } = useVideoAvatar();
 
-    // Deliberately an ordinary in-flow child of the Manifesto column now
-    // — it must NOT be re-detached from the tree to somewhere else in
-    // the document. The old positioning reason for moving this element's
-    // DOM location no longer applies once the widget is not fixed.
     return (
-        <div className="avatar-faq-widget">
+        <>
             <AvatarVideo
                 videoRef={videoRef}
                 videoSrc={videoSrc}
@@ -283,6 +276,78 @@ function AIAvatarFAQ() {
                 activeQuestionId={activeQuestionId}
                 onSelect={askQuestion}
             />
+        </>
+    );
+}
+
+/* The widget now mounts as an ordinary in-flow child of the Home
+   page's Manifesto left column (quick task 260905-t26), not as a
+   fixed-position overlay — so it no longer needs to be detached from
+   the React tree to escape an ancestor's positioning context. Quick
+   task 260905-rw7 redesigned the chrome inside it into the
+   overlay-on-video look with progressive disclosure (FAQOverlay),
+   replacing the interim full plain question list. Phase 11 still owns
+   the launcher and any remaining bespoke chrome.
+
+   Mount-gated on first scroll-visibility (quick task 260905-t26): the
+   engine lives in AvatarWidgetContent above, split out specifically so
+   it does not mount — and therefore useVideoAvatar's useReducer does
+   not lazy-init into the `intro` phase — until this wrapper has
+   actually seen the widget cross into view. Gating anywhere else
+   (inside the hook, or just hiding the rendered content) would still
+   start the reducer/video engine on page mount; only NOT mounting the
+   child achieves "nothing plays until scrolled to". */
+function AIAvatarFAQ() {
+    const widgetRef = useRef(null);
+    const [hasBeenVisible, setHasBeenVisible] = useState(false);
+
+    // Empty deps: this effect binds once. Nothing inside it reads
+    // changing state, so there is no stale-closure risk, and the
+    // observer disconnects itself after its one fire — it never needs
+    // to re-run. "Has been visible" is a one-way latch: once true it
+    // never resets, and the observer never re-arms. "Plays once per
+    // session" is already owned by hasIntroPlayedThisSession /
+    // markIntroPlayed above; this observer's only job is "has the
+    // visitor arrived at this section yet" — re-firing on every
+    // scroll-in/scroll-out would fight the reducer for control of
+    // playback, which is explicitly NOT what this gate does: scrolling
+    // the section out of view and back does not pause or restart
+    // anything, only the first transition into view matters, exactly
+    // like "on mount" used to mean before this change.
+    useEffect(() => {
+        const el = widgetRef.current;
+        if (!el) return;
+        // No observer API support: degrade to today's play-on-mount
+        // behaviour rather than silently never playing.
+        if (typeof IntersectionObserver === 'undefined') {
+            setHasBeenVisible(true);
+            return;
+        }
+        const observer = new IntersectionObserver((entries) => {
+            // The observer fires an initial callback on observe() with
+            // the current intersection state — a visitor who lands
+            // already scrolled to this section (restored scroll
+            // position, deep link) gets the intro immediately rather
+            // than having to scroll away and back.
+            if (entries[0]?.isIntersecting) {
+                setHasBeenVisible(true);
+                observer.disconnect();
+            }
+        }, { threshold: 0.3 });
+        observer.observe(el);
+        return () => observer.disconnect(); // idempotent cleanup — safe if already disconnected above
+    }, []);
+
+    // Deliberately an ordinary in-flow child of the Manifesto column now
+    // — it must NOT be re-detached from the tree to somewhere else in
+    // the document. The old positioning reason for moving this element's
+    // DOM location no longer applies once the widget is not fixed. This
+    // div always renders, even empty, so the CSS-defined box reserves
+    // its slot in the column from first paint — the video appearing
+    // later causes no layout shift.
+    return (
+        <div className="avatar-faq-widget" ref={widgetRef}>
+            {hasBeenVisible && <AvatarWidgetContent />}
         </div>
     );
 }
