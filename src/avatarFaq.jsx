@@ -155,15 +155,73 @@ function FAQPill({ letter, label, onClick }) {
 /* The overlay chrome that floats on the video (FAQ-03's category-first
    navigation, progressive-disclosure shape): on open it shows only the
    small FAQ_STARTER_IDS set as lettered pills, never all 15 questions
-   and never the 4 category headings at once. Every string is read from
-   the data module at render time (FAQ-04): no question text, category
-   label, or media path is copied into this file. activeQuestionId is
-   threaded through because the hook already returns it and Phase 11's
-   selected/Playing state (FAQ-02) will consume it — but it deliberately
-   drives NO visual difference this phase, and no local copy of the
-   active question lives here: the reducer stays the single source of
-   truth. */
+   and never the 4 category headings at once. "More topics" reveals the
+   4 one-word keyword chips; picking one reveals that category's
+   questions as lettered pills; "Back" walks the path in reverse. Every
+   one of the 15 questions stays reachable, just never shown alongside
+   all the others. Every string is read from the data module at render
+   time (FAQ-04): no question text, category label, keyword, or media
+   path is copied into this file. activeQuestionId is threaded through
+   because the hook already returns it and Phase 11's selected/Playing
+   state (FAQ-02) will consume it — but it deliberately drives NO visual
+   difference this phase, and no local copy of the active question
+   lives here: the reducer stays the single source of truth. */
 function FAQOverlay({ categories, starterIds, questionsById, activeQuestionId, onSelect }) {
+    // `view` is which subset of questions is on screen ('starters',
+    // 'topics', or a category id) — deliberately component state, NOT
+    // reducer state: it is presentation, not playback, and must not
+    // reach avatarReducer.js.
+    const [view, setView] = useState('starters');
+
+    // Selecting a question does NOT reset `view` — the visitor stays
+    // where they were so they can pick a second question from the same
+    // place while the answer plays. This is deliberate.
+
+    if (view === 'topics') {
+        return (
+            <div className="avatar-faq-overlay">
+                <div className="avatar-faq-chips">
+                    {categories.map((category) => (
+                        <button
+                            key={category.id}
+                            type="button"
+                            className="avatar-faq-chip"
+                            onClick={() => setView(category.id)}
+                        >
+                            {category.keyword}
+                        </button>
+                    ))}
+                </div>
+                <button type="button" className="avatar-faq-more-btn" onClick={() => setView('starters')}>
+                    Back
+                </button>
+            </div>
+        );
+    }
+
+    const activeCategory = view === 'starters' ? null : categories.find((category) => category.id === view);
+
+    if (activeCategory) {
+        return (
+            <div className="avatar-faq-overlay">
+                {activeCategory.questions.map((question, index) => (
+                    <FAQPill
+                        key={question.id}
+                        letter={String.fromCharCode(65 + index)}
+                        label={question.question}
+                        onClick={() => onSelect(question.id)}
+                    />
+                ))}
+                <button type="button" className="avatar-faq-more-btn" onClick={() => setView('topics')}>
+                    Back
+                </button>
+            </div>
+        );
+    }
+
+    // 'starters' branch — also the fallback when `view` names a
+    // category id that no longer resolves, so a stale view value
+    // renders a usable panel instead of an empty overlay.
     return (
         <div className="avatar-faq-overlay">
             {starterIds.map((id, index) => {
@@ -177,6 +235,9 @@ function FAQOverlay({ categories, starterIds, questionsById, activeQuestionId, o
                     />
                 );
             })}
+            <button type="button" className="avatar-faq-more-btn" onClick={() => setView('topics')}>
+                More topics
+            </button>
         </div>
     );
 }

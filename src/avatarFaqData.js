@@ -18,6 +18,10 @@ export const FAQ_CATEGORIES = Object.freeze([
     {
         id: "about",
         label: "About LaDidiér",
+        // keyword is the one-word chip form of `label`, living here so
+        // no component restates a category string (FAQ-04). `label`
+        // stays the long-form name Phase 11 will use for headings.
+        keyword: "About",
         questions: [
             { id: "q1", question: "What is LaDidiér?", videoSrc: `${AVATAR_ASSET_BASE}/Q1.mp4` },
             { id: "q2", question: "What types of products do you sell?", videoSrc: `${AVATAR_ASSET_BASE}/Q2.mp4` },
@@ -29,6 +33,7 @@ export const FAQ_CATEGORIES = Object.freeze([
     {
         id: "shipping",
         label: "Shipping & Delivery",
+        keyword: "Shipping",
         questions: [
             { id: "q6", question: "Where does LaDidiér ship?", videoSrc: `${AVATAR_ASSET_BASE}/Q6.mp4` },
             { id: "q7", question: "How much does shipping cost?", videoSrc: `${AVATAR_ASSET_BASE}/Q7.mp4` },
@@ -40,6 +45,7 @@ export const FAQ_CATEGORIES = Object.freeze([
     {
         id: "orders",
         label: "Orders, Returns & Exchanges",
+        keyword: "Returns",
         questions: [
             { id: "q11", question: "Can I change or cancel my order after I place it?", videoSrc: `${AVATAR_ASSET_BASE}/Q11.mp4` },
             { id: "q12", question: "What is your return and exchange policy?", videoSrc: `${AVATAR_ASSET_BASE}/Q12.mp4` },
@@ -49,6 +55,7 @@ export const FAQ_CATEGORIES = Object.freeze([
     {
         id: "payments",
         label: "Payments & Customer Support",
+        keyword: "Payments",
         questions: [
             { id: "q14", question: "What payment methods do you accept?", videoSrc: `${AVATAR_ASSET_BASE}/Q14.mp4` },
             { id: "q15", question: "How can I contact LaDidiér if I need additional help?", videoSrc: `${AVATAR_ASSET_BASE}/Q15.mp4` },

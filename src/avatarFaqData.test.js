@@ -107,6 +107,20 @@ test("the FAQ_STARTER_IDS ids map onto four distinct categories", () => {
     assert.equal(categoriesHit.size, 4);
 });
 
+test("every category has a non-empty keyword", () => {
+    for (const category of FAQ_CATEGORIES) {
+        assert.ok(typeof category.keyword === "string" && category.keyword.length > 0);
+    }
+});
+
+test("the four keywords are distinct single words with no spaces", () => {
+    const keywords = FAQ_CATEGORIES.map((category) => category.keyword);
+    assert.equal(new Set(keywords).size, keywords.length);
+    for (const keyword of keywords) {
+        assert.ok(!/\s/.test(keyword), `expected "${keyword}" to have no spaces`);
+    }
+});
+
 test("all 15 question strings are byte-identical to the D-01 text", () => {
     const D01_QUESTIONS = [
         "What is LaDidiér?",

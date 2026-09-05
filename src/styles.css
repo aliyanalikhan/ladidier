@@ -1396,6 +1396,35 @@ body::before {
   line-height: 1.3;
 }
 
+.avatar-faq-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.avatar-faq-chip {
+  min-height: 36px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(244,239,230,.12);
+  border: 1px solid rgba(244,239,230,.24);
+  color: var(--ivory);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* Gold marks it as the site's affordance colour and keeps it visually
+   subordinate to the pills/chips. */
+.avatar-faq-more-btn {
+  align-self: flex-start;
+  min-height: 36px;
+  padding: 8px 4px;
+  color: var(--gold-soft);
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: var(--tracking-mid);
+}
+
 /* A now-absolutely-positioned video paints above any in-flow sibling,
    so an unpositioned autoplay-block button would be invisible exactly
    when it matters — this must be positioned to stay visible on top. */
