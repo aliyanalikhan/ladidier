@@ -7,7 +7,7 @@
 import { useReducer, useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { avatarReducer, initAvatarState } from './avatarReducer.js';
-import { AVATAR_INTRO_SRC, AVATAR_IDLE_SRC, FAQ_CATEGORIES, FAQ_QUESTIONS_BY_ID } from './avatarFaqData.js';
+import { AVATAR_INTRO_SRC, AVATAR_IDLE_SRC, FAQ_CATEGORIES, FAQ_QUESTIONS_BY_ID, FAQ_STARTER_IDS } from './avatarFaqData.js';
 import { AVATAR_MOBILENAV_EVENT } from './components.jsx';
 
 const AVATAR_INTRO_PLAYED_KEY = "ladidier_avatar_intro_played";
@@ -137,43 +137,55 @@ function AvatarVideo({ videoRef, videoSrc, muted, loop, phase, onIntroEnded, onA
     );
 }
 
-/* All 15 questions under their 4 locked category headings, in the
-   locked D-01 order, unconditionally — no accordion, no collapse,
-   no drill-down, no search (FAQ-03's category-first navigation is
-   Phase 11 scope; this phase's populated state is "all of them,
-   always"). Every string is read from the data module at render
-   time (FAQ-04): no question text, category label, or media path
-   is copied into this file. activeQuestionId is threaded through
-   because the hook already returns it and Phase 11's selected/
-   Playing state (FAQ-02) will consume it — but it deliberately
-   drives NO visual difference this phase, and no local copy of
-   the active question lives here: the reducer stays the single
-   source of truth. */
-function FAQCategories({ categories, activeQuestionId, onSelect }) {
+/* One lettered pill: a circular badge holding the positional letter
+   (pure visual indexing, aria-hidden so a screen reader does not
+   announce a stray letter — this is the one aria attribute in scope,
+   not the Phase 12 a11y pass) plus the question label. Shared by every
+   view FAQOverlay renders — starters and per-category — so there is
+   only ever one pill implementation. */
+function FAQPill({ letter, label, onClick }) {
     return (
-        <div className="avatar-faq-questions">
-            {categories.map((cat) => (
-                <div key={cat.id} className="avatar-faq-category">
-                    <p className="avatar-faq-category-label">{cat.label}</p>
-                    {cat.questions.map((q) => (
-                        <button
-                            key={q.id}
-                            type="button"
-                            className="avatar-faq-question-btn"
-                            onClick={() => onSelect(q.id)}
-                        >
-                            {q.question}
-                        </button>
-                    ))}
-                </div>
-            ))}
+        <button type="button" className="avatar-faq-pill" onClick={onClick}>
+            <span className="avatar-faq-pill-badge" aria-hidden="true">{letter}</span>
+            <span className="avatar-faq-pill-label">{label}</span>
+        </button>
+    );
+}
+
+/* The overlay chrome that floats on the video (FAQ-03's category-first
+   navigation, progressive-disclosure shape): on open it shows only the
+   small FAQ_STARTER_IDS set as lettered pills, never all 15 questions
+   and never the 4 category headings at once. Every string is read from
+   the data module at render time (FAQ-04): no question text, category
+   label, or media path is copied into this file. activeQuestionId is
+   threaded through because the hook already returns it and Phase 11's
+   selected/Playing state (FAQ-02) will consume it — but it deliberately
+   drives NO visual difference this phase, and no local copy of the
+   active question lives here: the reducer stays the single source of
+   truth. */
+function FAQOverlay({ categories, starterIds, questionsById, activeQuestionId, onSelect }) {
+    return (
+        <div className="avatar-faq-overlay">
+            {starterIds.map((id, index) => {
+                const question = questionsById[id];
+                return (
+                    <FAQPill
+                        key={id}
+                        letter={String.fromCharCode(65 + index)}
+                        label={question.question}
+                        onClick={() => onSelect(question.id)}
+                    />
+                );
+            })}
         </div>
     );
 }
 
-/* Interim widget (D-04): the full plain question list under the
-   video — Phase 11 builds the launcher and bespoke chrome on this
-   same DOM position without relocating it (D-03). */
+/* The widget mounts at the same DOM position D-04/D-03 established;
+   quick task 260905-rw7 redesigned the chrome inside it into the
+   overlay-on-video look with progressive disclosure (FAQOverlay),
+   replacing the interim full plain question list. Phase 11 still owns
+   the launcher and any remaining bespoke chrome. */
 function AIAvatarFAQ() {
     const {
         phase, activeQuestionId, videoRef, videoSrc, muted, loop, blocked,
@@ -206,8 +218,10 @@ function AIAvatarFAQ() {
                     Tap to play
                 </button>
             )}
-            <FAQCategories
+            <FAQOverlay
                 categories={FAQ_CATEGORIES}
+                starterIds={FAQ_STARTER_IDS}
+                questionsById={FAQ_QUESTIONS_BY_ID}
                 activeQuestionId={activeQuestionId}
                 onSelect={askQuestion}
             />

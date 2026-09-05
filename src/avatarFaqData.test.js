@@ -11,6 +11,7 @@ import {
     AVATAR_IDLE_SRC,
     FAQ_CATEGORIES,
     FAQ_QUESTIONS_BY_ID,
+    FAQ_STARTER_IDS,
 } from "./avatarFaqData.js";
 
 const FLAT = FAQ_CATEGORIES.flatMap((category) => category.questions);
@@ -83,6 +84,27 @@ test("FAQ_CATEGORIES and FAQ_QUESTIONS_BY_ID are both frozen", () => {
 
 test("the q10 question string is stored untruncated — longer than 60 characters", () => {
     assert.ok(FAQ_QUESTIONS_BY_ID.q10.question.length > 60);
+});
+
+test("FAQ_STARTER_IDS holds 3 to 4 ids", () => {
+    assert.ok(FAQ_STARTER_IDS.length >= 3 && FAQ_STARTER_IDS.length <= 4);
+});
+
+test("every FAQ_STARTER_IDS id resolves in FAQ_QUESTIONS_BY_ID", () => {
+    for (const id of FAQ_STARTER_IDS) {
+        assert.ok(FAQ_QUESTIONS_BY_ID[id], `expected FAQ_QUESTIONS_BY_ID.${id} to exist`);
+    }
+});
+
+test("the FAQ_STARTER_IDS ids map onto four distinct categories", () => {
+    const idToCategory = new Map();
+    for (const category of FAQ_CATEGORIES) {
+        for (const question of category.questions) {
+            idToCategory.set(question.id, category.id);
+        }
+    }
+    const categoriesHit = new Set(FAQ_STARTER_IDS.map((id) => idToCategory.get(id)));
+    assert.equal(categoriesHit.size, 4);
 });
 
 test("all 15 question strings are byte-identical to the D-01 text", () => {

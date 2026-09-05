@@ -64,3 +64,10 @@ export const FAQ_QUESTIONS_BY_ID = Object.freeze(
         FAQ_CATEGORIES.flatMap((category) => category.questions).map((question) => [question.id, question])
     )
 );
+
+/* The ids shown before any drill-down (Q-1): the lead question of each
+   of the four categories in D-01 order, so the opening view spans every
+   topic area rather than exhausting one. This array is the single place
+   the opening set is defined — nothing else should hardcode a second
+   starter list. */
+export const FAQ_STARTER_IDS = Object.freeze(["q1", "q6", "q12", "q14"]);
