@@ -1331,9 +1331,16 @@ body::before {
 
 .avatar-faq-video {
   width: 100%;
+  height: 240px;
+  object-fit: cover;
   display: block;
   flex: none;
-  /* never shrinks — the list area absorbs the cap */
+  /* Fixed height + object-fit: cover, not an unconstrained aspect ratio —
+     the real portrait (9:16) footage rendered at natural size (~616px at
+     this widget's width) exceeded the widget's entire 600px max-height by
+     itself, collapsing .avatar-faq-questions (flex: 1) to 0px and making
+     all 15 questions invisible and unreachable. Never shrinks below this
+     height — the list area absorbs the cap. */
 }
 
 /* The scroll area (UI-SPEC overflow state): all 15 buttons stay
