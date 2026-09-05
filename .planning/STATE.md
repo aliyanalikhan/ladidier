@@ -5,16 +5,16 @@ milestone_name: AI Video Avatar FAQ Concierge
 current_phase: 10
 current_phase_name: avatar-video-engine-data-state-machine-playback
 status: executing
-stopped_at: Plan 10-03 complete (all 15 questions + categories + mobile-nav pause committed; next is Plan 10-04)
-last_updated: "2026-09-05T01:35:00.000Z"
+stopped_at: Phase 10 complete — all 4 plans done (structural sweep 27/27, D-09 + D-10 gates approved); next is /gsd-plan-phase 11
+last_updated: "2026-09-05T01:45:00.000Z"
 last_activity: 2026-09-05
-last_activity_desc: Plan 10-03 executed — FAQCategories all-15 list + AVATAR_MOBILENAV_EVENT pause signal (7066f1e, 5f9aced)
+last_activity_desc: Phase 10 closed out — 27/27 structural sweep + D-09/D-10 human gates approved
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 75
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-09-04)
 
 ## Current Position
 
-Phase: 10 (avatar-video-engine-data-state-machine-playback) — EXECUTING
-Plan: 4 of 4 (10-01, 10-02, 10-03 complete)
-Status: Executing Phase 10
-Last activity: 2026-09-05 — Plan 10-03 complete
+Phase: 10 (avatar-video-engine-data-state-machine-playback) — COMPLETE
+Plan: 4 of 4 (10-01, 10-02, 10-03, 10-04 complete)
+Status: Phase 10 closed — D-09 + D-10 gates approved; ready for /gsd-plan-phase 11
+Last activity: 2026-09-05 — Phase 10 close-out (10-04)
 
-Progress: [███████░░░] 75% (v1.3 — 0/3 phases, 3/4 plans)
+Progress: [██████████] 100% (v1.3 — 1/3 phases, 4/4 plans)
 
 ## Out-of-band work
 
@@ -75,6 +75,7 @@ Paid Stripe membership was built and shipped to production on 2026-08-31 **outsi
 | Phase 06 P03 | 3min | 3 tasks | 5 files |
 | Phase 10 P02 | ~40min | 2 tasks | 6 files |
 | Phase 10 P03 | ~25min | 2 tasks | 4 files |
+| Phase 10 P04 | ~15min | 3 tasks | 0 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,8 @@ Paid Stripe membership was built and shipped to production on 2026-08-31 **outsi
 - [Phase 10-02]: Task 1's initial commit (e37a62f) was corrupted by a large multi-block apply_diff (styles.css ballooned to 2353 lines — ~1048 lines of reformat churn plus partial duplication). Repaired by restoring the three touched files from HEAD~1, re-applying the intended edits via a one-shot Node script with found-exactly-once/count assertions, and amending (safe: branch unpushed) — final 3a22596 is surgical and fully re-verified. Standing lesson: check `git diff --stat` immediately after every apply_diff.
 - [Phase 10-03]: The apply_diff corruption recurred on Task 1 (styles.css reformatted whole-file, 1374/331 lines; avatarFaq.jsx landed clean). Repaired via git restore + repair-1003.mjs (uniqueness-asserted, CRLF-aware) — final 38 ins/0 del. Task 2 applied via apply-1003-task2.mjs from the start. Lesson upgraded: multi-block edits to existing files now go through Node scripts with found-exactly-once assertions; apply_diff only for single-block edits, always followed by git diff --stat.
 - [Phase 10-03]: The plan's literal CSS text ("give .avatar-faq-questions an 8px gap") was corrected in implementation — the 8px gap sits on .avatar-faq-category (where the buttons are direct children); a gap on the questions container would give 0px within groups and 8px between groups, inverting the UI-SPEC's sm/lg scale steps. Documented in CSS comments and 10-03-SUMMARY.md.
+- [Phase 10-04]: Structural sweep executed as sweep-1004.mjs (Node) rather than the plan's bash one-liner (cmd.exe lacks the syntax); the zero-deps diff base was resolved programmatically to eea09ed's parent c2795d0 — the plan's literal `HEAD~6` was a stale estimate that would have skipped 10-01's commits, where the asset and package.json baselines live. 27/27 checks green.
+- [Phase 10-04]: D-09 (12-step desktop click-through) and D-10 (physical iPhone) both approved with zero defects. Low Power Mode branch: autoplay still worked — the "Tap to play" fallback was NOT exercised on-device and remains an unexercised safety net; re-check opportunistically during Phase 11/12 device passes.
 
 ### Roadmap Evolution
 
@@ -125,7 +128,7 @@ None yet.
 - Phase 5: `perks.jsx` script tag must be added to both `Ladidier Portal.html` and `Ladidier Portal-print.html` — `PrintApp` also renders `Footer`, so missing either causes a `ReferenceError`.
 - Phase 8: cannot be marked done in Production until the Stripe test-mode-to-live-key revert (see Out-of-band work above) is completed and verified with one successful live webhook delivery.
 - Phase 8: the webhook log-only-vs-actor decision (whether `api/webhook.js`-adjacent logic ever becomes a linking writer) needs an explicit recorded choice during `/gsd-plan-phase 8` — flagged by research/SUMMARY.md as needing deeper design review before task planning.
-- Phase 10: iOS Safari autoplay/Low-Power-Mode behavior (muted+playsInline+autoPlay together, real-device testing) and the stale-event generation-counter guard for rapid FAQ switching are flagged by research/SUMMARY.md as subtle enough to warrant a focused pass during `/gsd-plan-phase 10`.
+- Phase 10 (resolved 2026-09-05, plan 10-04): iOS Safari autoplay/Low-Power-Mode behavior verified on a physical iPhone (D-10) — muted+playsInline+autoPlay autoplays inline, including under Low Power Mode; the stale-event generation guard was exercised by D-09's approved rapid-interrupt click-throughs. Both blocking gates approved with zero defects.
 - Phase 10 (resolved 2026-09-05, plan 10-01): D-08 Vercel plan-tier gate answered — developer confirmed **Pro tier or higher** in the Vercel dashboard (team TNneMwMrfJWJTS1CLnpGwglM); the ~249 MiB avatar payload fits under Pro's 1GB static-upload cap. The Phase 12 blocker/concern entry below about plan-tier verification is now satisfied for this project.
 - Phase 11: Idle-loop footage quality (does `Idle.mp4` read as a natural "alive" loop vs. an obviously-repeating cheap loop) is a content decision that depends on footage already in hand — surface to the content owner during Phase 11, not assumed fine.
 - Phase 12: Vercel plan-tier and bandwidth verification for ~250MB of new video static assets (Hobby plan caps at 100MB total static-file uploads) must be confirmed in the actual Vercel dashboard before the first production deploy that includes the avatar video assets — flagged as a pre-merge checklist item by research/SUMMARY.md.
@@ -151,6 +154,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-05T01:35:00.000Z
-Stopped at: Plan 10-03 complete; next is Plan 10-04 (phase close-out)
-Resume file: ./.planning/phases/10-avatar-video-engine-data-state-machine-playback/10-04-PLAN.md
+Last session: 2026-09-05T01:45:00.000Z
+Stopped at: Phase 10 complete (plans 10-01..10-04; structural sweep 27/27, D-09 + D-10 approved); next is /gsd-plan-phase 11 (Widget UI — Launcher, Categories & Bespoke Chrome)
+Resume file: .planning/ROADMAP.md
