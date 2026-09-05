@@ -5,16 +5,16 @@ milestone_name: AI Video Avatar FAQ Concierge
 current_phase: 10
 current_phase_name: avatar-video-engine-data-state-machine-playback
 status: executing
-stopped_at: Plan 10-02 complete (reducer + widget + session flag committed; next is Plan 10-03)
-last_updated: "2026-09-05T01:10:00.000Z"
+stopped_at: Plan 10-03 complete (all 15 questions + categories + mobile-nav pause committed; next is Plan 10-04)
+last_updated: "2026-09-05T01:35:00.000Z"
 last_activity: 2026-09-05
-last_activity_desc: Plan 10-02 executed — avatarReducer + avatarFaq widget + sessionStorage intro flag (3a22596, 1907ceb)
+last_activity_desc: Plan 10-03 executed — FAQCategories all-15 list + AVATAR_MOBILENAV_EVENT pause signal (7066f1e, 5f9aced)
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
-  percent: 50
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-09-04)
 ## Current Position
 
 Phase: 10 (avatar-video-engine-data-state-machine-playback) — EXECUTING
-Plan: 3 of 4 (10-01, 10-02 complete)
+Plan: 4 of 4 (10-01, 10-02, 10-03 complete)
 Status: Executing Phase 10
-Last activity: 2026-09-05 — Plan 10-02 complete
+Last activity: 2026-09-05 — Plan 10-03 complete
 
-Progress: [█████░░░░░] 50% (v1.3 — 0/3 phases, 2/4 plans)
+Progress: [███████░░░] 75% (v1.3 — 0/3 phases, 3/4 plans)
 
 ## Out-of-band work
 
@@ -74,6 +74,7 @@ Paid Stripe membership was built and shipped to production on 2026-08-31 **outsi
 | Phase 05 P02 | 8min | 2 tasks | 3 files |
 | Phase 06 P03 | 3min | 3 tasks | 5 files |
 | Phase 10 P02 | ~40min | 2 tasks | 6 files |
+| Phase 10 P03 | ~25min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,8 @@ Paid Stripe membership was built and shipped to production on 2026-08-31 **outsi
 - [v1.3 roadmap]: Phase numbering continues from Phase 9 (Phases 10-12) rather than resetting, per this milestone's phase_id_convention (sequential, no milestone prefix in config.json).
 - [v1.3 roadmap]: Compressed research/SUMMARY.md's proposed 4-phase split into 3 roadmap phases by folding "Data + State Machine Foundation" into "Video Playback + Lifecycle" (now Phase 10) — a standalone reducer/data-module phase has no rendered UI and therefore no human-observable success criteria. The research-recommended build order (data module + reducer built and manually exercised before wiring to a real `<video>` element) is preserved as internal Phase 10 plan sequencing, not lost.
 - [Phase 10-02]: Task 1's initial commit (e37a62f) was corrupted by a large multi-block apply_diff (styles.css ballooned to 2353 lines — ~1048 lines of reformat churn plus partial duplication). Repaired by restoring the three touched files from HEAD~1, re-applying the intended edits via a one-shot Node script with found-exactly-once/count assertions, and amending (safe: branch unpushed) — final 3a22596 is surgical and fully re-verified. Standing lesson: check `git diff --stat` immediately after every apply_diff.
+- [Phase 10-03]: The apply_diff corruption recurred on Task 1 (styles.css reformatted whole-file, 1374/331 lines; avatarFaq.jsx landed clean). Repaired via git restore + repair-1003.mjs (uniqueness-asserted, CRLF-aware) — final 38 ins/0 del. Task 2 applied via apply-1003-task2.mjs from the start. Lesson upgraded: multi-block edits to existing files now go through Node scripts with found-exactly-once assertions; apply_diff only for single-block edits, always followed by git diff --stat.
+- [Phase 10-03]: The plan's literal CSS text ("give .avatar-faq-questions an 8px gap") was corrected in implementation — the 8px gap sits on .avatar-faq-category (where the buttons are direct children); a gap on the questions container would give 0px within groups and 8px between groups, inverting the UI-SPEC's sm/lg scale steps. Documented in CSS comments and 10-03-SUMMARY.md.
 
 ### Roadmap Evolution
 
@@ -148,6 +151,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-05T01:10:00.000Z
-Stopped at: Plan 10-02 complete; next is Plan 10-03 (widen the tracer to all 15 questions + categories)
-Resume file: ./.planning/phases/10-avatar-video-engine-data-state-machine-playback/10-03-PLAN.md
+Last session: 2026-09-05T01:35:00.000Z
+Stopped at: Plan 10-03 complete; next is Plan 10-04 (phase close-out)
+Resume file: ./.planning/phases/10-avatar-video-engine-data-state-machine-playback/10-04-PLAN.md
