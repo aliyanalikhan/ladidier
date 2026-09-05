@@ -5,16 +5,16 @@ milestone_name: AI Video Avatar FAQ Concierge
 current_phase: 10
 current_phase_name: avatar-video-engine-data-state-machine-playback
 status: executing
-stopped_at: Plan 10-01 complete (data module + 17 clips committed; D-08 resolved tier-confirmed-pro)
-last_updated: "2026-09-05T00:29:00.000Z"
+stopped_at: Plan 10-02 complete (reducer + widget + session flag committed; next is Plan 10-03)
+last_updated: "2026-09-05T01:10:00.000Z"
 last_activity: 2026-09-05
-last_activity_desc: Plan 10-01 executed — avatarFaqData.js + tests green, 17 video clips committed (eea09ed, d0ac846)
+last_activity_desc: Plan 10-02 executed — avatarReducer + avatarFaq widget + sessionStorage intro flag (3a22596, 1907ceb)
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
-  percent: 25
+  completed_plans: 2
+  percent: 50
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-09-04)
 ## Current Position
 
 Phase: 10 (avatar-video-engine-data-state-machine-playback) — EXECUTING
-Plan: 2 of 4 (10-01 complete)
+Plan: 3 of 4 (10-01, 10-02 complete)
 Status: Executing Phase 10
-Last activity: 2026-09-05 — Plan 10-01 complete
+Last activity: 2026-09-05 — Plan 10-02 complete
 
-Progress: [██░░░░░░░░░] 25% (v1.3 — 0/3 phases, 1/4 plans)
+Progress: [█████░░░░░] 50% (v1.3 — 0/3 phases, 2/4 plans)
 
 ## Out-of-band work
 
@@ -73,6 +73,7 @@ Paid Stripe membership was built and shipped to production on 2026-08-31 **outsi
 | Phase 05 P01 | 15min | 2 tasks | 2 files |
 | Phase 05 P02 | 8min | 2 tasks | 3 files |
 | Phase 06 P03 | 3min | 3 tasks | 5 files |
+| Phase 10 P02 | ~40min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,7 @@ Paid Stripe membership was built and shipped to production on 2026-08-31 **outsi
 - [v1.2 roadmap]: Stripe-customer linking (LINK-01..04) isolated into its own phase (8) rather than folded into Phase 7 or 9, because it concentrates the highest-severity new risks (duplicate customers, race conditions, account-takeover-by-email) — per research/SUMMARY.md's explicit phase-ordering rationale.
 - [v1.3 roadmap]: Phase numbering continues from Phase 9 (Phases 10-12) rather than resetting, per this milestone's phase_id_convention (sequential, no milestone prefix in config.json).
 - [v1.3 roadmap]: Compressed research/SUMMARY.md's proposed 4-phase split into 3 roadmap phases by folding "Data + State Machine Foundation" into "Video Playback + Lifecycle" (now Phase 10) — a standalone reducer/data-module phase has no rendered UI and therefore no human-observable success criteria. The research-recommended build order (data module + reducer built and manually exercised before wiring to a real `<video>` element) is preserved as internal Phase 10 plan sequencing, not lost.
+- [Phase 10-02]: Task 1's initial commit (e37a62f) was corrupted by a large multi-block apply_diff (styles.css ballooned to 2353 lines — ~1048 lines of reformat churn plus partial duplication). Repaired by restoring the three touched files from HEAD~1, re-applying the intended edits via a one-shot Node script with found-exactly-once/count assertions, and amending (safe: branch unpushed) — final 3a22596 is surgical and fully re-verified. Standing lesson: check `git diff --stat` immediately after every apply_diff.
 
 ### Roadmap Evolution
 
@@ -146,6 +148,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-05T00:29:00.000Z
-Stopped at: Plan 10-01 complete; next is Plan 10-02 (avatarReducer + state machine)
-Resume file: ./.planning/phases/10-avatar-video-engine-data-state-machine-playback/10-02-PLAN.md
+Last session: 2026-09-05T01:10:00.000Z
+Stopped at: Plan 10-02 complete; next is Plan 10-03 (widen the tracer to all 15 questions + categories)
+Resume file: ./.planning/phases/10-avatar-video-engine-data-state-machine-playback/10-03-PLAN.md
