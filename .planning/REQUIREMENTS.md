@@ -102,7 +102,7 @@ Requirements for the "AI Video Avatar FAQ Concierge" milestone. Each maps to roa
 
 ### Avatar — Video State Machine
 
-- [ ] **AVATAR-01**: Widget auto-opens on homepage load and autoplays the intro video (muted, per browser autoplay policy)
+- [ ] **AVATAR-01**: The widget autoplays its intro video (muted, per browser autoplay policy) the first time the Manifesto section scrolls into view — not on homepage load (amended 2026-09-05, quick task 260905-t26)
 - [ ] **AVATAR-02**: After the intro finishes, the idle video loops continuously until a question is selected
 - [ ] **AVATAR-03**: Selecting a question immediately plays that question's answer video with audio enabled
 - [ ] **AVATAR-04**: When an answer video finishes, playback automatically returns to the looping idle video
@@ -118,10 +118,10 @@ Requirements for the "AI Video Avatar FAQ Concierge" milestone. Each maps to roa
 
 ### Widget — Chrome & Placement
 
-- [ ] **WIDGET-01**: The experience is a floating, bottom-right popup widget on the homepage only (not a hero section, not site-wide)
+- [ ] **WIDGET-01**: The experience is an inline widget embedded in the Home page's Manifesto section (left column, under the Crest/Laurel), on the homepage only — not a floating popup, not a hero section, not site-wide (amended 2026-09-05, quick task 260905-t26)
 - [ ] **WIDGET-02**: The widget has a persistent, always-reachable close/minimize control
 - [ ] **WIDGET-03**: Visual design uses the existing LaDidiér design system (fonts, palette, spacing) and explicitly avoids generic chatbot chrome (speech bubbles, "online" dot, typing indicator)
-- [ ] **WIDGET-04**: The widget's stacking (z-index) doesn't conflict with or get obscured by existing homepage UI (mobile nav overlay, hidden perk, treasure hunt icons)
+- [ ] **WIDGET-04**: Satisfied structurally — the widget is an in-flow element with no z-index, so it can neither obscure nor be obscured by the mobile nav overlay, the hidden perk, or the treasure hunt icons (amended 2026-09-05, quick task 260905-t26)
 
 ### Accessibility, Robustness & Responsiveness
 
