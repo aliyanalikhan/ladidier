@@ -471,6 +471,18 @@ const ISSUE_HIGHLIGHTS = [
     title: "One Planet. One Human Race. One Love.",
     dek: "The manifesto behind ÉCLAT — a reminder, from as far away as the moon, of what actually connects us.",
   },
+  {
+    img: "/assets/eclat/bridal-collection.png",
+    kicker: "Style · Bridal",
+    title: "The Bridal Collection: Timeless Beauty",
+    dek: "Crystal tiaras, filigree necklaces, and the quiet brilliance of jewelry made for a forever moment.",
+  },
+  {
+    img: "/assets/eclat/sleep-wellness.png",
+    kicker: "Wellness · Living Well",
+    title: "Why Good Sleep Matters As We Age",
+    dek: "Quality rest supports memory, mood, and heart health — the case for prioritizing sleep at every stage of life.",
+  },
 ];
 
 /* Total pages behind /api/issue/page — must match content/eclat-vol2-pages/ */
