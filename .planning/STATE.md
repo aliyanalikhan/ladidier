@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-09-04)
 Phase: 10 (avatar-video-engine-data-state-machine-playback) — COMPLETE
 Plan: 4 of 4 (10-01, 10-02, 10-03, 10-04 complete)
 Status: Phase 10 closed — D-09 + D-10 gates approved; ready for /gsd-plan-phase 11
-Last activity: 2026-09-05 — Phase 10 close-out (10-04)
+Last activity: 2026-09-08 - Completed quick task 260908-9l4: Add two new highlight images (bridal collection ad, sleep wellness ad) to the ECLAT magazine Highlights section
 
 Progress: [██████████] 100% (v1.3 — 1/3 phases, 4/4 plans)
 
@@ -155,6 +155,7 @@ None yet.
 | 260905-avc | fixed avatar FAQ widget: oversized portrait video (unconstrained aspect ratio) was collapsing the question list to 0px, making all 15 questions invisible/unreachable — explains both "audio not coming" and "UI not good" reports | 2026-09-05 | (pending) | Complete | [260905-avc-fix-oversized-avatar-video-hiding-faq-quest](.planning/quick/260905-avc-fix-oversized-avatar-video-hiding-faq-quest/) |
 | 260905-rw7 | redesigned avatar FAQ widget chrome — question pills now float on a dark scrim over the video (lettered badges) instead of a list below it; replaced "all 15 questions always" with progressive disclosure (4 starters -> More topics -> 4 keyword chips -> per-category pills -> Back), advancing FAQ-03/WIDGET-03 early | 2026-09-05 | ec77f1f | Awaiting checkpoint approval (Task 3: human visual check against reference screenshot) | [260905-rw7-redesign-avatar-faq-popup-to-overlay-the](.planning/quick/260905-rw7-redesign-avatar-faq-popup-to-overlay-the/) |
 | 260905-stj | replaced the avatar widget's idle-loop video asset (public/ + dist/) with a user-supplied re-recorded clip, same filename — no code change | 2026-09-05 | ce38293 | Complete | [260905-stj-replace-the-avatar-idle-loop-video-asset](.planning/quick/260905-stj-replace-the-avatar-idle-loop-video-asset/) |
+| 260908-9l4 | added two new highlight images (bridal collection ad, sleep wellness ad) to the ÉCLAT magazine Highlights section — copied assets, appended ISSUE_HIGHLIGHTS entries, rebuilt dist | 2026-09-08 | 5a90084 | Awaiting checkpoint approval (Task 4: human visual check — 10 cards render, no crop cutting off ad headlines, Home unchanged) | [260908-9l4-add-two-new-highlight-images-bridal-coll](.planning/quick/260908-9l4-add-two-new-highlight-images-bridal-coll/) |
 
 ## Session Continuity
 
