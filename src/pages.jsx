@@ -853,7 +853,7 @@ function IssueReader({ onClose }) {
             >
               {isFullPage ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 14h6m0 0v6m0-6L3 21m17-7h-6m0 0v6m0-6l7 7M10 4v6m0 0H4m6 0L3 3m10 7h6m0 0V4m0 6l7-7"/>
+                  <path d="M4 10h6V4M4 4l6 6M20 10h-6V4M20 4l-6 6M4 14h6v6M4 20l6-6M20 14h-6v6M20 20l-6-6"/>
                 </svg>
               ) : (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
