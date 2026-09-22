@@ -23,12 +23,8 @@ const PAGES_DIR = path.join(process.cwd(), 'content', 'eclat-vol2-pages');
 // the file here means the only way to it is this route's entitlement check.
 const PDF_PATH = path.join(process.cwd(), 'content', 'eclat-vol2-issue.pdf');
 
-async function handlePage(request, stripe) {
-  const active = await hasIssueAccess(request, stripe);
-  if (!active) {
-    return Response.json({ error: 'Membership required' }, { status: 403, headers: PRIVATE });
-  }
-
+async function handlePage(request) {
+  // Complimentary reading access: pages can be read in the reader without subscription.
   // The page number becomes part of a filesystem path below, so it is validated
   // as a bounded integer before anything is built from it — never the raw
   // query string. This is what stops a crafted `n` from reading files outside
@@ -77,6 +73,11 @@ async function handlePdf(request, stripe) {
 }
 
 export async function GET(request) {
+  const action = new URL(request.url).searchParams.get('action');
+  if (action === 'page') {
+    return handlePage(request);
+  }
+
   let stripe;
   try {
     stripe = getStripe();
@@ -85,10 +86,7 @@ export async function GET(request) {
     return Response.json({ error: 'Stripe is not configured' }, { status: 500, headers: PRIVATE });
   }
 
-  const action = new URL(request.url).searchParams.get('action');
   switch (action) {
-    case 'page':
-      return handlePage(request, stripe);
     case 'pdf':
       return handlePdf(request, stripe);
     default:

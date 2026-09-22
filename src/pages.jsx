@@ -593,8 +593,21 @@ function IssueReader({ onClose }) {
   );
 }
 
-function MagazinePage({ setRoute, isMember }) {
-  const [readerOpen, setReaderOpen] = useState(false);
+function MagazinePage({ setRoute, isMember, readerOpen: externalReaderOpen = false, onCloseReader }) {
+  const [internalReaderOpen, setInternalReaderOpen] = useState(false);
+  const isReaderActive = externalReaderOpen || internalReaderOpen;
+
+  const handleClose = () => {
+    setInternalReaderOpen(false);
+    if (onCloseReader) {
+      onCloseReader();
+    }
+  };
+
+  const handleOpen = () => {
+    setInternalReaderOpen(true);
+  };
+
   return (
     <div className="page-fade">
       <header className="page-head">
@@ -646,7 +659,7 @@ function MagazinePage({ setRoute, isMember }) {
                 You're a member — the full issue is yours to read here, or take home as a PDF.
               </p>
               <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
-                <button className="btn solid" onClick={() => setReaderOpen(true)}>Read the full issue →</button>
+                <button className="btn solid" onClick={handleOpen}>Read the full issue →</button>
                 <a className="btn ghost" href="/api/issue/pdf" download="ECLAT-Vol2.pdf">Download PDF</a>
               </div>
             </>
@@ -663,7 +676,7 @@ function MagazinePage({ setRoute, isMember }) {
         </div>
       </section>
 
-      {readerOpen && <IssueReader onClose={() => setReaderOpen(false)} />}
+      {isReaderActive && <IssueReader onClose={handleClose} />}
 
       {/* Highlights grid */}
       <section className="section container">

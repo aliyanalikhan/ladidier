@@ -137,16 +137,48 @@ export default function App() {
   }, [authReady, user]);
 
 
-  // simple hash routing
+  const [readerOpen, setReaderOpen] = useState(false);
+
+  // simple hash routing + direct reader entry point
   useEffect(() => {
     const fromHash = () => {
-      const h = window.location.hash.replace(/^#/, "").split('?')[0] || "home";
-      setRoute(h);
+      const rawHash = window.location.hash.replace(/^#/, "");
+      const [baseRoute, query] = rawHash.split('?');
+      const searchParams = new URLSearchParams(query || window.location.search);
+      const isDirectRead =
+        baseRoute === "read" ||
+        baseRoute === "reader" ||
+        baseRoute === "magazine-reader" ||
+        searchParams.get("read") === "true" ||
+        searchParams.get("read") === "1" ||
+        searchParams.get("reader") === "true" ||
+        searchParams.get("reader") === "1" ||
+        window.location.pathname === "/read" ||
+        window.location.pathname === "/reader";
+
+      if (isDirectRead) {
+        setRoute("magazine");
+        setReaderOpen(true);
+      } else {
+        const h = baseRoute || "home";
+        setRoute(h);
+        if (h !== "magazine") {
+          setReaderOpen(false);
+        }
+      }
     };
     fromHash();
     window.addEventListener("hashchange", fromHash);
     return () => window.removeEventListener("hashchange", fromHash);
   }, []);
+
+  const handleCloseReader = () => {
+    setReaderOpen(false);
+    const rawHash = window.location.hash.replace(/^#/, "").split('?')[0];
+    if (rawHash === "read" || rawHash === "reader" || rawHash === "magazine-reader") {
+      history.replaceState(null, "", "#magazine");
+    }
+  };
 
   // Returning from Stripe Checkout. The session id in the URL is not proof of
   // payment on its own, so confirm it server-side before unlocking anything.
@@ -201,7 +233,17 @@ export default function App() {
   }, []);
 
   const go = (r) => {
+    if (r === "read" || r === "reader" || r === "magazine-reader") {
+      setRoute("magazine");
+      setReaderOpen(true);
+      history.replaceState(null, "", `#${r}`);
+      window.scrollTo({ top: 0, behavior: "instant" });
+      return;
+    }
     setRoute(r);
+    if (r !== "magazine") {
+      setReaderOpen(false);
+    }
     history.replaceState(null, "", `#${r}`);
     window.scrollTo({ top: 0, behavior: "instant" });
   };
@@ -211,7 +253,7 @@ export default function App() {
 
   let page;
   switch (route) {
-    case "magazine":  page = <MagazinePage  setRoute={go} isMember={isMember} />; break;
+    case "magazine":  page = <MagazinePage  setRoute={go} isMember={isMember} readerOpen={readerOpen} onCloseReader={handleCloseReader} />; break;
     case "article":   page = <ArticlePage   setRoute={go} />; break;
     case "stores":    page = <StoresPage    setRoute={go} />; break;
     case "subscribe": page = <SubscribePage setRoute={go} isSubscribed={isSubscribed} setIsSubscribed={setIsSubscribed} user={user} setUser={setUser} authReady={authReady} isMember={isMember} activePlan={activePlan} />; break;

@@ -5,6 +5,16 @@
       "source": "/Ladidier Portal-print.html",
       "destination": "/print.html",
       "permanent": true
+    },
+    {
+      "source": "/read",
+      "destination": "/#read",
+      "permanent": false
+    },
+    {
+      "source": "/reader",
+      "destination": "/#reader",
+      "permanent": false
     }
   ],
   "rewrites": [
