@@ -5,22 +5,14 @@
       "source": "/Ladidier Portal-print.html",
       "destination": "/print.html",
       "permanent": true
-    },
-    {
-      "source": "/read",
-      "destination": "/#read",
-      "permanent": false
-    },
-    {
-      "source": "/reader",
-      "destination": "/#reader",
-      "permanent": false
     }
   ],
   "rewrites": [
     { "source": "/api/auth/:action", "destination": "/api/auth-router" },
     { "source": "/api/account/:action", "destination": "/api/account-router" },
-    { "source": "/api/issue/:action", "destination": "/api/issue-router" }
+    { "source": "/api/issue/:action", "destination": "/api/issue-router" },
+    { "source": "/read", "destination": "/index.html" },
+    { "source": "/reader", "destination": "/index.html" }
   ],
   "functions": {
     "api/issue-router.js": {
