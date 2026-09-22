@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    LADIDIÉR — Page components
    ───────────────────────────────────────────────────────────── */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
   IMG,
@@ -501,91 +501,511 @@ function pagesForSpread(i) {
   return [2 * i, 2 * i + 1];
 }
 
-/* Full-issue reader, member-gated. Fetches the 1-2 page images for the
-   current spread from /api/issue/page (cookie-authenticated) rather than
-   shipping all 62 pages up front. */
+function spreadForPage(p) {
+  if (p <= 1) return 0;
+  if (p >= ISSUE_PAGE_COUNT) return LAST_SPREAD;
+  return Math.floor(p / 2);
+}
+
+/* Full-issue reader with Full Page toggle, Single-Page Zoom Tool, and
+   floating/persistent navigation buttons so readers can comfortably zoom in
+   on any page while all navigation and action buttons stay visible. */
 function IssueReader({ onClose }) {
   const [spreadIndex, setSpreadIndex] = useState(0);
+  const [zoomedPage, setZoomedPage] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [isFullPage, setIsFullPage] = useState(false);
   const [imgUrls, setImgUrls] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const viewportRef = useRef(null);
+  const dragRef = useRef({ startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
+  const cacheRef = useRef(new Map());
+
   const pages = pagesForSpread(spreadIndex);
 
+  // Fetch page images with caching
   useEffect(() => {
     let cancelled = false;
-    let objectUrls = [];
     setLoading(true);
     setError(null);
-    setImgUrls([]);
-    Promise.all(
-      pages.map((n) =>
-        fetch(`/api/issue/page?n=${n}`, { credentials: "same-origin" }).then(async (res) => {
-          if (!res.ok) throw new Error(res.status === 403 ? "Your session has expired — please sign back in." : "Could not load this page.");
-          return res.blob();
-        })
+
+    const neededPages = pages.filter((n) => !cacheRef.current.has(n));
+
+    if (neededPages.length === 0) {
+      setImgUrls(pages.map((n) => cacheRef.current.get(n)));
+      setLoading(false);
+    } else {
+      Promise.all(
+        neededPages.map((n) =>
+          fetch(`/api/issue/page?n=${n}`, { credentials: "same-origin" }).then(async (res) => {
+            if (!res.ok) {
+              throw new Error(
+                res.status === 403
+                  ? "Your session has expired — please sign back in."
+                  : "Could not load this page."
+              );
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            cacheRef.current.set(n, url);
+            return { n, url };
+          })
+        )
       )
-    )
-      .then((blobs) => {
-        if (cancelled) return;
-        objectUrls = blobs.map((b) => URL.createObjectURL(b));
-        setImgUrls(objectUrls);
-      })
-      .catch((err) => { if (!cancelled) setError(err.message); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+        .then(() => {
+          if (cancelled) return;
+          setImgUrls(pages.map((n) => cacheRef.current.get(n)));
+        })
+        .catch((err) => {
+          if (!cancelled) setError(err.message);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }
+
     return () => {
       cancelled = true;
-      objectUrls.forEach((u) => URL.revokeObjectURL(u));
     };
-    // pagesForSpread(spreadIndex) is re-derived above on every render from
-    // spreadIndex alone, so depending on spreadIndex here is equivalent to
-    // depending on `pages` without recreating the array on each render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spreadIndex]);
 
+  // Clean up object URLs on reader unmount
+  useEffect(() => {
+    return () => {
+      cacheRef.current.forEach((url) => URL.revokeObjectURL(url));
+      cacheRef.current.clear();
+    };
+  }, []);
+
+  // Listen to browser fullscreen changes to keep full page toggle state in sync
+  useEffect(() => {
+    const onFsChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullPage(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  // Reset scroll position when page changes
+  useEffect(() => {
+    if (viewportRef.current) {
+      viewportRef.current.scrollTop = 0;
+      viewportRef.current.scrollLeft = 0;
+    }
+  }, [zoomedPage, spreadIndex]);
+
+  // Navigation handlers
+  const handlePrev = useCallback(() => {
+    if (zoomedPage !== null) {
+      if (zoomedPage > 1) {
+        const prevPage = zoomedPage - 1;
+        const targetSpread = spreadForPage(prevPage);
+        if (targetSpread !== spreadIndex) {
+          setSpreadIndex(targetSpread);
+        }
+        setZoomedPage(prevPage);
+      }
+    } else {
+      setSpreadIndex((i) => Math.max(0, i - 1));
+    }
+  }, [zoomedPage, spreadIndex]);
+
+  const handleNext = useCallback(() => {
+    if (zoomedPage !== null) {
+      if (zoomedPage < ISSUE_PAGE_COUNT) {
+        const nextPage = zoomedPage + 1;
+        const targetSpread = spreadForPage(nextPage);
+        if (targetSpread !== spreadIndex) {
+          setSpreadIndex(targetSpread);
+        }
+        setZoomedPage(nextPage);
+      }
+    } else {
+      setSpreadIndex((i) => Math.min(LAST_SPREAD, i + 1));
+    }
+  }, [zoomedPage, spreadIndex]);
+
+  const toggleFullPage = useCallback(() => {
+    setIsFullPage((prev) => {
+      const next = !prev;
+      if (next) {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } else {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    if (zoomedPage === null) {
+      setZoomedPage(pages[0]);
+      setZoomLevel(1.5);
+    } else {
+      setZoomLevel((z) => Math.min(2.5, +(z + 0.3).toFixed(1)));
+    }
+  }, [zoomedPage, pages]);
+
+  const handleZoomOut = useCallback(() => {
+    if (zoomedPage !== null) {
+      if (zoomLevel > 1.2) {
+        setZoomLevel((z) => Math.max(1, +(z - 0.3).toFixed(1)));
+      } else {
+        setZoomedPage(null);
+        setZoomLevel(1);
+      }
+    }
+  }, [zoomedPage, zoomLevel]);
+
+  const handleToggleZoomMode = useCallback(() => {
+    if (zoomedPage !== null) {
+      setZoomedPage(null);
+      setZoomLevel(1);
+    } else {
+      setZoomedPage(pages[0]);
+      setZoomLevel(1.5);
+    }
+  }, [zoomedPage, pages]);
+
+  const handlePageClick = useCallback((pageNum) => {
+    if (zoomedPage === pageNum) {
+      setZoomedPage(null);
+      setZoomLevel(1);
+    } else {
+      setZoomedPage(pageNum);
+      setZoomLevel(1.5);
+    }
+  }, [zoomedPage]);
+
+  // Keyboard navigation
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") setSpreadIndex((i) => Math.min(LAST_SPREAD, i + 1));
-      if (e.key === "ArrowLeft") setSpreadIndex((i) => Math.max(0, i - 1));
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      if (e.key === "Escape") {
+        if (isFullPage) {
+          toggleFullPage();
+        } else {
+          onClose();
+        }
+      } else if (e.key === "ArrowRight") {
+        handleNext();
+      } else if (e.key === "ArrowLeft") {
+        handlePrev();
+      } else if (e.key === "+" || e.key === "=") {
+        handleZoomIn();
+      } else if (e.key === "-" || e.key === "_") {
+        handleZoomOut();
+      } else if (e.key === "f" || e.key === "F") {
+        toggleFullPage();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, handleNext, handlePrev, handleZoomIn, handleZoomOut, toggleFullPage, isFullPage]);
 
+  // Drag to pan handlers when zoomed
+  const handleMouseDown = (e) => {
+    if (zoomedPage === null && zoomLevel <= 1) return;
+    if (e.target.closest("button") || e.target.closest("a")) return;
+    setIsDragging(true);
+    if (viewportRef.current) {
+      dragRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        scrollLeft: viewportRef.current.scrollLeft,
+        scrollTop: viewportRef.current.scrollTop,
+      };
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging || !viewportRef.current) return;
+    e.preventDefault();
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    viewportRef.current.scrollLeft = dragRef.current.scrollLeft - dx;
+    viewportRef.current.scrollTop = dragRef.current.scrollTop - dy;
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const isFirst = zoomedPage !== null ? zoomedPage <= 1 : spreadIndex <= 0;
+  const isLast = zoomedPage !== null ? zoomedPage >= ISSUE_PAGE_COUNT : spreadIndex >= LAST_SPREAD;
   const pageLabel = pages.length === 2 ? `Pages ${pages[0]}–${pages[1]}` : `Page ${pages[0]}`;
+  const isSpreadView = zoomedPage === null && pages.length === 2;
+  const activeZoomIdx = zoomedPage !== null ? pages.indexOf(zoomedPage) : -1;
 
-  // Portaled straight to document.body: MagazinePage's root carries the
-  // site-wide .page-fade entry animation, which animates `transform` and so
-  // establishes a containing block for any `position: fixed` descendant —
-  // without the portal this backdrop renders pinned to that ancestor's box
-  // instead of the viewport (it visually lands mid-document instead of
-  // centered on screen). Mounting outside that subtree sidesteps it, the same
-  // reason `.mobile-overlay` is mounted at the app root rather than inside a page.
   return createPortal(
     <div
-      className="reader-backdrop"
+      className={`reader-backdrop ${isFullPage ? "reader-backdrop-fullscreen" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label="ÉCLAT Vol. 2 reader"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
-      <div className={`reader-modal${pages.length === 2 ? " reader-modal-spread" : ""}`}>
+      <div
+        className={`reader-modal ${isFullPage ? "reader-modal-fullscreen" : ""} ${
+          isSpreadView ? "reader-modal-spread" : ""
+        }`}
+      >
+        {/* Top Header - Always visible */}
         <div className="reader-modal-header">
-          <span className="mono" style={{ fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--mute)" }}>
-            ÉCLAT Vol. 2 · {pageLabel} / {ISSUE_PAGE_COUNT}
-          </span>
-          <button className="reader-close" onClick={onClose} aria-label="Close reader">×</button>
+          <div className="reader-header-info">
+            <span className="mono reader-header-title">ÉCLAT Vol. 2</span>
+            <span className="reader-badge">
+              {zoomedPage !== null ? (
+                <>
+                  Page {zoomedPage} of {ISSUE_PAGE_COUNT}{" "}
+                  <span className="reader-badge-accent">
+                    (Zoomed {Math.round(zoomLevel * 100)}%)
+                  </span>
+                </>
+              ) : (
+                <>{pageLabel} of {ISSUE_PAGE_COUNT}</>
+              )}
+            </span>
+          </div>
+
+          <div className="reader-header-actions">
+            {/* Zoom Tool Group */}
+            <div className="reader-zoom-group" role="toolbar" aria-label="Zoom controls">
+              <button
+                type="button"
+                className="reader-btn-icon"
+                onClick={handleZoomOut}
+                disabled={zoomedPage === null && zoomLevel <= 1}
+                title="Zoom out (-)"
+                aria-label="Zoom out"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                className={`reader-btn-zoom-level ${zoomedPage !== null ? "active" : ""}`}
+                onClick={handleToggleZoomMode}
+                title={zoomedPage !== null ? "Click to reset zoom" : "Click to zoom into page"}
+              >
+                {zoomedPage !== null ? `${Math.round(zoomLevel * 100)}%` : "Fit"}
+              </button>
+
+              <button
+                type="button"
+                className="reader-btn-icon"
+                onClick={handleZoomIn}
+                disabled={zoomLevel >= 2.5}
+                title="Zoom in (+)"
+                aria-label="Zoom in"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                className={`reader-btn-mode ${zoomedPage !== null ? "active" : ""}`}
+                onClick={handleToggleZoomMode}
+                title={zoomedPage !== null ? "Switch to 2-page spread" : "Zoom on one page"}
+              >
+                {zoomedPage !== null ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                    </svg>
+                    <span className="reader-btn-text">Spread</span>
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/>
+                    </svg>
+                    <span className="reader-btn-text">Zoom Page</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="reader-header-divider" />
+
+            {/* Full page toggle button */}
+            <button
+              type="button"
+              className={`reader-btn-icon ${isFullPage ? "active" : ""}`}
+              onClick={toggleFullPage}
+              title={isFullPage ? "Exit full page (F)" : "Full page toggle (F)"}
+              aria-label={isFullPage ? "Exit full page" : "Full page toggle"}
+            >
+              {isFullPage ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 14h6m0 0v6m0-6L3 21m17-7h-6m0 0v6m0-6l7 7M10 4v6m0 0H4m6 0L3 3m10 7h6m0 0V4m0 6l7-7"/>
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+              )}
+            </button>
+
+            {/* Close button */}
+            <button type="button" className="reader-close" onClick={onClose} aria-label="Close reader" title="Close (Esc)">×</button>
+          </div>
         </div>
-        <div className="reader-page">
-          {loading && <div className="mono muted">Loading…</div>}
-          {!loading && error && <div className="mono muted">{error}</div>}
-          {!loading && !error && imgUrls.map((url, idx) => (
-            <img key={pages[idx]} src={url} alt={`ÉCLAT Vol. 2, page ${pages[idx]}`} />
-          ))}
+
+        {/* Viewport container holding page image & floating navigating buttons */}
+        <div className="reader-viewport-container">
+          {/* Floating Navigating Button (Left / Prev) */}
+          <button
+            type="button"
+            className="reader-nav-float reader-nav-prev"
+            onClick={handlePrev}
+            disabled={isFirst}
+            aria-label={zoomedPage !== null ? `Previous page (Page ${zoomedPage - 1})` : "Previous spread"}
+            title={zoomedPage !== null ? `Previous page (Page ${zoomedPage - 1})` : "Previous spread"}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </button>
+
+          {/* Floating Navigating Button (Right / Next) */}
+          <button
+            type="button"
+            className="reader-nav-float reader-nav-next"
+            onClick={handleNext}
+            disabled={isLast}
+            aria-label={zoomedPage !== null ? `Next page (Page ${zoomedPage + 1})` : "Next spread"}
+            title={zoomedPage !== null ? `Next page (Page ${zoomedPage + 1})` : "Next spread"}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+
+          {/* Scrollable / pannable Page area */}
+          <div
+            ref={viewportRef}
+            className={`reader-page ${zoomedPage !== null ? "reader-page-zoomed" : ""} ${isDragging ? "is-dragging" : ""}`}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            {loading && <div className="mono muted reader-status-msg">Loading…</div>}
+            {!loading && error && <div className="mono muted reader-status-msg">{error}</div>}
+
+            {!loading && !error && (
+              zoomedPage !== null ? (
+                // Single Page Zoom Mode
+                activeZoomIdx !== -1 && imgUrls[activeZoomIdx] ? (
+                  <div
+                    className="reader-single-page-wrap"
+                    style={{
+                      transform: `scale(${zoomLevel})`,
+                      transformOrigin: "center top",
+                      transition: isDragging ? "none" : "transform 0.2s ease-out",
+                    }}
+                  >
+                    <img
+                      src={imgUrls[activeZoomIdx]}
+                      alt={`ÉCLAT Vol. 2, page ${zoomedPage}`}
+                      className="reader-img-zoomed"
+                      draggable={false}
+                      onDoubleClick={() => {
+                        if (zoomLevel > 1.2) {
+                          setZoomLevel(1);
+                        } else {
+                          setZoomLevel(1.8);
+                        }
+                      }}
+                      title="Double-click to toggle zoom · Drag to pan"
+                    />
+                  </div>
+                ) : (
+                  <div className="mono muted reader-status-msg">Loading page…</div>
+                )
+              ) : (
+                // Spread Mode (1 or 2 facing pages)
+                imgUrls.map((url, idx) => (
+                  <div
+                    key={pages[idx]}
+                    className="reader-spread-page-wrap"
+                    onClick={() => handlePageClick(pages[idx])}
+                    title={`Click to zoom on Page ${pages[idx]}`}
+                  >
+                    <img
+                      src={url}
+                      alt={`ÉCLAT Vol. 2, page ${pages[idx]}`}
+                      className="reader-img-spread"
+                      draggable={false}
+                    />
+                    <div className="reader-zoom-overlay-hint">
+                      <span>Click to zoom</span>
+                    </div>
+                  </div>
+                ))
+              )
+            )}
+          </div>
         </div>
+
+        {/* Bottom Nav Bar - Always visible */}
         <div className="reader-nav">
-          <button className="btn ghost" onClick={() => setSpreadIndex((i) => Math.max(0, i - 1))} disabled={spreadIndex === 0}>← Prev</button>
-          <button className="btn ghost" onClick={() => setSpreadIndex((i) => Math.min(LAST_SPREAD, i + 1))} disabled={spreadIndex === LAST_SPREAD}>Next →</button>
+          <button
+            type="button"
+            className="btn ghost reader-nav-btn"
+            onClick={handlePrev}
+            disabled={isFirst}
+          >
+            ← Prev {zoomedPage !== null ? "Page" : "Spread"}
+          </button>
+
+          <div className="reader-nav-center mono">
+            {zoomedPage !== null ? (
+              <span>
+                Page <strong>{zoomedPage}</strong> of {ISSUE_PAGE_COUNT}
+                <button
+                  type="button"
+                  className="reader-text-link"
+                  onClick={() => {
+                    setZoomedPage(null);
+                    setZoomLevel(1);
+                  }}
+                >
+                  · View spread
+                </button>
+              </span>
+            ) : (
+              <span>
+                {pageLabel} of {ISSUE_PAGE_COUNT}
+                <span className="reader-hint"> · Click page to zoom</span>
+              </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="btn ghost reader-nav-btn"
+            onClick={handleNext}
+            disabled={isLast}
+          >
+            Next {zoomedPage !== null ? "Page" : "Spread"} →
+          </button>
         </div>
       </div>
     </div>,
