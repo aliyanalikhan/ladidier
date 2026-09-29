@@ -66,7 +66,7 @@ async function handlePdf(request, stripe) {
     headers: {
       ...PRIVATE,
       'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="ECLAT-Vol2.pdf"',
+      'Content-Disposition': 'attachment; filename="ECLAT-Issue-3.pdf"',
       'Content-Length': String(bytes.length),
     },
   });

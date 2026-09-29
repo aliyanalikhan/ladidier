@@ -132,7 +132,7 @@ function HeroSplit({ setRoute }) {
       </div>
 
       <div style={{ position: "relative" }} className="float-slow">
-        <div className="ph photo cover framed tilt" style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }} data-tag="Vol. 2 · Sep 2026" data-label="THE COVER"></div>
+        <div className="ph photo cover framed tilt" style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }} data-tag="Issue 3" data-label="THE COVER"></div>
         <div className="mono" style={{ position: "absolute", right: 0, top: -28, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--mute)" }}>
           ↘ Current issue
         </div>
@@ -227,7 +227,7 @@ function FeaturedStories({ setRoute }) {
         {/* Lead story */}
         <Reveal>
           <article className="art-card lift">
-            <div className="ph photo" style={{ aspectRatio: "4/5", "--bg-image": `url(${featured[0].img})` }} data-tag={featured[0].kicker} data-label="ÉCLAT VOL. 2"></div>
+            <div className="ph photo" style={{ aspectRatio: "4/5", "--bg-image": `url(${featured[0].img})` }} data-tag={featured[0].kicker} data-label="ÉCLAT ISSUE 3"></div>
             <div>
               <div className="eyebrow" style={{ marginBottom: 8 }}>{featured[0].kicker}</div>
               <h3 className="art-title" style={{ fontSize: "clamp(28px, 2.4vw, 40px)" }}>{featured[0].title}</h3>
@@ -240,7 +240,7 @@ function FeaturedStories({ setRoute }) {
           {featured.slice(1, 3).map((s, i) => (
             <Reveal key={s.title} delay={(i+1)*80}>
               <article className="art-card lift" style={{ gridTemplateColumns: "1fr", display: "grid", gap: 14 }}>
-                <div className="ph photo" style={{ aspectRatio: "16/10", "--bg-image": `url(${s.img})` }} data-tag={s.kicker} data-label="ÉCLAT VOL. 2"></div>
+                <div className="ph photo" style={{ aspectRatio: "16/10", "--bg-image": `url(${s.img})` }} data-tag={s.kicker} data-label="ÉCLAT ISSUE 3"></div>
                 <div>
                   <div className="eyebrow" style={{ marginBottom: 6 }}>{s.kicker}</div>
                   <h3 className="art-title">{s.title}</h3>
@@ -751,7 +751,7 @@ function IssueReader({ onClose }) {
       className={`reader-backdrop ${isFullPage ? "reader-backdrop-fullscreen" : ""}`}
       role="dialog"
       aria-modal="true"
-      aria-label="ÉCLAT Vol. 2 reader"
+      aria-label="ÉCLAT Issue 3 reader"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -764,7 +764,7 @@ function IssueReader({ onClose }) {
         {/* Top Header - Always visible */}
         <div className="reader-modal-header">
           <div className="reader-header-info">
-            <span className="mono reader-header-title">ÉCLAT Vol. 2</span>
+            <span className="mono reader-header-title">ÉCLAT Issue 3</span>
             <span className="reader-badge">
               {zoomedPage !== null ? (
                 <>
@@ -923,7 +923,7 @@ function IssueReader({ onClose }) {
                   >
                     <img
                       src={imgUrls[activeZoomIdx]}
-                      alt={`ÉCLAT Vol. 2, page ${zoomedPage}`}
+                      alt={`ÉCLAT Issue 3, page ${zoomedPage}`}
                       className="reader-img-zoomed"
                       draggable={false}
                       onDoubleClick={() => {
@@ -950,7 +950,7 @@ function IssueReader({ onClose }) {
                   >
                     <img
                       src={url}
-                      alt={`ÉCLAT Vol. 2, page ${pages[idx]}`}
+                      alt={`ÉCLAT Issue 3, page ${pages[idx]}`}
                       className="reader-img-spread"
                       draggable={false}
                     />
@@ -1059,7 +1059,7 @@ function MagazinePage({ setRoute, isMember, readerOpen: externalReaderOpen = fal
           <div
             className="ph photo cover framed tilt"
             style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }}
-            data-tag="Vol. 2 · Sep 2026"
+            data-tag="Issue 3"
             data-label="THE COVER"
           ></div>
         </div>
@@ -1080,7 +1080,7 @@ function MagazinePage({ setRoute, isMember, readerOpen: externalReaderOpen = fal
               </p>
               <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
                 <button className="btn solid" onClick={handleOpen}>Read the full issue →</button>
-                <a className="btn ghost" href="/api/issue/pdf" download="ECLAT-Vol2.pdf">Download PDF</a>
+                <a className="btn ghost" href="/api/issue/pdf" download="ECLAT-Issue-3.pdf">Download PDF</a>
               </div>
             </>
           ) : (
@@ -1107,7 +1107,7 @@ function MagazinePage({ setRoute, isMember, readerOpen: externalReaderOpen = fal
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 32 }}>
           {ISSUE_HIGHLIGHTS.map((h) => (
             <article key={h.title} className="art-card">
-              <div className="ph photo" style={{ aspectRatio: "4/5", "--bg-image": `url(${h.img})` }} data-tag={h.kicker} data-label="ÉCLAT VOL. 2"></div>
+              <div className="ph photo" style={{ aspectRatio: "4/5", "--bg-image": `url(${h.img})` }} data-tag={h.kicker} data-label="ÉCLAT ISSUE 3"></div>
               <div>
                 <div className="eyebrow" style={{ marginBottom: 8 }}>{h.kicker}</div>
                 <h3 className="art-title">{h.title}</h3>
