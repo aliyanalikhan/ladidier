@@ -239,6 +239,7 @@ hr.rule-strong {
   letter-spacing: .08em; text-transform: uppercase;
   color: color-mix(in srgb, var(--fg) 55%, transparent);
 }
+.ph.photo[data-tag]::before { color: rgba(255,255,255,.92); }
 .ph.blush { --ph-tint: var(--blush); }
 .ph.sage  { --ph-tint: var(--sage); }
 .ph.sky   { --ph-tint: var(--sky); }
