@@ -472,12 +472,6 @@ const ISSUE_HIGHLIGHTS = [
     dek: "A Karachi wedding of mehndi, rose petals and family — and the quieter story beneath the spectacle.",
   },
   {
-    img: "/assets/eclat3/emergency-funds.jpg",
-    kicker: "Journeys & Finance",
-    title: "Emergency Funds: Building Your Safety Net",
-    dek: "Financial security isn't about how much you make, but how well you're prepared for what you can't control.",
-  },
-  {
     img: "/assets/eclat3/health-partnership.jpg",
     kicker: "Health & Wellness",
     title: "Your Health Is a Partnership",
