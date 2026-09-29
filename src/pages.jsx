@@ -486,7 +486,7 @@ const ISSUE_HIGHLIGHTS = [
 ];
 
 /* Total pages behind /api/issue/page — must match content/eclat-vol2-pages/ */
-const ISSUE_PAGE_COUNT = 62;
+const ISSUE_PAGE_COUNT = 70;
 
 /* Spread pagination: page 1 (front cover) and the final page (back cover)
    show solo; everything between pairs up as a facing two-page spread
