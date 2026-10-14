@@ -2,6 +2,7 @@
    LADIDIÉR — App shell and routing
    ───────────────────────────────────────────────────────────── */
 import { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { Nav, Footer } from './components.jsx';
 import {
   HomePage,
@@ -269,6 +270,7 @@ export default function App() {
       <main key={route}>{page}</main>
       <Footer setRoute={go} />
       <TreasureHuntComplete setRoute={go} />
+      <Analytics />
     </>
   );
 }
