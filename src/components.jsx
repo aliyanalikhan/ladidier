@@ -66,8 +66,8 @@ const STORES = [
 
 const ISSUE = {
   vol: "I",
-  no: "03",
-  season: "Spring · Summer 2026",
+  no: "04",
+  season: "December 2026",
   title: "On Luxe & Larger Living",
   cover: "blush",
   img: IMG.cover,

@@ -132,9 +132,9 @@ function HeroSplit({ setRoute }) {
       </div>
 
       <div style={{ position: "relative" }} className="float-slow">
-        <div className="ph photo cover framed tilt" style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }} data-tag="Issue 3" data-label="THE COVER"></div>
+        <div className="ph photo cover framed tilt" style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }} data-tag="Issue 4" data-label="THE COVER"></div>
         <div className="mono" style={{ position: "absolute", right: 0, top: -28, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--mute)" }}>
-          ↘ Current issue
+          ↘ New release · Issue 4
         </div>
       </div>
     </header>
@@ -480,7 +480,7 @@ const ISSUE_HIGHLIGHTS = [
 ];
 
 /* Total pages behind /api/issue/page — must match content/eclat-vol2-pages/ */
-const ISSUE_PAGE_COUNT = 70;
+const ISSUE_PAGE_COUNT = 100;
 
 /* Spread pagination: page 1 (front cover) and the final page (back cover)
    show solo; everything between pairs up as a facing two-page spread
@@ -745,7 +745,7 @@ function IssueReader({ onClose }) {
       className={`reader-backdrop ${isFullPage ? "reader-backdrop-fullscreen" : ""}`}
       role="dialog"
       aria-modal="true"
-      aria-label="ÉCLAT Issue 3 reader"
+      aria-label="ÉCLAT Issue 4 reader"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -758,7 +758,7 @@ function IssueReader({ onClose }) {
         {/* Top Header - Always visible */}
         <div className="reader-modal-header">
           <div className="reader-header-info">
-            <span className="mono reader-header-title">ÉCLAT Issue 3</span>
+            <span className="mono reader-header-title">ÉCLAT Issue 4</span>
             <span className="reader-badge">
               {zoomedPage !== null ? (
                 <>
@@ -917,7 +917,7 @@ function IssueReader({ onClose }) {
                   >
                     <img
                       src={imgUrls[activeZoomIdx]}
-                      alt={`ÉCLAT Issue 3, page ${zoomedPage}`}
+                      alt={`ÉCLAT Issue 4, page ${zoomedPage}`}
                       className="reader-img-zoomed"
                       draggable={false}
                       onDoubleClick={() => {
@@ -944,7 +944,7 @@ function IssueReader({ onClose }) {
                   >
                     <img
                       src={url}
-                      alt={`ÉCLAT Issue 3, page ${pages[idx]}`}
+                      alt={`ÉCLAT Issue 4, page ${pages[idx]}`}
                       className="reader-img-spread"
                       draggable={false}
                     />
@@ -1053,19 +1053,19 @@ function MagazinePage({ setRoute, isMember, readerOpen: externalReaderOpen = fal
           <div
             className="ph photo cover framed tilt"
             style={{ aspectRatio: "1600/2263", "--bg-image": `url(/assets/eclat-vol2-cover.jpg)` }}
-            data-tag="Issue 3"
+            data-tag="Issue 4"
             data-label="THE COVER"
           ></div>
         </div>
         <div>
-          <div className="eyebrow">This Issue's Cover</div>
+          <div className="eyebrow">New Release · Issue 4</div>
           <h2 className="display" style={{ fontSize: "clamp(28px, 3.4vw, 48px)", margin: "16px 0 24px", letterSpacing: "-.02em", fontWeight: 300 }}>
-            The Power of Vision: Paul Onwuanibe — On Leadership, Legacy, and Rebuilding Africa's
-            Business Landscape.
+            The Frequency of Success: Chris Ubosi — The man behind Beat 99.9 FM on vision,
+            values, family and the future.
           </h2>
           <p className="lede">
-            A look inside Volume 2 — six of the stories, people, and moments that shaped this
-            issue, from the cover feature to the culture pages below.
+            Just released — Issue 4, December 2026. Inside: why African money doesn't become
+            capital, Nollywood's new wave, and escapes to Cape Town, Lagos &amp; Bruges.
           </p>
           {isMember ? (
             <>
@@ -1074,7 +1074,7 @@ function MagazinePage({ setRoute, isMember, readerOpen: externalReaderOpen = fal
               </p>
               <div className="flex gap-16" style={{ marginTop: 28, flexWrap: "wrap" }}>
                 <button className="btn solid" onClick={handleOpen}>Read the full issue →</button>
-                <a className="btn ghost" href="/api/issue/pdf" download="ECLAT-Issue-3.pdf">Download PDF</a>
+                <a className="btn ghost" href="/api/issue/pdf" download="ECLAT-Issue-4.pdf">Download PDF</a>
               </div>
             </>
           ) : (

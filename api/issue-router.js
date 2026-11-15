@@ -14,7 +14,7 @@ const PRIVATE = { 'Cache-Control': 'private, no-store' };
 
 // Kept in lock-step with content/eclat-vol2-pages/, which was rendered once
 // from the source PDF and committed alongside this route.
-const TOTAL_PAGES = 70;
+const TOTAL_PAGES = 100;
 const PAGES_DIR = path.join(process.cwd(), 'content', 'eclat-vol2-pages');
 
 // Lives outside public/ on purpose. Anything under public/ is served to
@@ -66,7 +66,7 @@ async function handlePdf(request, stripe) {
     headers: {
       ...PRIVATE,
       'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="ECLAT-Issue-3.pdf"',
+      'Content-Disposition': 'attachment; filename="ECLAT-Issue-4.pdf"',
       'Content-Length': String(bytes.length),
     },
   });
