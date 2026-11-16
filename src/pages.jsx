@@ -371,9 +371,33 @@ function Manifesto({ printMode = false }) {
   );
 }
 
-function HomePage({ setRoute, heroVariant, printMode = false }) {
+/* Seasonal Thanksgiving theme — auto-expires Dec 1 2026. */
+const THANKSGIVING_ON = new Date() < new Date("2026-12-01");
+const LEAVES = ["🍂", "🍁", "🍂", "🍁", "🍂", "🍁", "🍂", "🍁"];
+
+function ThanksgivingBanner({ setRoute }) {
   return (
-    <div className="page-fade">
+    <>
+      <div className="thanks-banner">
+        <span className="thanks-banner-text">
+          🦃 Happy Thanksgiving from LaDidiér — gather, give thanks &amp; read the new issue.
+        </span>
+        <button className="thanks-banner-link" onClick={() => setRoute("magazine")}>Read Issue 4 →</button>
+      </div>
+      <div className="thanks-leaves" aria-hidden="true">
+        {LEAVES.map((l, i) => (
+          <span key={i} style={{ left: `${6 + i * 12}%`, animationDelay: `${i * 1.3}s`, animationDuration: `${9 + (i % 3) * 3}s` }}>{l}</span>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function HomePage({ setRoute, heroVariant, printMode = false }) {
+  const thanks = THANKSGIVING_ON && !printMode;
+  return (
+    <div className={`page-fade${thanks ? " thanksgiving" : ""}`}>
+      {thanks && <ThanksgivingBanner setRoute={setRoute} />}
       {heroVariant === "manifest" && <HeroManifest setRoute={setRoute} />}
       {heroVariant === "split"    && <HeroSplit    setRoute={setRoute} />}
       {heroVariant === "index"    && <HeroIndex    setRoute={setRoute} />}

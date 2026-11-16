@@ -1776,3 +1776,30 @@ body::before {
   font-size: 14px;
   line-height: 1.2;
 }
+
+/* ── Thanksgiving theme (home only; see THANKSGIVING_ON in pages.jsx) ── */
+.thanksgiving { --gold: #B5651D; --gold-soft: #D9A05B; --accent: #7A3B10; }
+.thanks-banner {
+  display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: center;
+  padding: 10px 16px; font-size: 13px; letter-spacing: .02em; text-align: center;
+  background: linear-gradient(90deg, #7A3B10, #B5651D 50%, #7A3B10); color: #FFF4E0;
+}
+.thanks-banner-link {
+  background: none; border: 0; border-bottom: 1px solid currentColor; color: inherit;
+  font: inherit; font-weight: 600; cursor: pointer; padding: 0;
+}
+.thanksgiving .warmth {
+  background: radial-gradient(60% 60% at 30% 30%, rgba(217,125,40,.28), transparent 65%),
+              radial-gradient(50% 50% at 80% 50%, rgba(160,60,20,.18), transparent 70%);
+}
+.thanks-leaves { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
+.thanks-leaves span {
+  position: absolute; top: -40px; font-size: 22px; opacity: .8;
+  animation: leafFall linear infinite;
+}
+@keyframes leafFall {
+  0%   { transform: translateY(-40px) rotate(0deg) translateX(0); }
+  50%  { transform: translateY(55vh) rotate(180deg) translateX(30px); }
+  100% { transform: translateY(110vh) rotate(360deg) translateX(-20px); }
+}
+@media (prefers-reduced-motion: reduce) { .thanks-leaves { display: none; } }
