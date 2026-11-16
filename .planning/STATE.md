@@ -158,6 +158,7 @@ None yet.
 | 260908-9l4 | added two new highlight images (bridal collection ad, sleep wellness ad) to the ÉCLAT magazine Highlights section — copied assets, appended ISSUE_HIGHLIGHTS entries, rebuilt dist | 2026-09-08 | 5a90084 | Awaiting checkpoint approval (Task 4: human visual check — 10 cards render, no crop cutting off ad headlines, Home unchanged) | [260908-9l4-add-two-new-highlight-images-bridal-coll](.planning/quick/260908-9l4-add-two-new-highlight-images-bridal-coll/) |
 | 260922-mag | complimentary magazine access flow: direct access link to reader window without subscription, keeping paywall for PDF and untouched subscription tiers | 2026-09-22 | 1648c23 | Complete | [260922-mag-complimentary-magazine-access-flow](.planning/quick/260922-mag-complimentary-magazine-access-flow/) |
 | 261116-is4 | release ECLAT Issue 4 (100 pages) as new issue + hero cover | 2026-11-16 | e4bcc31 | Complete | |
+| 261116-tgv | add Thanksgiving theme on main page | 2026-11-16 | f71ae5c | Complete | |
 
 ## Session Continuity
 
