@@ -23,6 +23,7 @@ import {
 } from './ornaments.jsx';
 import { TreasureIcon } from './treasure.jsx';
 import { AIAvatarFAQ } from './avatarFaq.jsx';
+import { WelcomeGift } from './welcomeGift.jsx';
 
 const PENDING_PLAN = "ladidier_pending_plan";
 
@@ -450,6 +451,7 @@ function HomePage({ setRoute, heroVariant, printMode = false }) {
       <Manifesto printMode={printMode} />
       <FeaturedStories setRoute={setRoute} />
       <StoresPreview setRoute={setRoute} />
+      {!printMode && <WelcomeGift />}
       <SubscribeBanner setRoute={setRoute} />
     </div>
   );
