@@ -1578,7 +1578,7 @@ function SubscribePage({ setRoute, isSubscribed, setIsSubscribed, user, setUser,
             ) : (
               <>
                 <span className="muted" style={{ fontSize: 13 }}>
-                  Members sign in with Google.
+                  Members sign in with Google. Signing in adds you to our email list.
                 </span>
                 <button
                   className="btn ghost"

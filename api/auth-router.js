@@ -10,6 +10,8 @@ import {
   readSession,
 } from '../lib/session.js';
 import { safeReturnTo } from '../lib/routes.js';
+import { ipCountry } from '../lib/signup.js';
+import { subscribe } from '../lib/subscribe.js';
 
 // Consolidated router for /api/auth/* (google, callback, logout, me) — kept as
 // one Vercel Function instead of four to stay under the Hobby plan's 12
@@ -170,6 +172,14 @@ async function handleCallback(request) {
   } catch (err) {
     console.error('[auth] Failed to persist user in database:', err);
     return failRedirect();
+  }
+
+  // Signing in also joins the list. A failure here must never block the sign-in.
+  // shortcut: sends inline, so a first sign-in waits on the emails; move to a queue if slow.
+  try {
+    await subscribe(claims.email.toLowerCase(), ipCountry(request), 'Google sign-in');
+  } catch (err) {
+    console.error('[auth] Failed to add user to the email list:', err.message);
   }
 
   let sessionValue;
