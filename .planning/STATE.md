@@ -159,6 +159,7 @@ None yet.
 | 260922-mag | complimentary magazine access flow: direct access link to reader window without subscription, keeping paywall for PDF and untouched subscription tiers | 2026-09-22 | 1648c23 | Complete | [260922-mag-complimentary-magazine-access-flow](.planning/quick/260922-mag-complimentary-magazine-access-flow/) |
 | 261116-is4 | release ECLAT Issue 4 (100 pages) as new issue + hero cover | 2026-11-16 | e4bcc31 | Complete | |
 | 261116-tgv | add Thanksgiving theme on main page | 2026-11-16 | f71ae5c | Complete | |
+| 261126-u2x | fix falling leaves pink color on thanksgiving theme — replaced system emojis with bespoke SVG autumn foliage | 2026-11-26 | 28e0c16 | Complete | [261126-u2x-fix-falling-leaves-pink-color-on-thanksg](./quick/261126-u2x-fix-falling-leaves-pink-color-on-thanksg/) |
 
 ## Session Continuity
 
