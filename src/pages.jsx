@@ -373,7 +373,41 @@ function Manifesto({ printMode = false }) {
 
 /* Seasonal Thanksgiving theme — auto-expires Dec 1 2026. */
 const THANKSGIVING_ON = new Date() < new Date("2026-12-01");
-const LEAVES = ["🍂", "🍁", "🍂", "🍁", "🍂", "🍁", "🍂", "🍁"];
+
+/* Bespoke SVG leaf silhouettes with authentic warm autumn colors to avoid vendor emoji color quirks (e.g. pink maple leaves on Windows) */
+function AutumnLeaf({ type, color, size = 22 }) {
+  if (type === "oak") {
+    return (
+      <svg viewBox="0 0 24 24" width={size} height={size} fill={color} aria-hidden="true" style={{ display: "block" }}>
+        <path d="M12 2c1.2 1 2 2.2 1.8 3.5 1.2.2 2.2 1.2 2 2.5 1.1.4 1.8 1.5 1.5 2.7 1 .6 1.5 1.8 1.1 3-.8 0-1.4.6-1.5 1.5 1 .8 1.1 2.2.3 3.1-.6.7-1.6.8-2.3.3-.4.8-1.3 1.3-2.2 1.1l-.7 2.3h-1.6l-.7-2.3c-.9.2-1.8-.3-2.2-1.1-.7.5-1.7.4-2.3-.3-.8-.9-.7-2.3.3-3.1-.1-.9-.7-1.5-1.5-1.5-.4-1.2.1-2.4 1.1-3-.3-1.2.4-2.3 1.5-2.7-.2-1.3.8-2.3 2-2.5-.2-1.3.6-2.5 1.8-3.5z" />
+      </svg>
+    );
+  }
+  if (type === "birch") {
+    return (
+      <svg viewBox="0 0 24 24" width={size} height={size} fill={color} aria-hidden="true" style={{ display: "block" }}>
+        <path d="M12 2C7 6 5 10 5 14.5 5 18.5 8 21.5 11 22v2h2v-2c3-.5 6-3.5 6-7.5C19 10 17 6 12 2zm0 3.2c3 3.5 4.8 6.8 4.8 9.3 0 2.2-1.8 4.5-4.8 5.1V5.2z" />
+      </svg>
+    );
+  }
+  // Default: maple leaf
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill={color} aria-hidden="true" style={{ display: "block" }}>
+      <path d="M12 2c.4 1.8.8 2.8 1.8 3.4 1-.8 2-1 2.8-.5-.3 1.2-.2 2.2.5 2.8 1.1-.3 2.1 0 2.7.9-.8.8-1 1.8-.4 2.8 1.1.2 1.8 1 1.8 2.1-.9.4-1.3 1.3-1 2.3-.9.1-1.6.7-1.9 1.6-1-.2-1.9.2-2.3 1.1-.6-.2-1.2 0-1.6.6l-.4 3.9h-1.6l-.4-3.9c-.4-.6-1-.8-1.6-.6-.4-.9-1.3-1.3-2.3-1.1-.3-.9-1-1.5-1.9-1.6.3-1-.1-1.9-1-2.3 0-1.1.7-1.9 1.8-2.1.6-1 .4-2-.4-2.8.6-.9 1.6-1.2 2.7-.9.7-.6.8-1.6.5-2.8.8-.5 1.8-.3 2.8.5 1-.6 1.4-1.6 1.8-3.4z" />
+    </svg>
+  );
+}
+
+const AUTUMN_LEAVES = [
+  { type: "maple", color: "#C85A17", size: 24, left: 6,  delay: 0,   duration: 9 },   // burnt orange
+  { type: "oak",   color: "#D48B28", size: 22, left: 18, delay: 1.3, duration: 11 },  // amber gold
+  { type: "birch", color: "#9E381C", size: 20, left: 30, delay: 2.6, duration: 10 },  // deep rust
+  { type: "maple", color: "#B5501B", size: 26, left: 42, delay: 3.9, duration: 12 },  // terracotta
+  { type: "birch", color: "#E09C32", size: 19, left: 54, delay: 5.2, duration: 9 },   // harvest gold
+  { type: "oak",   color: "#A2481A", size: 23, left: 66, delay: 6.5, duration: 11 },  // cinnamon
+  { type: "maple", color: "#8B2E1E", size: 25, left: 78, delay: 7.8, duration: 10 },  // burgundy
+  { type: "birch", color: "#C46822", size: 21, left: 90, delay: 9.1, duration: 12 },  // spiced amber
+];
 
 function ThanksgivingBanner({ setRoute }) {
   return (
@@ -385,8 +419,17 @@ function ThanksgivingBanner({ setRoute }) {
         <button className="thanks-banner-link" onClick={() => setRoute("magazine")}>Read Issue 4 →</button>
       </div>
       <div className="thanks-leaves" aria-hidden="true">
-        {LEAVES.map((l, i) => (
-          <span key={i} style={{ left: `${6 + i * 12}%`, animationDelay: `${i * 1.3}s`, animationDuration: `${9 + (i % 3) * 3}s` }}>{l}</span>
+        {AUTUMN_LEAVES.map((leaf, i) => (
+          <span
+            key={i}
+            style={{
+              left: `${leaf.left}%`,
+              animationDelay: `${leaf.delay}s`,
+              animationDuration: `${leaf.duration}s`,
+            }}
+          >
+            <AutumnLeaf type={leaf.type} color={leaf.color} size={leaf.size} />
+          </span>
         ))}
       </div>
     </>

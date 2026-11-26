@@ -1794,7 +1794,10 @@ body::before {
 }
 .thanks-leaves { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
 .thanks-leaves span {
-  position: absolute; top: -40px; font-size: 22px; opacity: .8;
+  position: absolute; top: -40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  opacity: .85;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
   animation: leafFall linear infinite;
 }
 @keyframes leafFall {
