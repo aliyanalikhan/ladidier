@@ -280,8 +280,8 @@ function SeasonStoryCard({ story, lead = false }) {
 /* Featured stories strip on home */
 function FeaturedStories({ setRoute }) {
   const [lead, ...stories] = SEASON_STORIES;
-  const supporting = stories.slice(0, 2);
-  const additional = stories.slice(2);
+  const featured = [stories[2], stories[0]];
+  const additional = [stories[1], stories[3], stories[4], stories[5]];
   return (
     <section className="section container">
       <div className="flex between" style={{ marginBottom: 56, alignItems: "flex-end", gap: 32, flexWrap: "wrap" }}>
@@ -294,10 +294,10 @@ function FeaturedStories({ setRoute }) {
         <button className="btn ghost" onClick={() => setRoute("magazine")}>All stories →</button>
       </div>
 
-      <div className="magazine-featured-grid">
+      <div className="magazine-featured-grid" style={{ alignItems: "center", gap: "clamp(24px, 6vw, 96px)" }}>
         <SeasonStoryCard story={lead} lead />
         <div className="col gap-32">
-          {supporting.map((story) => <SeasonStoryCard key={story.title} story={story} />)}
+          {featured.map((story) => <SeasonStoryCard key={story.title} story={story} />)}
         </div>
       </div>
 
