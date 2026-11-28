@@ -209,9 +209,79 @@ function HeroIndex({ setRoute }) {
   );
 }
 
+const SEASON_STORIES = [
+  {
+    title: "Chris Ubosi: The Man Behind the Frequency",
+    kicker: "Cover Story",
+    dek: "Chris Ubosi built stations, including Beat 99.9 FM, but when ÉCLAT sat down with him, he kept coming back to family, knowing when to walk away, and what tennis taught him about recovering from a mistake.",
+    photos: [{ file: "chris-ubosi", page: 82, alt: "Chris Ubosi in a dark suit and bow tie" }],
+  },
+  {
+    title: "Cape Town: The Beautiful Complication",
+    kicker: "Travel · Cape Town",
+    dek: "The last light falls across the Twelve Apostles. From the V&A Waterfront to the penguins on False Bay, our Cape Town feature follows the city along the edge of the mountain and the sea.",
+    photos: [{ file: "cape-town", page: 16, alt: "The Twelve Apostles mountain range at sunset" }],
+  },
+  {
+    title: "48 Hours in Lagos",
+    kicker: "Dining · Lagos",
+    dek: "Fifteen floors up at Sora Lagos, the weekend begins with bao, dumplings, and cocktails. It’s one stop on a two-day itinerary best planned around the table.",
+    photos: [{ file: "sora-lagos", credit: "Courtesy of Sora Restaurant", page: 31, alt: "A table of dishes and cocktails at Sora Lagos" }],
+  },
+  {
+    title: "The House That Gives",
+    kicker: "Profile · Enugu",
+    dek: "From Chicago, Dr. Conrad and Susan Mgbodille built a place for celebrations in Enugu. Events at Wicker Park help fund local scholarships, support for widows, and care for children.",
+    photos: [{ file: "house-that-gives", credit: "Courtesy of Wicker Park Enugu Event Center", page: 65, alt: "The grounds of Wicker Park Enugu Event Center from the street" }],
+  },
+  {
+    title: "A City Learns the Age of Its Trees",
+    kicker: "Travel · Bruges",
+    dek: "On the Bruges ramparts, Tanja Vandermoere follows a history written in old trees. The walk offers a quieter view of a city so often seen through its buildings.",
+    photos: [{ file: "bruges", credit: "Tanja Vandermoere", page: 54, alt: "Mature trees and historic ramparts beside the water in Bruges" }],
+  },
+  {
+    title: "Time Together",
+    kicker: "Community",
+    dek: "At a Human Race Foundation gathering, old friends find their way back to one another over tennis and conversation. The photos catch the easy company that keeps them coming back.",
+    photos: [{ file: "time-together", page: 77, alt: "Friends gathered around a table with tennis racquets" }],
+  },
+  {
+    title: "Seventeen in Style",
+    kicker: "On Air · Beat 99.9 FM",
+    dek: "Beat 99.9 FM marked its seventeenth anniversary with a gathering dressed in white. The photographs follow Chris Ubosi and the guests who came to celebrate the station’s milestone.",
+    photos: [{ file: "beat-at-17", page: 95, alt: "Guests dressed in white at the Beat 99.9 FM anniversary" }],
+  },
+];
+
+function SeasonStoryCard({ story, lead = false }) {
+  return (
+    <article className={`season-story${lead ? " season-story-lead" : ""}`} id={story.photos[0].file}>
+      <div className="season-story-photos">
+        {story.photos.map(({ file, alt, page, credit }) => (
+          <figure className="season-story-photo" key={file}>
+            <img src={`/assets/eclat4/${file}.webp`} alt={alt} loading={lead ? "eager" : "lazy"} />
+            <figcaption>
+              {credit && <span>{credit}</span>}
+              <span>ÉCLAT Issue {ISSUE.no} · p. {page}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      <div>
+        <div className="eyebrow">{story.kicker}</div>
+        <h3 className="art-title">{story.title}</h3>
+        <p className="art-meta">{story.dek}</p>
+      </div>
+    </article>
+  );
+}
+
 /* Featured stories strip on home */
 function FeaturedStories({ setRoute }) {
-  const featured = ISSUE_HIGHLIGHTS.slice(0, 3);
+  const [lead, ...stories] = SEASON_STORIES;
+  const supporting = stories.slice(0, 2);
+  const additional = stories.slice(2);
   return (
     <section className="section container">
       <div className="flex between" style={{ marginBottom: 56, alignItems: "flex-end", gap: 32, flexWrap: "wrap" }}>
@@ -224,46 +294,15 @@ function FeaturedStories({ setRoute }) {
         <button className="btn ghost" onClick={() => setRoute("magazine")}>All stories →</button>
       </div>
 
-      <div className="magazine-featured-grid" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 40 }}>
-        {/* Lead story */}
-        <Reveal>
-          <article className="art-card lift">
-            <div className="ph photo" style={{ aspectRatio: "4/5", "--bg-image": `url(${featured[0].img})` }} data-tag={featured[0].kicker} data-label="ÉCLAT ISSUE 3"></div>
-            <div>
-              <div className="eyebrow" style={{ marginBottom: 8 }}>{featured[0].kicker}</div>
-              <h3 className="art-title" style={{ fontSize: "clamp(28px, 2.4vw, 40px)" }}>{featured[0].title}</h3>
-              <div className="art-meta" style={{ marginTop: 16 }}>{featured[0].dek}</div>
-            </div>
-          </article>
-        </Reveal>
-
+      <div className="magazine-featured-grid">
+        <SeasonStoryCard story={lead} lead />
         <div className="col gap-32">
-          {featured.slice(1, 3).map((s, i) => (
-            <Reveal key={s.title} delay={(i+1)*80}>
-              <article className="art-card lift" style={{ gridTemplateColumns: "1fr", display: "grid", gap: 14 }}>
-                <div className="ph photo" style={{ aspectRatio: "16/10", "--bg-image": `url(${s.img})` }} data-tag={s.kicker} data-label="ÉCLAT ISSUE 3"></div>
-                <div>
-                  <div className="eyebrow" style={{ marginBottom: 6 }}>{s.kicker}</div>
-                  <h3 className="art-title">{s.title}</h3>
-                  <div className="art-meta" style={{ marginTop: 10 }}>{s.dek}</div>
-                </div>
-              </article>
-            </Reveal>
-          ))}
+          {supporting.map((story) => <SeasonStoryCard key={story.title} story={story} />)}
         </div>
+      </div>
 
-        <div className="col gap-24">
-          <div className="mono" style={{ fontSize: 11, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--mute)", paddingBottom: 12, borderBottom: "1px solid var(--line-strong)" }}>
-            Also in the issue
-          </div>
-          {ISSUE_HIGHLIGHTS.slice(3, 6).map((s, i) => (
-            <div key={s.title} style={{ paddingBlock: 14, borderBottom: "1px solid var(--line)" }}>
-              <div className="eyebrow" style={{ marginBottom: 6 }}>{s.kicker}</div>
-              <div className="art-title" style={{ fontSize: 18 }}>{s.title}</div>
-              <div className="art-meta" style={{ marginTop: 6 }}>{s.dek}</div>
-            </div>
-          ))}
-        </div>
+      <div className="season-story-grid">
+        {additional.map((story) => <SeasonStoryCard key={story.title} story={story} />)}
       </div>
     </section>
   );
