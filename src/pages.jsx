@@ -211,34 +211,22 @@ function HeroIndex({ setRoute }) {
 
 const SEASON_STORIES = [
   {
-    title: "Time Together",
-    kicker: "Living · Community",
-    dek: "A gathering of friends, with tennis and conversation around the table.",
-    photos: [{ file: "time-together", page: 77, alt: "Friends gathered around a table with tennis racquets" }],
-  },
-  {
     title: "Cape Town: The Beautiful Complication",
     kicker: "Travel · Escape",
     dek: "Table Mountain and the Twelve Apostles catch the last of the evening light.",
     photos: [{ file: "cape-town", page: 16, alt: "The Twelve Apostles mountain range at sunset" }],
   },
   {
+    title: "Time Together",
+    kicker: "Living · Community",
+    dek: "A gathering of friends, with tennis and conversation around the table.",
+    photos: [{ file: "time-together", page: 77, alt: "Friends gathered around a table with tennis racquets" }],
+  },
+  {
     title: "48 Hours in Lagos",
     kicker: "Travel · Dining",
     dek: "Asian-inspired dishes and cocktails at Sora Lagos.",
     photos: [{ file: "sora-lagos", credit: "Courtesy of Sora Restaurant", page: 31, alt: "A table of dishes and cocktails at Sora Lagos" }],
-  },
-  {
-    title: "The World in Our Suitcase",
-    kicker: "Travel · Essay",
-    dek: "Collins Nweke reflects on how 9/11 changed the way we travel.",
-    photos: [{ file: "suitcase", credit: "Joshua Woroniecki / Pexels", page: 42, alt: "A suitcase beneath orange arches in an airport terminal" }],
-  },
-  {
-    title: "A City Learns the Age of Its Trees",
-    kicker: "Travel · Bruges",
-    dek: "Tanja Vandermoere explores the historic trees and architecture along the Bruges ramparts.",
-    photos: [{ file: "bruges", credit: "Tanja Vandermoere", page: 54, alt: "Mature trees and historic ramparts beside the water in Bruges" }],
   },
   {
     title: "Along the Cape",
@@ -249,11 +237,23 @@ const SEASON_STORIES = [
       { file: "false-bay", page: 20, alt: "African penguins on the shore of False Bay" },
     ],
   },
+  {
+    title: "A City Learns the Age of Its Trees",
+    kicker: "Travel · Bruges",
+    dek: "Tanja Vandermoere explores the historic trees and architecture along the Bruges ramparts.",
+    photos: [{ file: "bruges", credit: "Tanja Vandermoere", page: 54, alt: "Mature trees and historic ramparts beside the water in Bruges" }],
+  },
+  {
+    title: "The World in Our Suitcase",
+    kicker: "Travel · Essay",
+    dek: "Collins Nweke reflects on how 9/11 changed the way we travel.",
+    photos: [{ file: "suitcase", credit: "Joshua Woroniecki / Pexels", page: 42, alt: "A suitcase beneath orange arches in an airport terminal" }],
+  },
 ];
 
 function SeasonStoryCard({ story, lead = false }) {
   return (
-    <article className={`season-story${lead ? " season-story-lead" : ""}`} id={story.photos[0].file}>
+    <article className={`season-story${lead ? " season-story-lead" : ""}${story.photos.length > 1 ? " season-story-pair" : ""}`} id={story.photos[0].file}>
       <div className="season-story-photos">
         {story.photos.map(({ file, alt, page, credit }) => (
           <figure className="season-story-photo" key={file}>
@@ -274,43 +274,57 @@ function SeasonStoryCard({ story, lead = false }) {
   );
 }
 
-/* Featured stories strip on home */
 function FeaturedStories({ setRoute }) {
-  const [lead, ...stories] = SEASON_STORIES;
-  const supporting = stories.slice(0, 2);
-  const additional = stories.slice(2);
   return (
-    <section className="section container">
-      <div className="flex between" style={{ marginBottom: 56, alignItems: "flex-end", gap: 32, flexWrap: "wrap" }}>
+    <section className="section container issue-four-editorial" aria-labelledby="issue-four-editorial">
+      <style>{`
+        .issue-four-editorial .issue-four-layout {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: clamp(24px, 5vw, 72px) clamp(20px, 4vw, 64px);
+        }
+        .issue-four-editorial :is(.season-story-lead, .season-story-pair) {
+          grid-column: 1 / -1;
+        }
+        .issue-four-editorial .season-story-lead img {
+          aspect-ratio: 2 / 1;
+          object-fit: cover;
+        }
+        .issue-four-editorial .season-story-photo {
+          padding: 0;
+        }
+        .issue-four-editorial .season-story-photo figcaption {
+          position: static;
+          display: flex;
+          writing-mode: horizontal-tb;
+          justify-content: space-between;
+          padding-block: 7px;
+        }
+        .issue-four-editorial .season-story-photos {
+          gap: clamp(10px, 2vw, 24px);
+        }
+        @media (max-width: 640px) {
+          .issue-four-editorial .issue-four-layout {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .issue-four-editorial .season-story-lead img {
+            aspect-ratio: 4 / 3;
+          }
+        }
+      `}</style>
+      <div className="flex between" style={{ marginBottom: 40, alignItems: "flex-end", gap: 24, flexWrap: "wrap" }}>
         <div>
           <div className="eyebrow" style={{ marginBottom: 14 }}>The Magazine — Vol. {ISSUE.vol} N°{ISSUE.no}</div>
-          <h2 className="display h2" style={{ margin: 0, maxWidth: "16ch" }}>
-            Stories from this season's issue.
+          <h2 id="issue-four-editorial" className="display h2" style={{ margin: 0, maxWidth: "19ch" }}>
+            Stories from this season’s issue.
           </h2>
         </div>
         <button className="btn ghost" onClick={() => setRoute("magazine")}>All stories →</button>
       </div>
-
-      <div className="magazine-featured-grid">
-        <SeasonStoryCard story={lead} lead />
-        <div className="col gap-32">
-          {supporting.map((story) => <SeasonStoryCard key={story.title} story={story} />)}
-        </div>
-        <nav className="col gap-24" aria-label="Also in the issue">
-          <div className="eyebrow">Also in the issue</div>
-          {additional.map((story) => (
-            <a className="season-story-link" key={story.title} href={`#${story.photos[0].file}`} onClick={(event) => {
-              event.preventDefault();
-              document.getElementById(story.photos[0].file)?.scrollIntoView();
-            }}>
-              {story.title}
-            </a>
-          ))}
-        </nav>
-      </div>
-
-      <div className="season-story-grid">
-        {additional.map((story) => <SeasonStoryCard key={story.title} story={story} />)}
+      <div className="issue-four-layout">
+        {SEASON_STORIES.map((story, index) => (
+          <SeasonStoryCard key={story.title} story={story} lead={index === 0} />
+        ))}
       </div>
     </section>
   );
