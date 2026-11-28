@@ -1806,3 +1806,59 @@ body::before {
   100% { transform: translateY(110vh) rotate(360deg) translateX(-20px); }
 }
 @media (prefers-reduced-motion: reduce) { .thanks-leaves { display: none; } }
+
+.magazine-featured-grid,
+.season-story-grid {
+  display: grid;
+  gap: 40px;
+}
+
+.magazine-featured-grid { grid-template-columns: 1.4fr 1fr 1fr; }
+.season-story-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  margin-top: 48px;
+}
+
+.season-story { scroll-margin-top: 100px; }
+.season-story-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.season-story-photos img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  display: block;
+  object-fit: cover;
+}
+.season-story-lead img { aspect-ratio: 4 / 3; }
+.season-story h3 { margin-top: 6px; }
+.season-story-lead h3 { font-size: clamp(28px, 2.4vw, 40px); }
+.season-story .art-meta { margin: 10px 0 0; }
+.season-story-link {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.season-story-photo {
+  position: relative;
+  padding-inline-end: 24px;
+  margin: 0;
+  min-width: 0;
+}
+
+.season-story-photo figcaption {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  gap: 3px 8px;
+  writing-mode: vertical-rl;
+  font-size: 10px;
+  line-height: 1.15;
+  color: var(--fg);
+}
