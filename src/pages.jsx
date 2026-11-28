@@ -211,43 +211,46 @@ function HeroIndex({ setRoute }) {
 
 const SEASON_STORIES = [
   {
-    title: "Time Together",
-    kicker: "Living · Community",
-    dek: "A gathering of friends, with tennis and conversation around the table.",
-    photos: [{ file: "time-together", page: 77, alt: "Friends gathered around a table with tennis racquets" }],
+    title: "Chris Ubosi: The Man Behind the Frequency",
+    kicker: "Cover Story",
+    dek: "Chris Ubosi built stations, including Beat 99.9 FM, but when ÉCLAT sat down with him, he kept coming back to family, knowing when to walk away, and what tennis taught him about recovering from a mistake.",
+    photos: [{ file: "chris-ubosi", page: 82, alt: "Chris Ubosi in a dark suit and bow tie" }],
   },
   {
     title: "Cape Town: The Beautiful Complication",
-    kicker: "Travel · Escape",
-    dek: "Table Mountain and the Twelve Apostles catch the last of the evening light.",
+    kicker: "Travel · Cape Town",
+    dek: "The last light falls across the Twelve Apostles. From the V&A Waterfront to the penguins on False Bay, our Cape Town feature follows the city along the edge of the mountain and the sea.",
     photos: [{ file: "cape-town", page: 16, alt: "The Twelve Apostles mountain range at sunset" }],
   },
   {
     title: "48 Hours in Lagos",
-    kicker: "Travel · Dining",
-    dek: "Asian-inspired dishes and cocktails at Sora Lagos.",
+    kicker: "Dining · Lagos",
+    dek: "Fifteen floors up at Sora Lagos, the weekend begins with bao, dumplings, and cocktails. It’s one stop on a two-day itinerary best planned around the table.",
     photos: [{ file: "sora-lagos", credit: "Courtesy of Sora Restaurant", page: 31, alt: "A table of dishes and cocktails at Sora Lagos" }],
   },
   {
-    title: "The World in Our Suitcase",
-    kicker: "Travel · Essay",
-    dek: "Collins Nweke reflects on how 9/11 changed the way we travel.",
-    photos: [{ file: "suitcase", credit: "Joshua Woroniecki / Pexels", page: 42, alt: "A suitcase beneath orange arches in an airport terminal" }],
+    title: "The House That Gives",
+    kicker: "Profile · Enugu",
+    dek: "From Chicago, Dr. Conrad and Susan Mgbodille built a place for celebrations in Enugu. Events at Wicker Park help fund local scholarships, support for widows, and care for children.",
+    photos: [{ file: "house-that-gives", credit: "Courtesy of Wicker Park Enugu Event Center", page: 65, alt: "The grounds of Wicker Park Enugu Event Center from the street" }],
   },
   {
     title: "A City Learns the Age of Its Trees",
     kicker: "Travel · Bruges",
-    dek: "Tanja Vandermoere explores the historic trees and architecture along the Bruges ramparts.",
+    dek: "On the Bruges ramparts, Tanja Vandermoere follows a history written in old trees. The walk offers a quieter view of a city so often seen through its buildings.",
     photos: [{ file: "bruges", credit: "Tanja Vandermoere", page: 54, alt: "Mature trees and historic ramparts beside the water in Bruges" }],
   },
   {
-    title: "Along the Cape",
-    kicker: "Travel · Cape Town",
-    dek: "Two stops from our Cape Town feature: the V&A Waterfront and the African penguins of False Bay.",
-    photos: [
-      { file: "cape-waterfront", page: 21, alt: "Cape Town’s V&A Waterfront beneath Table Mountain" },
-      { file: "false-bay", page: 20, alt: "African penguins on the shore of False Bay" },
-    ],
+    title: "Time Together",
+    kicker: "Community",
+    dek: "At a Human Race Foundation gathering, old friends find their way back to one another over tennis and conversation. The photos catch the easy company that keeps them coming back.",
+    photos: [{ file: "time-together", page: 77, alt: "Friends gathered around a table with tennis racquets" }],
+  },
+  {
+    title: "Seventeen in Style",
+    kicker: "On Air · Beat 99.9 FM",
+    dek: "Beat 99.9 FM marked its seventeenth anniversary with a gathering dressed in white. The photographs follow Chris Ubosi and the guests who came to celebrate the station’s milestone.",
+    photos: [{ file: "beat-at-17", page: 95, alt: "Guests dressed in white at the Beat 99.9 FM anniversary" }],
   },
 ];
 
@@ -257,7 +260,7 @@ function SeasonStoryCard({ story, lead = false }) {
       <div className="season-story-photos">
         {story.photos.map(({ file, alt, page, credit }) => (
           <figure className="season-story-photo" key={file}>
-            <img src={`/assets/eclat4/${file}.webp`} alt={alt} loading="lazy" />
+            <img src={`/assets/eclat4/${file}.webp`} alt={alt} loading={lead ? "eager" : "lazy"} />
             <figcaption>
               {credit && <span>{credit}</span>}
               <span>ÉCLAT Issue {ISSUE.no} · p. {page}</span>
@@ -296,17 +299,6 @@ function FeaturedStories({ setRoute }) {
         <div className="col gap-32">
           {supporting.map((story) => <SeasonStoryCard key={story.title} story={story} />)}
         </div>
-        <nav className="col gap-24" aria-label="Also in the issue">
-          <div className="eyebrow">Also in the issue</div>
-          {additional.map((story) => (
-            <a className="season-story-link" key={story.title} href={`#${story.photos[0].file}`} onClick={(event) => {
-              event.preventDefault();
-              document.getElementById(story.photos[0].file)?.scrollIntoView();
-            }}>
-              {story.title}
-            </a>
-          ))}
-        </nav>
       </div>
 
       <div className="season-story-grid">
